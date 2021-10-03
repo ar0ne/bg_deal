@@ -14,7 +14,7 @@ def create_app() -> FastAPI:
     container.wire(modules=[endpoints])
 
     app = FastAPI()
-    app.container = container
+    app.container = container  # type: ignore
     app.include_router(endpoints.router)
 
     return app
