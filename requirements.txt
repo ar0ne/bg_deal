@@ -2,4 +2,5 @@ dependency-injector
 fastapi
 jinja2
 pyyaml
+requests >= 0.8.8
 uvicorn[standard]

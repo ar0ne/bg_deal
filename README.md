@@ -1,1 +1,4 @@
-## Find best deals 
+## Find best deals
+
+
+$ uvicorn bgd.application:app --reload
