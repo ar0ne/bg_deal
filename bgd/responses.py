@@ -1,7 +1,7 @@
 """
 App response schemas
 """
-from typing import Union
+from typing import Optional, Union
 
 from pydantic.main import BaseModel
 
@@ -20,7 +20,8 @@ class SearchOwner(BaseModel):
 
 class SearchResponseItem(BaseModel):
     images: list
-    location: SearchLocation
-    owner: SearchOwner
+    location: Optional[SearchLocation]
+    owner: Optional[SearchOwner]
     prices: list
+    source: str
     url: str

@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends
 
 from bgd.containers import ApplicationContainer
 from bgd.responses import SearchResponseItem
-from bgd.services import KufarSearchService
+from bgd.services import KufarSearchService, WildberriesSearchService
 
 router = APIRouter()
 
@@ -17,12 +17,15 @@ router = APIRouter()
 @inject
 async def search_game(
     game: str,
-    search_service: KufarSearchService = Depends(
+    kufar_search_service: KufarSearchService = Depends(
         Provide[ApplicationContainer.kufar_search_service]
     ),
-    game_category: int = Depends(
-        Provide[ApplicationContainer.config.kufar.game_category.as_int()]
+    wildberries_search_service: WildberriesSearchService = Depends(
+        Provide[ApplicationContainer.wildberreis_search_service]
     ),
 ) -> List[SearchResponseItem]:
     """Index endpoint"""
-    return search_service.search_game_ads(game, game_category)
+    return [
+        *kufar_search_service.search_games(game),
+        *wildberries_search_service.search_games(game),
+    ]
