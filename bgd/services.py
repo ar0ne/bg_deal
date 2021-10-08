@@ -1,6 +1,8 @@
 """
 App Services
 """
+import asyncio
+import logging
 import math
 from abc import abstractmethod
 from typing import List, Optional, Union
@@ -10,13 +12,25 @@ from bgd.responses import SearchLocation, SearchOwner, SearchResponseItem
 
 BELARUS = "Belarus"
 
+log = logging.getLogger(__name__)
+
 
 class SearchService:
     """Abstract search service"""
 
     @abstractmethod
-    async def search_games(self, game_name: str) -> List[SearchResponseItem]:
+    async def do_search(self, query: str) -> List[SearchResponseItem]:
+        """search query"""
+
+    async def search(self, query: str) -> List[SearchResponseItem]:
         """Searching games"""
+        responses = await asyncio.gather(self.do_search(query), return_exceptions=True)
+        ret: List = [resp for resp in responses if isinstance(resp, list)]
+        for resp in responses:
+            # just log it if an api client error occurs
+            if resp and not isinstance(resp, SearchResponseItem):
+                log.info("Error %s", resp)
+        return ret[0] if len(ret) else []
 
 
 class KufarSearchService(SearchService):
@@ -29,7 +43,7 @@ class KufarSearchService(SearchService):
         self._client = client
         self.game_category_id = game_category_id
 
-    async def search_games(self, game_name: str) -> List[SearchResponseItem]:
+    async def do_search(self, game_name: str) -> List[SearchResponseItem]:
         """Search ads by game name"""
         ads = await self._client.search(game_name, {"category": self.game_category_id})
         return [self._format_ads(ad) for ad in ads.response.get("ads")]
@@ -107,7 +121,7 @@ class WildberriesSearchService(SearchService):
         self._client = client
         self.game_category_id = game_category_id
 
-    async def search_games(self, game_name: str) -> List[SearchResponseItem]:
+    async def do_search(self, game_name: str) -> List[SearchResponseItem]:
         items = await self._client.search(game_name)
         return [
             self._format_product(product)

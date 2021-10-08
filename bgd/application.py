@@ -5,8 +5,9 @@ import os
 
 from fastapi import FastAPI
 
-from bgd import endpoints
+from bgd import endpoints, errors
 from bgd.containers import ApplicationContainer
+from bgd.errors import ServiceException
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -20,6 +21,7 @@ def create_app() -> FastAPI:
 
     app = FastAPI()
     app.container = container  # type: ignore
+    app.exception_handler(ServiceException)(errors.service_exception_handler)
     app.include_router(endpoints.router)
 
     return app

@@ -4,9 +4,14 @@ Api clients
 import json
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import aiohttp
+from aiohttp import ClientResponse
+
+from bgd.errors import ApiClientError, NotFoundApiClientError
+
+JsonResponse = Dict[str, Any]
 
 
 @dataclass
@@ -33,11 +38,17 @@ class ApiClient:
             async with session.request(
                 method, url, headers=headers, json=body_json
             ) as resp:
-                response = await resp.json(content_type=None)
-                if not 200 <= resp.status < 300:
-                    # todo: raise error
-                    return APIResponse({"error": "something went wrong"}, 500)
-                return APIResponse(response, 200)
+                self._handle_response_status(resp)
+                r_json = await resp.json(content_type=None)
+                return APIResponse(r_json, 200)
+
+    def _handle_response_status(self, response: ClientResponse) -> None:
+        """Handle response status and raise exception if needed"""
+        status = response.status
+        if status == 404:
+            raise NotFoundApiClientError(str(response.url))
+        if not 200 <= status < 300:
+            raise ApiClientError(f"{self.__class__.__name__} {response.status}")
 
     @abstractmethod
     async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:

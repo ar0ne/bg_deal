@@ -8,6 +8,7 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
 
 from bgd.containers import ApplicationContainer
+from bgd.errors import ServiceException
 from bgd.responses import SearchResponseItem
 from bgd.services import SearchService
 
@@ -23,5 +24,10 @@ async def search_game(
     ),
 ) -> List[SearchResponseItem]:
     """Index endpoint"""
-    results = [await searcher.search_games(game) for searcher in search_engines]
+    results = [await searcher.search(game) for searcher in search_engines]
     return list(itertools.chain.from_iterable(results))
+
+
+@router.get("/")
+async def main():
+    raise ServiceException("error", "bla")
