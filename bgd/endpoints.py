@@ -1,6 +1,7 @@
 """
 App endpoints
 """
+import itertools
 from typing import List
 
 from dependency_injector.wiring import Provide, inject
@@ -8,7 +9,7 @@ from fastapi import APIRouter, Depends
 
 from bgd.containers import ApplicationContainer
 from bgd.responses import SearchResponseItem
-from bgd.services import KufarSearchService, WildberriesSearchService
+from bgd.services import SearchService
 
 router = APIRouter()
 
@@ -17,15 +18,10 @@ router = APIRouter()
 @inject
 async def search_game(
     game: str,
-    kufar_search_service: KufarSearchService = Depends(
-        Provide[ApplicationContainer.kufar_search_service]
-    ),
-    wildberries_search_service: WildberriesSearchService = Depends(
-        Provide[ApplicationContainer.wildberreis_search_service]
+    search_engines: List[SearchService] = Depends(
+        Provide[ApplicationContainer.search_engines]
     ),
 ) -> List[SearchResponseItem]:
     """Index endpoint"""
-    return [
-        *kufar_search_service.search_games(game),
-        *wildberries_search_service.search_games(game),
-    ]
+    results = [await searcher.search_games(game) for searcher in search_engines]
+    return list(itertools.chain.from_iterable(results))

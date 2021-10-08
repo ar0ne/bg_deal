@@ -2,27 +2,36 @@
 App Services
 """
 import math
+from abc import abstractmethod
 from typing import List, Optional, Union
 
 from bgd.clients import ApiClient
 from bgd.responses import SearchLocation, SearchOwner, SearchResponseItem
 
 BELARUS = "Belarus"
-KUFAR = "Kufar"
-WILDBERRIES = "Wildberries"
 
 
-class KufarSearchService:
+class SearchService:
+    """Abstract search service"""
+
+    @abstractmethod
+    async def search_games(self, game_name: str) -> List[SearchResponseItem]:
+        """Searching games"""
+
+
+class KufarSearchService(SearchService):
     """Service for work with Kufar api"""
+
+    KUFAR = "Kufar"
 
     def __init__(self, client: ApiClient, game_category_id: Union[str, int]) -> None:
         """Init Search Service"""
         self._client = client
         self.game_category_id = game_category_id
 
-    def search_games(self, game_name: str) -> List[SearchResponseItem]:
+    async def search_games(self, game_name: str) -> List[SearchResponseItem]:
         """Search ads by game name"""
-        ads = self._client.search(game_name, {"category": self.game_category_id})
+        ads = await self._client.search(game_name, {"category": self.game_category_id})
         return [self._format_ads(ad) for ad in ads.response.get("ads")]
 
     def _format_ads(self, ad_item: dict) -> SearchResponseItem:
@@ -32,7 +41,7 @@ class KufarSearchService:
             location=self._extract_product_location(ad_item),
             owner=self._extract_owner_info(ad_item),
             prices=self._extract_prices(ad_item),
-            source=KUFAR,
+            source=self.KUFAR,
             url=ad_item.get("ad_link"),
         )
 
@@ -88,16 +97,18 @@ class KufarSearchService:
         )
 
 
-class WildberriesSearchService:
+class WildberriesSearchService(SearchService):
     """Service for work with Wildberries api"""
+
+    WILDBERRIES = "Wildberries"
 
     def __init__(self, client: ApiClient, game_category_id: Union[str, int]) -> None:
         """Init Search Service"""
         self._client = client
         self.game_category_id = game_category_id
 
-    def search_games(self, game_name: str) -> List[SearchResponseItem]:
-        items = self._client.search(game_name)
+    async def search_games(self, game_name: str) -> List[SearchResponseItem]:
+        items = await self._client.search(game_name)
         return [
             self._format_product(product)
             for product in items.response.get("data", {}).get("products")
@@ -111,7 +122,7 @@ class WildberriesSearchService:
             location=None,
             owner=None,
             prices=self._extract_prices(product),
-            source=WILDBERRIES,
+            source=self.WILDBERRIES,
             url=self._extract_url(product),
         )
 

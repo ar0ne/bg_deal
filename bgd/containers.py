@@ -30,3 +30,8 @@ class ApplicationContainer(containers.DeclarativeContainer):
         client=wildberries_api_client,
         game_category_id=config.wildberries.game_category_id,
     )
+
+    search_engines = providers.List(
+        kufar_search_service,
+        wildberreis_search_service,
+    )
