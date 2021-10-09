@@ -22,11 +22,13 @@ class SearchOwner(BaseModel):
 
 
 class SearchResponseItem(BaseModel):
+    description: str
     images: list
     location: Optional[SearchLocation]
     owner: Optional[SearchOwner]
     prices: list
     source: str
+    subject: str
     url: str
 
 

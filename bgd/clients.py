@@ -69,6 +69,9 @@ class KufarApiClient(ApiClient):
             url += f"&cat={options['category']}"
         if options.get("language"):
             url += f"&lang={options['language']}"
+        size = options.get("size", 10)
+        if size:
+            url += f"&size={size}"
 
         return await self.connect("GET", self.BASE_URL, url)
 
@@ -86,17 +89,37 @@ class WildberriesApiClient(ApiClient):
 
     async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
         """Search items by query"""
+        url = await self._build_search_query_url(query)
+        return await self.connect("GET", self.BASE_CATALOG_URL, url)
 
-        # firstly we need to get shard info and query
-        query_response = await self._get_query(query)
-        shard_key = query_response.response.get("shardKey")
-        query_key_value = query_response.response.get("query")
-
-        return await self._get_catalog_items(shard_key, query_key_value)
-
-    async def _get_query(self, query: str):
+    async def _build_search_query_url(
+        self,
+        query: str,
+        locale: str = "by",
+        language: Optional[str] = "ru",
+        currency: Optional[str] = "byn",
+    ) -> str:
         """
+        Build query url for searching income text.
+        e.g. /presets/bucket_71/catalog?locale=by&lang=ru&curr=rub&brand=32823
+        """
+        # firstly we need to get shard info and query
+        shard_response = await self._get_shard_and_query(query)
+        shard_key = shard_response.response.get("shardKey")
+        query_key_value = shard_response.response.get("query")
 
+        url = f"/{shard_key}/catalog?{query_key_value}&locale={locale}"
+
+        if language:
+            url += f"&lang={language}"
+        if currency:
+            url += f"&curr={currency}"
+
+        return url
+
+    async def _get_shard_and_query(self, query: str):
+        """
+        Firstly, we need to get right shard and query key-value, e.g.
         {
           "name": "monopoly",
           "query": "preset=10134421",
@@ -107,21 +130,3 @@ class WildberriesApiClient(ApiClient):
         """
         url = f"{self.SEARCH_PATH}?query={query}"
         return await self.connect("GET", self.BASE_SEARCH_URL, url)
-
-    async def _get_catalog_items(
-        self,
-        shard_key: str,
-        query: str,
-        locale: str = "by",
-        language: Optional[str] = "ru",
-        currency: Optional[str] = "byn",
-    ) -> APIResponse:
-        # /presets/bucket_71/catalog?locale=by&lang=ru&curr=rub&brand=32823
-        url = f"/{shard_key}/catalog?{query}&locale={locale}"
-
-        if language:
-            url += f"&lang={language}"
-        if currency:
-            url += f"&curr={currency}"
-
-        return await self.connect("GET", self.BASE_CATALOG_URL, url)

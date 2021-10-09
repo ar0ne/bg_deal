@@ -25,16 +25,18 @@ class SearchService:
     async def search(self, query: str) -> List[SearchResponseItem]:
         """Searching games"""
         responses = await asyncio.gather(self.do_search(query), return_exceptions=True)
+        # filter BaseExceptions
         ret: List[SearchResponseItem] = [
-            resp[0] for resp in responses if isinstance(resp, list) and len(resp)
+            resp for resp in responses if isinstance(resp, list) and len(resp)
         ]
-        return ret
+        return ret[0] if ret else ret
 
 
 class KufarSearchService(SearchService):
     """Service for work with Kufar api"""
 
     KUFAR = "Kufar"
+    IMAGE_URL = "https://yams.kufar.by/api/v1/kufar-ads/images/{}/{}.jpg?rule=gallery"
 
     def __init__(self, client: ApiClient, game_category_id: Union[str, int]) -> None:
         """Init Search Service"""
@@ -49,11 +51,13 @@ class KufarSearchService(SearchService):
     def _format_ads(self, ad_item: dict) -> SearchResponseItem:
         """Convert ads to internal data format"""
         return SearchResponseItem(
+            description="",
             images=self._extract_images(ad_item),
             location=self._extract_product_location(ad_item),
             owner=self._extract_owner_info(ad_item),
             prices=self._extract_prices(ad_item),
             source=self.KUFAR,
+            subject=ad_item.get("subject"),
             url=ad_item.get("ad_link"),
         )
 
@@ -66,9 +70,12 @@ class KufarSearchService(SearchService):
         ]
 
     def _extract_images(self, ad_item: dict) -> list:
-        """Extracts ad images"""
-        # todo: extract images for kufar service
-        return []
+        """ Extracts ad images"""
+        return [
+            self.IMAGE_URL.format(img.get("id")[:2], img.get("id"))
+            for img in ad_item.get("images")
+            if img.get("yams_storage")
+        ]
 
     def _extract_product_location(self, ad_item: dict) -> SearchLocation:
         """Extract location of item"""
@@ -130,11 +137,13 @@ class WildberriesSearchService(SearchService):
     def _format_product(self, product: dict) -> SearchResponseItem:
         """Convert ads to internal data format"""
         return SearchResponseItem(
+            description="",
             images=self._extract_images(product),
             location=None,
             owner=None,
             prices=self._extract_prices(product),
             source=self.WILDBERRIES,
+            subject="",
             url=self._extract_url(product),
         )
 
