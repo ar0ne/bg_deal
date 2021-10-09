@@ -18,7 +18,6 @@ class SearchLocation(BaseModel):
 class SearchOwner(BaseModel):
     id: Union[str, int]
     name: str
-    phone: str
 
 
 class SearchResponseItem(BaseModel):

@@ -25,11 +25,20 @@ class SearchService:
     async def search(self, query: str) -> List[SearchResponseItem]:
         """Searching games"""
         responses = await asyncio.gather(self.do_search(query), return_exceptions=True)
+        self._log_errors(responses)
         # filter BaseExceptions
         ret: List[SearchResponseItem] = [
             resp for resp in responses if isinstance(resp, list) and len(resp)
         ]
         return ret[0] if ret else ret
+
+    def _log_errors(
+        self, all_responses: List[Union[List[SearchResponseItem], Exception]]
+    ):
+        """Log errors if any occur"""
+        for resp in all_responses:
+            if not isinstance(resp, list):
+                log.warning("Error appeared during searching: %s", resp)
 
 
 class KufarSearchService(SearchService):
@@ -51,7 +60,7 @@ class KufarSearchService(SearchService):
     def _format_ads(self, ad_item: dict) -> SearchResponseItem:
         """Convert ads to internal data format"""
         return SearchResponseItem(
-            description="",
+            description="",  # @TODO: how to get it?
             images=self._extract_images(ad_item),
             location=self._extract_product_location(ad_item),
             owner=self._extract_owner_info(ad_item),
@@ -70,7 +79,7 @@ class KufarSearchService(SearchService):
         ]
 
     def _extract_images(self, ad_item: dict) -> list:
-        """ Extracts ad images"""
+        """Extracts ad images"""
         return [
             self.IMAGE_URL.format(img.get("id")[:2], img.get("id"))
             for img in ad_item.get("images")
@@ -112,7 +121,6 @@ class KufarSearchService(SearchService):
         return SearchOwner(
             id=ad_item.get("account_id"),
             name=" ".join(name),
-            phone="",
         )
 
 
@@ -120,6 +128,8 @@ class WildberriesSearchService(SearchService):
     """Service for work with Wildberries api"""
 
     WILDBERRIES = "Wildberries"
+    ITEM_URL = "https://by.wildberries.ru/catalog/{}/detail.aspx"
+    IMAGE_URL = "https://images.wbstatic.net/big/new/{}0000/{}-1.jpg"
 
     def __init__(self, client: ApiClient, game_category_id: Union[str, int]) -> None:
         """Init Search Service"""
@@ -143,7 +153,7 @@ class WildberriesSearchService(SearchService):
             owner=None,
             prices=self._extract_prices(product),
             source=self.WILDBERRIES,
-            subject="",
+            subject=self._extract_subject(product),
             url=self._extract_url(product),
         )
 
@@ -158,10 +168,13 @@ class WildberriesSearchService(SearchService):
 
     def _extract_url(self, product: dict) -> str:
         """Extract url to product"""
-        # todo: clean up
-        return f"https://by.wildberries.ru/catalog/{product.get('id')}/detail.aspx"
+        return self.ITEM_URL.format(product.get("id"))
 
     def _extract_images(self, product: dict) -> list:
         """Extract product images"""
-        # @todo: extract images
-        return []
+        product_id = str(product.get("id"))
+        return [self.IMAGE_URL.format(product_id[:4], product_id)]
+
+    def _extract_subject(self, product: dict) -> str:
+        """Extract product subject"""
+        return f"{product.get('brand') / product.get('name')}"
