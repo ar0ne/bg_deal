@@ -25,12 +25,10 @@ class SearchService:
     async def search(self, query: str) -> List[SearchResponseItem]:
         """Searching games"""
         responses = await asyncio.gather(self.do_search(query), return_exceptions=True)
-        ret: List = [resp for resp in responses if isinstance(resp, list)]
-        for resp in responses:
-            # just log it if an api client error occurs
-            if resp and not isinstance(resp, SearchResponseItem):
-                log.info("Error %s", resp)
-        return ret[0] if len(ret) else []
+        ret: List[SearchResponseItem] = [
+            resp[0] for resp in responses if isinstance(resp, list) and len(resp)
+        ]
+        return ret
 
 
 class KufarSearchService(SearchService):

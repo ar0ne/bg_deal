@@ -2,22 +2,17 @@
 Api clients
 """
 import json
+import logging
 from abc import abstractmethod
-from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Optional
 
 import aiohttp
 from aiohttp import ClientResponse
 
 from bgd.errors import ApiClientError, NotFoundApiClientError
+from bgd.responses import APIResponse
 
-JsonResponse = Dict[str, Any]
-
-
-@dataclass
-class APIResponse:
-    response: dict
-    status: int
+log = logging.getLogger(__name__)
 
 
 class ApiClient:
@@ -38,17 +33,20 @@ class ApiClient:
             async with session.request(
                 method, url, headers=headers, json=body_json
             ) as resp:
-                self._handle_response_status(resp)
+                self._handle_response(resp)
                 r_json = await resp.json(content_type=None)
                 return APIResponse(r_json, 200)
 
-    def _handle_response_status(self, response: ClientResponse) -> None:
+    @staticmethod
+    def _handle_response(response: ClientResponse) -> None:
         """Handle response status and raise exception if needed"""
         status = response.status
         if status == 404:
+            log.warning("NotFoundApiClient error occurs for response %s", response)
             raise NotFoundApiClientError(str(response.url))
         if not 200 <= status < 300:
-            raise ApiClientError(f"{self.__class__.__name__} {response.status}")
+            log.warning("ApiClient error occurs for response %s", response)
+            raise ApiClientError
 
     @abstractmethod
     async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:

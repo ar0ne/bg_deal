@@ -25,8 +25,7 @@ class NotFoundApiClientError(ApiClientError):
 
     def __init__(self, url: str) -> None:
         self.error = "api_client"
-        self.message = "Page Not Found"
-        self.url = url
+        self.message = f"Page Not Found: {url}"
 
 
 async def service_exception_handler(

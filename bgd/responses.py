@@ -1,9 +1,12 @@
 """
 App response schemas
 """
-from typing import Optional, Union
+from dataclasses import dataclass
+from typing import Any, Dict, Optional, Union
 
 from pydantic.main import BaseModel
+
+JsonResponse = Dict[str, Any]
 
 
 class SearchLocation(BaseModel):
@@ -25,3 +28,9 @@ class SearchResponseItem(BaseModel):
     prices: list
     source: str
     url: str
+
+
+@dataclass
+class APIResponse:
+    response: JsonResponse
+    status: int

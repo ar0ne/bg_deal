@@ -1,6 +1,7 @@
 """
 Application entrypoint
 """
+import logging
 import os
 
 from fastapi import FastAPI
@@ -23,6 +24,10 @@ def create_app() -> FastAPI:
     app.container = container  # type: ignore
     app.exception_handler(ServiceException)(errors.service_exception_handler)
     app.include_router(endpoints.router)
+
+    logging.config.fileConfig(
+        f"{BASE_DIR}/logging.conf", disable_existing_loggers=False
+    )
 
     return app
 
