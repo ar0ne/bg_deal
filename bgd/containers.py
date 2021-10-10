@@ -4,7 +4,7 @@ App containers
 from dependency_injector import containers, providers
 
 from bgd import services
-from bgd.clients import KufarApiClient, WildberriesApiClient
+from bgd.clients import KufarApiClient, OzonApiClient, WildberriesApiClient
 
 
 class ApplicationContainer(containers.DeclarativeContainer):
@@ -31,7 +31,17 @@ class ApplicationContainer(containers.DeclarativeContainer):
         game_category_id=config.wildberries.game_category_id,
     )
 
+    ozon_api_client = providers.Factory(
+        OzonApiClient,
+    )
+    ozon_search_service = providers.Factory(
+        services.OzonSearchService,
+        client=ozon_api_client,
+        game_category_id=config.ozon.game_category_id,
+    )
+
     search_engines = providers.List(
-        kufar_search_service,
-        wildberreis_search_service,
+        ozon_search_service,
+        # kufar_search_service,
+        # wildberreis_search_service,
     )

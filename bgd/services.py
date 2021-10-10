@@ -5,7 +5,7 @@ import asyncio
 import logging
 import math
 from abc import abstractmethod
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from bgd.clients import ApiClient
 from bgd.responses import SearchLocation, SearchOwner, SearchResponseItem
@@ -17,6 +17,11 @@ log = logging.getLogger(__name__)
 
 class SearchService:
     """Abstract search service"""
+
+    def __init__(self, client: ApiClient, game_category_id: Union[str, int]) -> None:
+        """Init Search Service"""
+        self._client = client
+        self.game_category_id = game_category_id
 
     @abstractmethod
     async def do_search(self, query: str) -> List[SearchResponseItem]:
@@ -47,17 +52,12 @@ class KufarSearchService(SearchService):
     KUFAR = "Kufar"
     IMAGE_URL = "https://yams.kufar.by/api/v1/kufar-ads/images/{}/{}.jpg?rule=gallery"
 
-    def __init__(self, client: ApiClient, game_category_id: Union[str, int]) -> None:
-        """Init Search Service"""
-        self._client = client
-        self.game_category_id = game_category_id
-
     async def do_search(self, game_name: str) -> List[SearchResponseItem]:
         """Search ads by game name"""
         ads = await self._client.search(game_name, {"category": self.game_category_id})
-        return [self._format_ads(ad) for ad in ads.response.get("ads")]
+        return [self._build_item(ad) for ad in ads.response.get("ads")]
 
-    def _format_ads(self, ad_item: dict) -> SearchResponseItem:
+    def _build_item(self, ad_item: dict) -> SearchResponseItem:
         """Convert ads to internal data format"""
         return SearchResponseItem(
             description="",  # @TODO: how to get it?
@@ -131,11 +131,6 @@ class WildberriesSearchService(SearchService):
     ITEM_URL = "https://by.wildberries.ru/catalog/{}/detail.aspx"
     IMAGE_URL = "https://images.wbstatic.net/big/new/{}0000/{}-1.jpg"
 
-    def __init__(self, client: ApiClient, game_category_id: Union[str, int]) -> None:
-        """Init Search Service"""
-        self._client = client
-        self.game_category_id = game_category_id
-
     async def do_search(self, game_name: str) -> List[SearchResponseItem]:
         items = await self._client.search(game_name)
         return [
@@ -178,3 +173,77 @@ class WildberriesSearchService(SearchService):
     def _extract_subject(self, product: dict) -> str:
         """Extract product subject"""
         return f"{product.get('brand') / product.get('name')}"
+
+
+class OzonSearchService(SearchService):
+    """Search Service for ozon api"""
+
+    "searchResultsV2-311201-default-1"
+    OZON = "ozon"
+
+    async def do_search(self, game_name: str) -> List[SearchResponseItem]:
+        response = await self._client.search(
+            game_name, {"category": self.game_category_id}
+        )
+        search_results = self._extract_search_results(response.response)
+        if not (search_results and len(search_results.get("items"))):
+            return []
+        return [self._format_item(item) for item in search_results.get("items")]
+
+    def _extract_search_results(self, resp: dict) -> Optional[dict]:
+        """Extract search results from response"""
+        widget_states = resp.get("widgetStates", {})
+        key = self._find_search_v2_key(widget_states)
+        return widget_states.get(key)
+
+    @staticmethod
+    def _find_search_v2_key(states: dict) -> Optional[str]:
+        """Find a key in widget states"""
+        for key in states.keys():
+            if "searchResultsV2" in key:
+                return key
+
+    def _format_item(self, item: dict) -> SearchResponseItem:
+        """Format search response item"""
+        return SearchResponseItem(
+            description="",  # @TODO: how to get it?
+            images=self._extract_images(item),
+            location=None,
+            owner=None,
+            prices=self._extract_prices(item),
+            source=self.OZON,
+            subject=self._extract_subject(item),
+            url=self._extract_url(item),
+        )
+
+    def _extract_url(self, item: dict) -> Optional[str]:
+        """Extract url"""
+        return item.get("action", {}).get("link")
+
+    def _extract_prices(self, item: dict) -> List[Optional[Dict[str, int]]]:
+        """Extract item prices"""
+        # @todo: clean up it
+        main_state = item.get("mainState", [])
+        price_state = next(filter(lambda it: it.get("id") == "atom", main_state))
+        if not price_state:
+            return []
+        price = price_state.get("atom", {}).get("price", {}).get("price")
+        if not price:
+            return []
+        price_in_byn = int(price.split("-")[0])
+        return [
+            {"byn": price_in_byn},
+            {"usd": int(price_in_byn / 2.5)},
+        ]
+
+    def _extract_images(self, item: dict) -> list:
+        """Extract images"""
+        return item.get("tileImage", {}).get("images", [])
+
+    def _extract_subject(self, item: dict) -> str:
+        """Extract item subject"""
+        main_state = item.get("mainState", [])
+        name_state = next(filter(lambda it: it.get("id") == "name", main_state))
+        if not name_state:
+            return ""
+        return name_state.get("atom", {}).get("textAtom", {}).get("text", "")

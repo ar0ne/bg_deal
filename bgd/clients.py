@@ -130,3 +130,20 @@ class WildberriesApiClient(ApiClient):
         """
         url = f"{self.SEARCH_PATH}?query={query}"
         return await self.connect("GET", self.BASE_SEARCH_URL, url)
+
+
+class OzonApiClient(ApiClient):
+    """Api client for ozon.ru"""
+
+    BASE_SEARCH_URL = "https://www.ozon.ru"
+    SEARCH_PATH = "/api/composer-api.bx/page/json/v2?url=/category/{}/?text="
+
+    async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
+        """Search items by query"""
+        url = self.SEARCH_PATH.format(options.get("category")) + query
+        headers = {
+            "Accept": "*/*",
+            "User-Agent": "insomnia/6.3.2",
+            "Cookie": "xcid=8a3b73a818a14d70ab2591e9594ba50f; __Secure-refresh-token=3.0.GIrnQT1URXexR825C7Uc0A.0.l8cMBQAAAABhYsyNBo-biKN3ZWKgAICQoA..20211010132045.qxJfbebz7QYUQzp62enFiQGazcg0poP7eRl8JOOpYgs; incap_ses_245_1101384=N139PWCXFQB97Vh5o2pmA7HkYmEAAAAAGjQsd9qvbm2pYDeC/nAwrg==; incap_ses_800_1285159=PmBUWt4OMwh1YkWiXCwaCy7RYmEAAAAAQ5uBtqBbm/3S1fm+B0EEcA==; __Secure-access-token=3.0.GIrnQT1URXexR825C7Uc0A.0.l8cMBQAAAABhYsyNBo-biKN3ZWKgAICQoA..20211010132045.Z7oq4KQ8OjNgyQhvYJx32TdddwsqC3wPVbm-GToWEYA; incap_ses_534_1101384=xVDjdNt61HUG2Pt2qSZpBw3PYmEAAAAALZi0z3sUEgB//71LZNpquw==; visid_incap_1285159=f13XQG92R3iieu2Q6IHX8S7RYmEAAAAAQUIPAAAAAAB8HY4b1TY3kilc/2cMIw8x; visid_incap_1101384=etbU7hcHQRyqJ6blUN5RgHfMYmEAAAAAQUIPAAAAAAAz67+mU3/+QtXKoSFSIVlU; __Secure-ext_xcid=8a3b73a818a14d70ab2591e9594ba50f; __Secure-ab-group=0; __Secure-user-id=0; nlbi_1285159=uYw7ImEWwGAWI25eXicWUgAAAABSqnm3HV+bGcHJZVNtZ2yL; nlbi_1101384=4rhUZ/8KbwJ8/zvUK8plmQAAAABF0pfjpWyH8NWBeq3yFTM9",
+        }
+        return await self.connect("GET", self.BASE_SEARCH_URL, url, headers=headers)
