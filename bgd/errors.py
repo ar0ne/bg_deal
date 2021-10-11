@@ -17,7 +17,7 @@ class ApiClientError(ServiceException):
 
     def __init__(self, message: str) -> None:
         self.error = "api_client"
-        self.message = message
+        self.message = f"Api Client Error: status = {message}"
 
 
 class NotFoundApiClientError(ApiClientError):

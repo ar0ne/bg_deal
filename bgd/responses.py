@@ -9,22 +9,22 @@ from pydantic.main import BaseModel
 JsonResponse = Dict[str, Any]
 
 
-class SearchLocation(BaseModel):
+class GameLocation(BaseModel):
     area: str
     city: str
     country: str
 
 
-class SearchOwner(BaseModel):
+class GameOwner(BaseModel):
     id: Union[str, int]
     name: str
 
 
-class SearchResponseItem(BaseModel):
+class GameSearchResult(BaseModel):
     description: str
     images: list
-    location: Optional[SearchLocation]
-    owner: Optional[SearchOwner]
+    location: Optional[GameLocation]
+    owner: Optional[GameOwner]
     prices: list
     source: str
     subject: str

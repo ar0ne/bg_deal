@@ -40,7 +40,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
         game_category_id=config.ozon.game_category_id,
     )
 
-    search_engines = providers.List(
+    data_sources = providers.List(
         ozon_search_service,
         # kufar_search_service,
         # wildberreis_search_service,

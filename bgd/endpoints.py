@@ -8,20 +8,20 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
 
 from bgd.containers import ApplicationContainer
-from bgd.responses import SearchResponseItem
-from bgd.services import SearchService
+from bgd.responses import GameSearchResult
+from bgd.services import DataSource
 
 router = APIRouter()
 
 
-@router.get("/search/{game}", response_model=List[SearchResponseItem])
+@router.get("/search/{game}", response_model=List[GameSearchResult])
 @inject
 async def search_game(
     game: str,
-    search_engines: List[SearchService] = Depends(
-        Provide[ApplicationContainer.search_engines]
+    data_sources: List[DataSource] = Depends(
+        Provide[ApplicationContainer.data_sources]
     ),
-) -> List[SearchResponseItem]:
-    """Index endpoint"""
-    results = [await searcher.search(game) for searcher in search_engines]
+) -> List[GameSearchResult]:
+    """Search game endpoint"""
+    results = [await source.search(game) for source in data_sources]
     return list(itertools.chain.from_iterable(results))
