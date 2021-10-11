@@ -1,3 +1,4 @@
+aiofiles
 aiohttp==3.6.3
 brotlipy
 dependency-injector

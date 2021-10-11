@@ -5,7 +5,9 @@ import itertools
 from typing import List
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
 from bgd.containers import ApplicationContainer
 from bgd.responses import GameDetailsResult, GameSearchResult
@@ -34,3 +36,12 @@ async def game_details(
     service: BoardGameGeekService = Depends(Provide[ApplicationContainer.bgg_service]),
 ):
     return await service.get_board_game_info(game)
+
+
+@router.get("/", response_class=HTMLResponse)
+@inject
+async def main(
+    request: Request,
+    templates: Jinja2Templates = Depends(Provide[ApplicationContainer.templates]),
+):
+    return templates.TemplateResponse("index.html", {"request": request})

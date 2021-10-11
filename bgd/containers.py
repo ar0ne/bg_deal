@@ -1,7 +1,10 @@
 """
 App containers
 """
+import os
+
 from dependency_injector import containers, providers
+from starlette.templating import Jinja2Templates
 
 from bgd import services
 from bgd.builders import (
@@ -15,6 +18,8 @@ from bgd.clients import (
     OzonApiClient,
     WildberriesApiClient,
 )
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 class ApplicationContainer(containers.DeclarativeContainer):
@@ -65,4 +70,9 @@ class ApplicationContainer(containers.DeclarativeContainer):
     bgg_service = providers.Factory(
         services.BoardGameGeekService,
         client=bgg_api_client,
+    )
+
+    templates = providers.Factory(
+        Jinja2Templates,
+        directory=config.templates.dir,
     )

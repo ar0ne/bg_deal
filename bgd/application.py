@@ -5,6 +5,7 @@ import logging
 import os
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from bgd import endpoints, errors
 from bgd.containers import ApplicationContainer
@@ -28,6 +29,8 @@ def create_app() -> FastAPI:
     logging.config.fileConfig(
         f"{BASE_DIR}/logging.conf", disable_existing_loggers=False
     )
+
+    app.mount("/static", StaticFiles(directory=f"{BASE_DIR}/static"), name="static")
 
     return app
 
