@@ -3,5 +3,7 @@ brotlipy
 dependency-injector
 fastapi
 jinja2
+py-bgg
 pyyaml
+starlette
 uvicorn[standard]

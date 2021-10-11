@@ -9,7 +9,7 @@ repos:
     rev: 'v5.8.0'
     hooks:
       - id: isort
-        args: ["-m3", "-w100"]
+        args: ["--profile", "black"]
   - repo: https://github.com/psf/black
     rev: 20.8b1
     hooks:

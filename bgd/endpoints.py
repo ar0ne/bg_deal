@@ -8,8 +8,8 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends
 
 from bgd.containers import ApplicationContainer
-from bgd.responses import GameSearchResult
-from bgd.services import DataSource
+from bgd.responses import GameDetailsResult, GameSearchResult
+from bgd.services import BoardGameGeekService, DataSource
 
 router = APIRouter()
 
@@ -25,3 +25,12 @@ async def search_game(
     """Search game endpoint"""
     results = [await source.search(game) for source in data_sources]
     return list(itertools.chain.from_iterable(results))
+
+
+@router.get("/games/{game}", response_model=GameDetailsResult)
+@inject
+async def game_details(
+    game: str,
+    service: BoardGameGeekService = Depends(Provide[ApplicationContainer.bgg_service]),
+):
+    return await service.get_board_game_info(game)

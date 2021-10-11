@@ -35,3 +35,9 @@ async def service_exception_handler(
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
         content={"error": exc.error, "message": exc.message},
     )
+
+
+class GameNotFoundError(ServiceException):
+    def __init__(self, game_name: str) -> None:
+        self.error = "game_not_found"
+        self.message = f"Game '{game_name}' is not found!"

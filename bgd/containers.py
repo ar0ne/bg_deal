@@ -4,7 +4,12 @@ App containers
 from dependency_injector import containers, providers
 
 from bgd import services
-from bgd.clients import KufarApiClient, OzonApiClient, WildberriesApiClient
+from bgd.clients import (
+    BoardGameGeekApiClient,
+    KufarApiClient,
+    OzonApiClient,
+    WildberriesApiClient,
+)
 
 
 class ApplicationContainer(containers.DeclarativeContainer):
@@ -44,4 +49,12 @@ class ApplicationContainer(containers.DeclarativeContainer):
         kufar_search_service,
         wildberreis_search_service,
         ozon_search_service,
+    )
+
+    bgg_api_client = providers.Factory(
+        BoardGameGeekApiClient,
+    )
+    bgg_service = providers.Factory(
+        services.BoardGameGeekService,
+        client=bgg_api_client,
     )

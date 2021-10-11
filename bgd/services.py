@@ -8,8 +8,16 @@ import math
 from abc import abstractmethod
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from bgd.clients import ApiClient
-from bgd.responses import GameLocation, GameOwner, GameSearchResult
+from bgd.builders import GameDetailsResultBuilder
+from bgd.clients import ApiClient, BoardGameGeekApiClient
+from bgd.errors import GameNotFoundError
+from bgd.responses import (
+    BGGAPIResponse,
+    GameDetailsResult,
+    GameLocation,
+    GameOwner,
+    GameSearchResult,
+)
 
 BELARUS = "Belarus"
 
@@ -260,3 +268,25 @@ class OzonSearchService(DataSource):
         if not name_state:
             return ""
         return name_state.get("atom", {}).get("textAtom", {}).get("text", "")
+
+
+class BoardGameGeekService:
+    """Board Game Geek service"""
+
+    def __init__(self, client: BoardGameGeekApiClient) -> None:
+        """Init Search Service"""
+        self._client = client
+
+    async def get_board_game_info(self, game_name: str) -> GameDetailsResult:
+        """Get info about board game"""
+        search_resp = await self._client.search_game(game_name)
+        game_id = self._get_game_id_from_search_result(search_resp)
+        if not game_id:
+            raise GameNotFoundError(game_name)
+        game_info_resp = await self._client.get_thing_by_id(game_id)
+        return GameDetailsResultBuilder.from_game_info(game_info_resp.response)
+
+    @staticmethod
+    def _get_game_id_from_search_result(search_resp: BGGAPIResponse) -> str:
+        """Get game id from result of searching"""
+        return search_resp.response.get("items", {}).get("item", {}).get("id")

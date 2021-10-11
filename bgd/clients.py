@@ -4,16 +4,27 @@ Api clients
 import json
 import logging
 from abc import abstractmethod
-from typing import Optional
+from typing import Optional, Union
 
 import aiohttp
 from aiohttp import ClientResponse
-from starlette.datastructures import Headers
+from libbgg.infodict import InfoDict
 
 from bgd.errors import ApiClientError, NotFoundApiClientError
-from bgd.responses import APIResponse
+from bgd.responses import APIResponse, BGGAPIResponse
 
 log = logging.getLogger(__name__)
+
+
+def handle_response(response: ClientResponse) -> None:
+    """Handle response status and raise exception if needed"""
+    status = response.status
+    if status == 404:
+        log.warning("NotFoundApiClient error occurs for response %s", response)
+        raise NotFoundApiClientError(str(response.url))
+    if not 200 <= status < 300:
+        log.warning("ApiClient error occurs for response %s", response)
+        raise ApiClientError(str(status))
 
 
 class ApiClient:
@@ -33,20 +44,9 @@ class ApiClient:
             async with session.request(
                 method, url, headers=headers, json=body_json
             ) as resp:
-                self._handle_response(resp)
+                handle_response(resp)
                 r_json = await resp.json(content_type=None)
-                return APIResponse(r_json, 200)
-
-    @staticmethod
-    def _handle_response(response: ClientResponse) -> None:
-        """Handle response status and raise exception if needed"""
-        status = response.status
-        if status == 404:
-            log.warning("NotFoundApiClient error occurs for response %s", response)
-            raise NotFoundApiClientError(str(response.url))
-        if not 200 <= status < 300:
-            log.warning("ApiClient error occurs for response %s", response)
-            raise ApiClientError(str(status))
+                return APIResponse(r_json, resp.status)
 
     @abstractmethod
     async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
@@ -136,11 +136,12 @@ class OzonApiClient(ApiClient):
     """Api client for ozon.ru"""
 
     BASE_SEARCH_URL = "https://www.ozon.ru"
-    SEARCH_PATH = "/api/composer-api.bx/page/json/v2?url=/category/{}/?text="
+    SEARCH_PATH = "/api/composer-api.bx/page/json/v2?url=/category"
 
     async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
         """Search items by query"""
-        url = self.SEARCH_PATH.format(options.get("category")) + query
+        category = options.get("category")
+        url = f"{self.SEARCH_PATH}/{category}?text={query}"
         return await self.connect(
             "GET", self.BASE_SEARCH_URL, url, headers=self._headers
         )
@@ -152,8 +153,10 @@ class OzonApiClient(ApiClient):
             "connection": "keep-alive",
             "dnt": "1",
             "upgrade-insecure-requests": "1",
-            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36",
-            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/89.0.4389.82 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,"
+            "image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
             "purpose": "prefetch",
             "sec-fetch-site": "none",
             "sec-fetch-mode": "navigate",
@@ -162,3 +165,42 @@ class OzonApiClient(ApiClient):
             "accept-encoding": "gzip, deflate, br",
             "accept-language": "en-US,en;q=0.9,ru;q=0.8",
         }
+
+
+class BoardGameGeekApiClient:
+    """Api client for BoardGameGeek"""
+
+    BASE_URL = "https://api.geekdo.com/xmlapi2"
+    SEARCH_PATH = "/search"
+    THING_PATH = "/thing"
+
+    async def connect(
+        self,
+        method: str,
+        base_url: str,
+        path: str,
+        request_body_dict: str = "",
+        headers: Optional[dict] = None,
+    ) -> BGGAPIResponse:
+        async with aiohttp.ClientSession() as session:
+            url = base_url + path
+            async with session.request(method, url, headers=headers) as resp:
+                handle_response(resp)
+                r_text = await resp.text(encoding=None)
+                info_dict = InfoDict.xml_to_info_dict(r_text, strip_errors=True)
+                return BGGAPIResponse(info_dict, resp.status)
+
+    async def search_game(
+        self,
+        query: str,
+        exact: int = 1,
+        game_type: str = "boardgame",
+    ) -> BGGAPIResponse:
+        """Search game by exact(1) query in game_type(boardgame) section"""
+        url = f"{self.SEARCH_PATH}?exact={exact}&type={game_type}&query={query}"
+        return await self.connect("GET", self.BASE_URL, url)
+
+    async def get_thing_by_id(self, game_id: Union[str, int]) -> BGGAPIResponse:
+        """Get details about the game by id"""
+        url = f"{self.THING_PATH}?stats=1&id={game_id}"
+        return await self.connect("GET", self.BASE_URL, url)
