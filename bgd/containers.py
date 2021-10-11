@@ -4,6 +4,11 @@ App containers
 from dependency_injector import containers, providers
 
 from bgd import services
+from bgd.builders import (
+    GameSearchResultKufarBuilder,
+    GameSearchResultOzonBuilder,
+    GameSearchResultWildberriesBuilder,
+)
 from bgd.clients import (
     BoardGameGeekApiClient,
     KufarApiClient,
@@ -25,6 +30,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
         services.KufarSearchService,
         client=kufar_api_client,
         game_category_id=config.kufar.game_category_id,
+        result_builder=GameSearchResultKufarBuilder,
     )
 
     wildberries_api_client = providers.Factory(
@@ -34,6 +40,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
         services.WildberriesSearchService,
         client=wildberries_api_client,
         game_category_id=config.wildberries.game_category_id,
+        result_builder=GameSearchResultWildberriesBuilder,
     )
 
     ozon_api_client = providers.Factory(
@@ -43,6 +50,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
         services.OzonSearchService,
         client=ozon_api_client,
         game_category_id=config.ozon.game_category_id,
+        result_builder=GameSearchResultOzonBuilder,
     )
 
     data_sources = providers.List(
