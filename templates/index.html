@@ -1,9 +1,18 @@
-<html>
-<head>
-    <title>Welcome to BGD</title>
-    <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
-</head>
-<body>
-<h1>Hello World!</h1>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Welcome to BGG!{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <h1>Find best deals to buy favoric board game!</h1>
+
+    <form action="/search">
+        <div class="mb-3">
+            <label for="name" class="form-label">Search game:</label>
+            <input type="text" class="form-control" id="name" name="name" value="Gloomhaven">
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+
+{% endblock %}

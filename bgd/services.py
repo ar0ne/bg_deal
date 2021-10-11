@@ -133,4 +133,8 @@ class BoardGameGeekService:
     @staticmethod
     def _get_game_id_from_search_result(search_resp: BGGAPIResponse) -> str:
         """Get game id from result of searching"""
-        return search_resp.response.get("items", {}).get("item", {}).get("id")
+        item = search_resp.response["items"]["item"]
+        if not isinstance(item, list):
+            return item["id"]
+        # get the latest item
+        return item[-1]["id"]

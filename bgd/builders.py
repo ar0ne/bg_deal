@@ -33,34 +33,42 @@ class GameDetailsResultBuilder:
             max_players=item.get("maxplayers")["value"],
             min_play_time=item.get("minplaytime")["value"],
             min_players=item.get("minplayers")["value"],
-            name=next(
-                filter(lambda n: n.get("type") == "primary", item.get("name", []))
-            )["value"],
+            name=cls._get_game_name(item),
             playing_time=item.get("playingtime")["value"],
             statistics=cls._build_game_statistics(item.get("statistics")),
             year_published=item.get("yearpublished")["value"],
         )
 
     @classmethod
+    def _get_game_name(cls, game_info: InfoDict) -> str:
+        """Get game name"""
+        if isinstance(game_info["name"], list):
+            return next(
+                filter(lambda n: n.get("type") == "primary", game_info["name"])
+            )["value"]
+        return game_info["name"]["value"]
+
+    @classmethod
     def _build_game_statistics(cls, statistics: InfoDict) -> GameStatistic:
         """Build game statistics info"""
+        ranks = statistics.get("ratings", {}).get("ranks", {})
         return GameStatistic(
             avg_rate=statistics["ratings"]["average"]["value"],
-            ranks=[
-                cls._build_game_ranks(rank)
-                for rank in statistics.get("ratings", {})
-                .get("ranks", {})
-                .get("rank", [])
-                if rank
-            ],
+            ranks=cls._build_game_ranks(ranks),
         )
 
     @classmethod
-    def _build_game_ranks(cls, rank: InfoDict) -> GameRank:
-        return GameRank(
-            name=rank.get("name"),
-            value=rank.get("value"),
-        )
+    def _build_game_ranks(cls, ranks: InfoDict) -> List[GameRank]:
+        game_ranks = ranks["rank"]
+        if not isinstance(game_ranks, list):
+            game_ranks = [game_ranks]
+        return [
+            GameRank(
+                name=rank["name"],
+                value=rank["value"],
+            )
+            for rank in game_ranks
+        ]
 
 
 class GameSearchResultBuilder:
@@ -93,8 +101,8 @@ class GameSearchResultKufarBuilder(GameSearchResultBuilder):
     def _extract_prices(ad_item: dict) -> list:
         """Extract ad prices in different currencies (BYN, USD)"""
         return [
-            {"byn": int(ad_item.get("price_byn"))},
-            {"usd": int(ad_item.get("price_usd"))},
+            {"currency": "byn", "value": int(ad_item.get("price_byn"))},
+            {"currency": "usd", "value": int(ad_item.get("price_usd"))},
         ]
 
     @classmethod
@@ -171,8 +179,8 @@ class GameSearchResultWildberriesBuilder(GameSearchResultBuilder):
         # @todo: currently I hardcoded "currency" in client, and exchange rate
         price_in_byn = product.get("salePriceU")
         return [
-            {"byn": price_in_byn},
-            {"usd": convert_byn_to_usd(price_in_byn)},
+            {"currency": "byn", "value": price_in_byn},
+            {"currency": "usd", "value": convert_byn_to_usd(price_in_byn)},
         ]
 
     @classmethod
@@ -227,8 +235,8 @@ class GameSearchResultOzonBuilder(GameSearchResultBuilder):
 
         price_in_byn = int(100 * float(price.split()[0].replace(",", ".")))
         return [
-            {"byn": price_in_byn},
-            {"usd": convert_byn_to_usd(price_in_byn)},
+            {"currency": "byn", "value": price_in_byn},
+            {"currency": "usd", "value": convert_byn_to_usd(price_in_byn)},
         ]
 
     @staticmethod

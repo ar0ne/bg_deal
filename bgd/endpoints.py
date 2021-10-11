@@ -16,7 +16,7 @@ from bgd.services import BoardGameGeekService, DataSource
 router = APIRouter()
 
 
-@router.get("/search/{game}", response_model=List[GameSearchResult])
+@router.get("/api/search/{game}", response_model=List[GameSearchResult])
 @inject
 async def search_game(
     game: str,
@@ -29,7 +29,7 @@ async def search_game(
     return list(itertools.chain.from_iterable(results))
 
 
-@router.get("/games/{game}", response_model=GameDetailsResult)
+@router.get("/api/games/{game}", response_model=GameDetailsResult)
 @inject
 async def game_details(
     game: str,
@@ -40,8 +40,28 @@ async def game_details(
 
 @router.get("/", response_class=HTMLResponse)
 @inject
-async def main(
+async def main_page(
     request: Request,
     templates: Jinja2Templates = Depends(Provide[ApplicationContainer.templates]),
 ):
     return templates.TemplateResponse("index.html", {"request": request})
+
+
+@router.get("/search", response_class=HTMLResponse)
+@inject
+async def search_page(
+    request: Request,
+    name: str,
+    templates: Jinja2Templates = Depends(Provide[ApplicationContainer.templates]),
+):
+    results = await search_game(name)
+    game_info = await game_details(name)
+    return templates.TemplateResponse(
+        "search.html",
+        {
+            "request": request,
+            "name": name,
+            "results": results,
+            "game_info": game_info,
+        },
+    )

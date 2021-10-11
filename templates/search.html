@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Search results!{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <h1>Found next deals for <b>{{ name }}</b></h1>
+
+    <div class="row" id="game_info">
+        <img src="{{ game_info.image }}" class="rounded" alt="Game image" style="max-width: 30%">
+
+        <p>BGG ID: {{ game_info.id }}</p>
+        <p>Name: {{ game_info.name }}</p>
+        <p>Description: {{ game_info.description }}</p>
+        <p>Published: {{ game_info.year_published }}</p>
+        <p> Playing time: {{ game_info.playing_time }}</p>
+        <p>Players: {{ game_info.min_players }}-{{ game_info.max_players }}</p>
+        <p>Play time: {{ game_info.min_play_time }}-{{ game_info.max_play_time }}</p>
+        <p>Average rate: {{ game_info.statistics.avg_rate }}</p>
+        <div class="col">
+            <p>Ranks:</p>
+            <ul>
+            {% for rank in game_info.statistics.ranks %}
+                <li>{{ rank.name }}: {{ rank.value }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <h3>Search results:</h3>
+    <div class="row" id="search_results">
+        {% for result in results %}
+            <div class="row">
+                <h5><a href="{{ result.url }}">{{ result.subject }}</a></h5>
+                <p>Source: {{ result.source }}</p>
+                <p>Description: {{ result.description }}</p>
+                <p>Price: {% for price in result.prices %}
+                    {{ price.value }} {{ price.currency }}{% if not loop.last %} /{% endif %}
+                {% endfor %}
+                </p>
+                {% if result.location %}
+                <p>Location: {{ result.location.country }} / {{ result.location.city }} / {{ result.location.area }} </p>
+                {% endif %}
+                {% if result.owner %}
+                <p>Owner: {{ result.owner.name }} ({{ result.owner.id }})</p>
+                {% endif %}
+                {% if result.images %}
+                    <img src="{{ result.images[0] }}" alt="Search result image" class="rounded" style="max-width: 30%">
+                {% endif %}
+            </div>
+            <br/>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}
