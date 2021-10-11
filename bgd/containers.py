@@ -41,7 +41,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
     )
 
     data_sources = providers.List(
+        kufar_search_service,
+        wildberreis_search_service,
         ozon_search_service,
-        # kufar_search_service,
-        # wildberreis_search_service,
     )

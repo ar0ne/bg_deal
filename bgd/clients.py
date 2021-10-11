@@ -8,6 +8,7 @@ from typing import Optional
 
 import aiohttp
 from aiohttp import ClientResponse
+from starlette.datastructures import Headers
 
 from bgd.errors import ApiClientError, NotFoundApiClientError
 from bgd.responses import APIResponse
@@ -28,7 +29,6 @@ class ApiClient:
     ) -> APIResponse:
         async with aiohttp.ClientSession() as session:
             url = base_url + path
-            headers = headers or {}
             body_json = json.dumps(request_body_dict)
             async with session.request(
                 method, url, headers=headers, json=body_json
@@ -141,11 +141,24 @@ class OzonApiClient(ApiClient):
     async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
         """Search items by query"""
         url = self.SEARCH_PATH.format(options.get("category")) + query
-        headers = {
-            "Host": "www.ozon.ru",
-            "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:61.0) Gecko/20100101 Firefox/61.0",
-            "Content-Type": "application/json",
-            "Accept": "*/*",
-            "Accept-Encoding": "gzip, deflate",
+        return await self.connect(
+            "GET", self.BASE_SEARCH_URL, url, headers=self._headers
+        )
+
+    @property
+    def _headers(self) -> dict:
+        """Prepare income headers for sending to ozon api"""
+        return {
+            "connection": "keep-alive",
+            "dnt": "1",
+            "upgrade-insecure-requests": "1",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+            "purpose": "prefetch",
+            "sec-fetch-site": "none",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-user": "?1",
+            "sec-fetch-dest": "document",
+            "accept-encoding": "gzip, deflate, br",
+            "accept-language": "en-US,en;q=0.9,ru;q=0.8",
         }
-        return await self.connect("GET", self.BASE_SEARCH_URL, url, headers=headers)

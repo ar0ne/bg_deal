@@ -6,7 +6,7 @@ import json
 import logging
 import math
 from abc import abstractmethod
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from bgd.clients import ApiClient
 from bgd.responses import GameLocation, GameOwner, GameSearchResult
@@ -31,12 +31,14 @@ class DataSource:
         self.game_category_id = game_category_id
 
     @abstractmethod
-    async def do_search(self, query: str) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         """search query"""
 
-    async def search(self, query: str) -> List[GameSearchResult]:
+    async def search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         """Searching games"""
-        responses = await asyncio.gather(self.do_search(query), return_exceptions=True)
+        responses = await asyncio.gather(
+            self.do_search(query, *args, **kwargs), return_exceptions=True
+        )
         self._log_errors(responses)
         # filter BaseExceptions
         ret: List[GameSearchResult] = [
@@ -44,9 +46,8 @@ class DataSource:
         ]
         return ret[0] if ret else ret
 
-    def _log_errors(
-        self, all_responses: List[Union[List[GameSearchResult], Exception]]
-    ):
+    @staticmethod
+    def _log_errors(all_responses: Tuple[Union[Any, Exception]]):
         """Log errors if any occur"""
         for resp in all_responses:
             if not isinstance(resp, list):
@@ -59,7 +60,9 @@ class KufarSearchService(DataSource):
     KUFAR = "Kufar"
     IMAGE_URL = "https://yams.kufar.by/api/v1/kufar-ads/images/{}/{}.jpg?rule=gallery"
 
-    async def do_search(self, game_name: str) -> List[GameSearchResult]:
+    async def do_search(
+        self, game_name: str, *args, **kwargs
+    ) -> List[GameSearchResult]:
         """Search ads by game name"""
         ads = await self._client.search(game_name, {"category": self.game_category_id})
         return [self._build_item(ad) for ad in ads.response.get("ads")]
@@ -138,7 +141,9 @@ class WildberriesSearchService(DataSource):
     ITEM_URL = "https://by.wildberries.ru/catalog/{}/detail.aspx"
     IMAGE_URL = "https://images.wbstatic.net/big/new/{}0000/{}-1.jpg"
 
-    async def do_search(self, game_name: str) -> List[GameSearchResult]:
+    async def do_search(
+        self, game_name: str, *args, **kwargs
+    ) -> List[GameSearchResult]:
         items = await self._client.search(game_name)
         return [
             self._format_product(product)
@@ -179,7 +184,7 @@ class WildberriesSearchService(DataSource):
 
     def _extract_subject(self, product: dict) -> str:
         """Extract product subject"""
-        return f"{product.get('brand') / product.get('name')}"
+        return f"{product.get('brand')} / {product.get('name')}"
 
 
 class OzonSearchService(DataSource):
@@ -187,9 +192,11 @@ class OzonSearchService(DataSource):
 
     OZON = "ozon"
 
-    async def do_search(self, game_name: str) -> List[GameSearchResult]:
+    async def do_search(
+        self, game_name: str, *args, **kwargs
+    ) -> List[GameSearchResult]:
         response = await self._client.search(
-            game_name, {"category": self.game_category_id}
+            game_name, {"category": self.game_category_id, **kwargs}
         )
         search_results = self._extract_search_results(response.response)
         if not (search_results and len(search_results.get("items"))):
