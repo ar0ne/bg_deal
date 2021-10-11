@@ -29,6 +29,9 @@
 
     <h3>Search results:</h3>
     <div class="row" id="search_results">
+        {% if not results %}
+        <p>No results. :(</p>
+        {% endif %}
         {% for result in results %}
             <div class="row">
                 <h5><a href="{{ result.url }}">{{ result.subject }}</a></h5>

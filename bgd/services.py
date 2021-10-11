@@ -131,9 +131,11 @@ class BoardGameGeekService:
         return GameDetailsResultBuilder.from_game_info(game_info_resp.response)
 
     @staticmethod
-    def _get_game_id_from_search_result(search_resp: BGGAPIResponse) -> str:
+    def _get_game_id_from_search_result(search_resp: BGGAPIResponse) -> Optional[str]:
         """Get game id from result of searching"""
-        item = search_resp.response["items"]["item"]
+        item = search_resp.response.get("items", {}).get("item")
+        if not item:
+            return
         if not isinstance(item, list):
             return item["id"]
         # get the latest item
