@@ -21,12 +21,17 @@ class GameOwner(BaseModel):
     name: str
 
 
+class Price(BaseModel):
+    byn: int
+    usd: int
+
+
 class GameSearchResult(BaseModel):
     description: str
     images: list
     location: Optional[GameLocation]
     owner: Optional[GameOwner]
-    prices: list
+    price: Optional[Price]
     source: str
     subject: str
     url: str

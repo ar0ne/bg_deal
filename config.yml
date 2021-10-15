@@ -4,5 +4,7 @@ wildberries:
   game_category_id: 267
 ozon:
   game_category_id: nastolnye-igry-13507
+ozby:
+  game_category_id: 1103640
 templates:
   dir: templates

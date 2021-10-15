@@ -167,6 +167,23 @@ class OzonApiClient(ApiClient):
         }
 
 
+class OzByApiClient(ApiClient):
+    """Api client for Oz.by"""
+
+    BASE_SEARCH_URL = "https://api.oz.by"
+    SEARCH_PATH = "/v4/search"
+
+    async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
+        """Search items by query"""
+        category = options.get("category")
+        url = (
+            f"{self.SEARCH_PATH}?fieldsets[goods]=listing&"
+            f"filter[id_catalog]={category}"
+            f"&filter[availability]=1&filter[q]={query}"
+        )
+        return await self.connect("GET", self.BASE_SEARCH_URL, url)
+
+
 class BoardGameGeekApiClient:
     """Api client for BoardGameGeek"""
 

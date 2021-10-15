@@ -26,7 +26,9 @@ async def search_game(
 ) -> List[GameSearchResult]:
     """Search game endpoint"""
     results = [await source.search(game) for source in data_sources]
-    return list(itertools.chain.from_iterable(results))
+    results = list(itertools.chain.from_iterable(results))
+    results.sort(key=lambda g: g.price.byn)
+    return results
 
 
 @router.get("/api/games/{game}", response_model=GameDetailsResult)

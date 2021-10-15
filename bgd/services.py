@@ -114,6 +114,18 @@ class OzonSearchService(DataSource):
                 return key
 
 
+class OzBySearchService(DataSource):
+    """Search service for oz.by"""
+
+    async def do_search(
+        self, game_name: str, *args, **kwargs
+    ) -> List[GameSearchResult]:
+        response = await self._client.search(
+            game_name, {"category": self.game_category_id, **kwargs}
+        )
+        return self.build_results(response.response.get("data"))
+
+
 class BoardGameGeekService:
     """Board Game Geek service"""
 

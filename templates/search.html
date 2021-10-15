@@ -37,10 +37,9 @@
                 <h5><a href="{{ result.url }}">{{ result.subject }}</a></h5>
                 <p>Source: {{ result.source }}</p>
                 <p>Description: {{ result.description }}</p>
-                <p>Price: {% for price in result.prices %}
-                    {{ price.value }} {{ price.currency }}{% if not loop.last %} /{% endif %}
-                {% endfor %}
-                </p>
+                <p>Price: {% for currency, price in result.price %}
+                    {{ "%.2f"|format(price/100) }} {{ currency }}{% if not loop.last %} /{% endif %}
+                {% endfor %}</p>
                 {% if result.location %}
                 <p>Location: {{ result.location.country }} / {{ result.location.city }} / {{ result.location.area }} </p>
                 {% endif %}

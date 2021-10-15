@@ -3,11 +3,13 @@
 
 ## Data sources
 
+ - boardgamegeek.com (game info)
  - kufar.by
  - by.wildberries.ru/
  - ozon.ru
+ - oz.by
  - vk.com (TBD)
- - boardgamegeek.com (game info)
+ - onliner.by (TBD)
 
 
 ## How to run
