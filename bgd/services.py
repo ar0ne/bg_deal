@@ -144,13 +144,24 @@ class BoardGameGeekService:
 
     @staticmethod
     def _get_game_id_from_search_result(search_resp: BGGAPIResponse) -> Optional[str]:
-        """Get game id from result of searching"""
+        """
+        Get game id from result of searching.
+        Skip all games without year of publishing and take the newest one.
+        """
         item = search_resp.response.get("items").get("item")
         if not item:
             return
         if not isinstance(item, list):
             return item["id"]
-        # get the latest item
+
+        def by_published_year(game_item: dict) -> int:
+            """By published year"""
+            if "yearpublished" not in game_item:
+                return 0
+            return int(game_item["yearpublished"]["value"])
+
+        item.sort(key=by_published_year)
+        # get the newest game
         return item[-1]["id"]
 
 

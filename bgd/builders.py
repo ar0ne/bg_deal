@@ -22,22 +22,25 @@ from bgd.utils import convert_byn_to_usd, remove_backslashes
 class GameDetailsResultBuilder:
     """Builder for GameDetailsResult"""
 
+    GAME_URL = "https://boardgamegeek.com/boardgame"
+
     @classmethod
     def from_game_info(cls, game_info: InfoDict) -> GameDetailsResult:
         """Build details result for the game"""
         item = game_info.get("items").get("item")
         return GameDetailsResult(
-            description=item.get("description")["TEXT"],
-            id=item.get("id"),
-            image=item.get("image")["TEXT"],
-            max_play_time=item.get("maxplaytime")["value"],
-            max_players=item.get("maxplayers")["value"],
-            min_play_time=item.get("minplaytime")["value"],
-            min_players=item.get("minplayers")["value"],
+            description=item["description"]["TEXT"],
+            id=item["id"],
+            image=item["image"]["TEXT"],
+            max_play_time=item["maxplaytime"]["value"],
+            max_players=item["maxplayers"]["value"],
+            min_play_time=item["minplaytime"]["value"],
+            min_players=item["minplayers"]["value"],
             name=cls._get_game_name(item),
-            playing_time=item.get("playingtime")["value"],
-            statistics=cls._build_game_statistics(item.get("statistics")),
-            year_published=item.get("yearpublished")["value"],
+            playing_time=item["playingtime"]["value"],
+            statistics=cls._build_game_statistics(item["statistics"]),
+            url=cls._build_game_url(item),
+            year_published=item["yearpublished"]["value"],
         )
 
     @classmethod
@@ -52,10 +55,12 @@ class GameDetailsResultBuilder:
     @classmethod
     def _build_game_statistics(cls, statistics: InfoDict) -> GameStatistic:
         """Build game statistics info"""
-        ranks = statistics.get("ratings").get("ranks")
+        ratings = statistics["ratings"]
+        ranks = ratings["ranks"]
         return GameStatistic(
-            avg_rate=statistics["ratings"]["average"]["value"],
+            avg_rate=ratings["average"]["value"],
             ranks=cls._build_game_ranks(ranks),
+            weight=ratings["averageweight"]["value"],
         )
 
     @classmethod
@@ -70,6 +75,11 @@ class GameDetailsResultBuilder:
             )
             for rank in game_ranks
         ]
+
+    @classmethod
+    def _build_game_url(cls, item: InfoDict) -> str:
+        """Build url to the game on bgg website"""
+        return f"{cls.GAME_URL}/{item['id']}"
 
 
 class GameSearchResultBuilder:

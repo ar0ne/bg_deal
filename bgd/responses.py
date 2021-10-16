@@ -45,6 +45,7 @@ class GameRank(BaseModel):
 class GameStatistic(BaseModel):
     avg_rate: str
     ranks: List[GameRank]
+    weight: str
 
 
 class GameDetailsResult(BaseModel):
@@ -58,6 +59,7 @@ class GameDetailsResult(BaseModel):
     name: str
     playing_time: str
     statistics: GameStatistic
+    url: str
     year_published: str
 
 
