@@ -2,62 +2,78 @@
 {% block title %}Search results!{% endblock %}
 
 {% block content %}
-<div class="container">
 
-    <h1>Found next deals for <b>{{ name }}</b></h1>
 
-    <div class="row" id="game_info">
-        <img src="{{ game_info.image }}" class="rounded" alt="Game image" style="max-width: 30%">
+<div class="container-fluid">
+    <div class="bg-image p-5 shadow-1-strong rounded mb-5 text-white"
+         style="background-image: url('{{ game_info.image }}');">
+        <h1 class="mb-3 text-center">{{ game_info.name }}</h1>
+        <div class="game_info">
+            <p>{{ game_info.description }}</p>
+            <div class="row">
+                <div class="col-3"><p>Published: {{ game_info.year_published }}</p></div>
+                <div class="col-3"><p>Playing time: {{ game_info.playing_time }}</p></div>
+                <div class="col-3"><p>Players: {{ game_info.min_players }}-{{ game_info.max_players }}</p></div>
+                <div class="col-3"><p>Play time: {{ game_info.min_play_time }}-{{ game_info.max_play_time }}</p></div>
+            </div>
+            <div class="row">
+                <div class="col-3"><p>Average rate: {{ game_info.statistics.avg_rate }}</p></div>
+                <div class="col-3"><p>Complexity rate: {{ game_info.statistics.weight }}</p></div>
+                <div class="col-3"><p>BGG: <a href="{{ game_info.url }}">{{ game_info.id }}</a></p></div>
+            </div>
+            <div class="row">
+                <div class="col-3">
+                    <p>Ranks:</p>
+                    {% for rank in game_info.statistics.ranks %}
+                    <li>{{ rank.name }}: {{ rank.value }}</li>
+                    {% endfor %}
+                </div>
 
-        <p>BGG ID: <a href="{{ game_info.url }}">{{ game_info.id }}</a></p>
-        <p>Name: {{ game_info.name }}</p>
-        <p>Description: {{ game_info.description }}</p>
-        <p>Published: {{ game_info.year_published }}</p>
-        <p> Playing time: {{ game_info.playing_time }}</p>
-        <p>Players: {{ game_info.min_players }}-{{ game_info.max_players }}</p>
-        <p>Play time: {{ game_info.min_play_time }}-{{ game_info.max_play_time }}</p>
-        <p>Average rate: {{ game_info.statistics.avg_rate }}</p>
-        <p>Complexity rate: {{ game_info.statistics.weight }}</p>
-        <div class="col">
-            <p>Ranks:</p>
-            <ul>
-            {% for rank in game_info.statistics.ranks %}
-                <li>{{ rank.name }}: {{ rank.value }}</li>
-            {% endfor %}
-            </ul>
+            </div>
         </div>
     </div>
 
-    <h3>Search results:</h3>
-    <div class="row" id="search_results">
+    <h2>Search results:</h2>
+    <div class="row search_result" id="search_results">
         {% if not results %}
         <p>No results. :(</p>
         {% endif %}
         {% for result in results %}
-            <div class="row">
-                <h5><a href="{{ result.url }}">{{ result.subject }}</a></h5>
-                <p>Source: {{ result.source }}</p>
-                <p>Description: {{ result.description }}</p>
-
-                <p>Price: {% if result.price %}
-                    {% for currency, price in result.price %}
-                        {{ "%.2f"|format(price/100) }} {{ currency }}{% if not loop.last %} /{% endif %}
-                    {% endfor %}
-                    {% else %}N/A{% endif %}
-                </p>
-                {% if result.location %}
-                <p>Location: {{ result.location.country }} / {{ result.location.city }} / {{ result.location.area }} </p>
-                {% endif %}
-                {% if result.owner %}
-                <p>Owner: {{ result.owner.name }} ({{ result.owner.id }})</p>
-                {% endif %}
-                {% if result.images %}
-                    <img src="{{ result.images[0] }}" alt="Search result image" class="rounded" style="max-width: 30%">
-                {% endif %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title>">
+                        <a class="card-title" href="{{ result.url }}">{{ result.subject }}</a>
+                        <img class="{{ result.source }}-logo"/>
+                    </h5>
+                </div>
+                <div class="card-block">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <p class="card-text">Description: {% if result.description %}{{ result.description }}{% else %}N/A{% endif %}</p>
+                                <p class="card-text">Price: {% if result.price %}
+                                    {% for currency, price in result.price %}
+                                    {{ "%.2f"|format(price/100) }} {{ currency }}{% if not loop.last %} /{% endif %}
+                                    {% endfor %}
+                                    {% else %}N/A{% endif %}
+                                </p>
+                                {% if result.location %}
+                                <p class="card-text">Location: {{ result.location.country }} / {{ result.location.city }} / {{ result.location.area }} </p>
+                                {% endif %}
+                                {% if result.owner %}
+                                <p class="card-text">Owner: {{ result.owner.name }} (ID: {{ result.owner.id }})</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            {% if result.images %}
+                            <img src="{{ result.images[0] }}" alt="Search result image" class="rounded img-thumbnail float-right">
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
             </div>
-            <br/>
         {% endfor %}
     </div>
-
 </div>
 {% endblock %}
