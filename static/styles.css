@@ -6,29 +6,24 @@
     opacity: 90%;
     color: black;
 }
+.card-logo {
+    float: right;
+    height: 2em;
+}
 
 .kufar-logo {
     content: url("https://content.kufar.by/static/frontend/svg/logo-big.svg");
-    float: right;
-    height: 2em;
 }
 .wb-logo {
     content: url("https://static.wbstatic.net/i/header/logo-v1.svg");
-    float: right;
-    height: 2em;
+    background-color: purple;
 }
 .ozon-logo {
     content: url("https://cdn1.ozone.ru/s3/cms/13/te9/logo-logo-ozon-blue.svg");
-    float: right;
-    height: 2em;
 }
 .ozby-logo {
     content: url("https://oz.by/img/module-header/logo.v1633928893.png");
-    float: right;
-    height: 2em;
 }
 .onliner-logo {
     content: url("https://gc.onliner.by/images/logo/onliner_logo.v3@2x.png");
-    float: right;
-    height: 2em;
 }
