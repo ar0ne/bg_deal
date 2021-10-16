@@ -2,11 +2,11 @@
 App builders
 """
 import abc
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from libbgg.infodict import InfoDict
 
-from bgd.constants import BELARUS, KUFAR, OZBY, OZON, WILDBERRIES
+from bgd.constants import BELARUS, KUFAR, ONLINER, OZBY, OZON, WILDBERRIES
 from bgd.responses import (
     GameDetailsResult,
     GameLocation,
@@ -16,7 +16,7 @@ from bgd.responses import (
     GameStatistic,
     Price,
 )
-from bgd.utils import convert_byn_to_usd
+from bgd.utils import convert_byn_to_usd, remove_backslashes
 
 
 class GameDetailsResultBuilder:
@@ -25,7 +25,7 @@ class GameDetailsResultBuilder:
     @classmethod
     def from_game_info(cls, game_info: InfoDict) -> GameDetailsResult:
         """Build details result for the game"""
-        item = game_info.get("items", {}).get("item", {})
+        item = game_info.get("items").get("item")
         return GameDetailsResult(
             description=item.get("description")["TEXT"],
             id=item.get("id"),
@@ -52,7 +52,7 @@ class GameDetailsResultBuilder:
     @classmethod
     def _build_game_statistics(cls, statistics: InfoDict) -> GameStatistic:
         """Build game statistics info"""
-        ranks = statistics.get("ratings", {}).get("ranks", {})
+        ranks = statistics.get("ratings").get("ranks")
         return GameStatistic(
             avg_rate=statistics["ratings"]["average"]["value"],
             ranks=cls._build_game_ranks(ranks),
@@ -220,7 +220,7 @@ class GameSearchResultOzonBuilder(GameSearchResultBuilder):
     @classmethod
     def _extract_url(cls, item: dict) -> Optional[str]:
         """Extract url"""
-        url = item.get("action", {}).get("link")
+        url = item.get("action").get("link")
         if not url:
             return
         return cls.ITEM_URL + url
@@ -232,7 +232,7 @@ class GameSearchResultOzonBuilder(GameSearchResultBuilder):
         price_state = next(filter(lambda it: it.get("id") == "atom", main_state))
         if not price_state:
             return
-        price = price_state.get("atom", {}).get("price", {}).get("price")
+        price = price_state.get("atom").get("price").get("price")
         if not price:
             return
 
@@ -242,7 +242,7 @@ class GameSearchResultOzonBuilder(GameSearchResultBuilder):
     @staticmethod
     def _extract_images(item: dict) -> list:
         """Extract images"""
-        return item.get("tileImage", {}).get("images", [])
+        return item.get("tileImage").get("images", [])
 
     @staticmethod
     def _extract_subject(item: dict) -> str:
@@ -251,7 +251,7 @@ class GameSearchResultOzonBuilder(GameSearchResultBuilder):
         name_state = next(filter(lambda it: it.get("id") == "name", main_state))
         if not name_state:
             return ""
-        return name_state.get("atom", {}).get("textAtom", {}).get("text", "")
+        return name_state.get("atom").get("textAtom").get("text", "")
 
 
 class GameSearchResultOzByBuilder(GameSearchResultBuilder):
@@ -261,6 +261,7 @@ class GameSearchResultOzByBuilder(GameSearchResultBuilder):
 
     @classmethod
     def from_search_result(cls, search_result: dict) -> GameSearchResult:
+        """Builds game search result from ozon data source search result"""
         return GameSearchResult(
             description=cls._extract_description(search_result),
             images=cls._extract_images(search_result),
@@ -275,12 +276,12 @@ class GameSearchResultOzByBuilder(GameSearchResultBuilder):
     @staticmethod
     def _extract_images(item: dict) -> list[str]:
         """Get image of the game"""
-        return [item.get("attributes", {}).get("main_image", {}).get("200")]
+        return [item.get("attributes").get("main_image").get("200")]
 
     @staticmethod
     def _extract_price(item: dict) -> Optional[Price]:
         """Extract game prices"""
-        price = item.get("attributes", {}).get("cost", {}).get("decimal")
+        price = item.get("attributes").get("cost").get("decimal")
         if not price:
             return
         return Price(byn=price * 100, usd=convert_byn_to_usd(price * 100))
@@ -288,7 +289,7 @@ class GameSearchResultOzByBuilder(GameSearchResultBuilder):
     @staticmethod
     def _extract_subject(item: dict) -> str:
         """Extracts subject"""
-        return item.get("attributes", {}).get("title")
+        return item.get("attributes").get("title")
 
     @classmethod
     def _extract_url(cls, item: dict) -> str:
@@ -298,4 +299,43 @@ class GameSearchResultOzByBuilder(GameSearchResultBuilder):
     @staticmethod
     def _extract_description(item: dict) -> str:
         """Extract item description"""
-        return item.get("attributes", {}).get("small_desc")
+        return item.get("attributes").get("small_desc")
+
+
+class GameSearchResultOnlinerBuilder(GameSearchResultBuilder):
+    """GameSearchResult builder for search results from onliner.by"""
+
+    @classmethod
+    def from_search_result(cls, search_result: dict) -> GameSearchResult:
+        """Builds game search result from ozon data source search result"""
+        return GameSearchResult(
+            description=search_result.get("description"),
+            images=cls._extract_images(search_result),
+            location=None,
+            owner=None,
+            price=cls._extract_price(search_result),
+            source=ONLINER,
+            subject=search_result.get("name"),
+            url=cls._extract_url(search_result),
+        )
+
+    @staticmethod
+    def _extract_price(product: dict) -> Optional[Price]:
+        """Extract product price"""
+        price = product.get("prices")
+        if not price:
+            return
+        price_in_byn = price.get("price_min").get("amount")
+        price_cents = int(float(price_in_byn) * 100)
+        return Price(byn=price_cents, usd=convert_byn_to_usd(price_cents))
+
+    @staticmethod
+    def _extract_url(product: dict) -> str:
+        """Extract product page url"""
+        return remove_backslashes(product.get("html_url", ""))
+
+    @staticmethod
+    def _extract_images(product: dict) -> list:
+        """Extract product images"""
+        image_url = remove_backslashes(product.get("images").get("header"))
+        return [f"https:{image_url}"]

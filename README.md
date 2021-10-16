@@ -9,7 +9,7 @@
  - ozon.ru
  - oz.by
  - vk.com (TBD)
- - onliner.by (TBD)
+ - onliner.by
 
 
 ## How to run

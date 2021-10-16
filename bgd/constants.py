@@ -1,5 +1,6 @@
 BELARUS = "Belarus"
 KUFAR = "Kufar"
+ONLINER = "onliner"
+OZBY = "ozby"
 OZON = "ozon"
 WILDBERRIES = "Wildberries"
-OZBY = "ozby"

@@ -9,6 +9,7 @@ from starlette.templating import Jinja2Templates
 from bgd import services
 from bgd.builders import (
     GameSearchResultKufarBuilder,
+    GameSearchResultOnlinerBuilder,
     GameSearchResultOzByBuilder,
     GameSearchResultOzonBuilder,
     GameSearchResultWildberriesBuilder,
@@ -16,6 +17,7 @@ from bgd.builders import (
 from bgd.clients import (
     BoardGameGeekApiClient,
     KufarApiClient,
+    OnlinerApiClient,
     OzByApiClient,
     OzonApiClient,
     WildberriesApiClient,
@@ -70,11 +72,22 @@ class ApplicationContainer(containers.DeclarativeContainer):
         result_builder=GameSearchResultOzByBuilder,
     )
 
+    onliner_api_client = providers.Factory(
+        OnlinerApiClient,
+    )
+    onliner_search_service = providers.Factory(
+        services.OnlinerSearchService,
+        client=onliner_api_client,
+        game_category_id="",
+        result_builder=GameSearchResultOnlinerBuilder,
+    )
+
     data_sources = providers.List(
         kufar_search_service,
         wildberreis_search_service,
         ozon_search_service,
         ozby_search_service,
+        onliner_search_service,
     )
 
     bgg_api_client = providers.Factory(

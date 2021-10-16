@@ -16,6 +16,13 @@ from bgd.services import BoardGameGeekService, DataSource
 router = APIRouter()
 
 
+def sort_by_price(game: GameSearchResult) -> int:
+    """Sort function for game search results"""
+    if not (game and game.price):
+        return 0
+    return game.price.byn
+
+
 @router.get("/api/search/{game}", response_model=List[GameSearchResult])
 @inject
 async def search_game(
@@ -27,7 +34,7 @@ async def search_game(
     """Search game endpoint"""
     results = [await source.search(game) for source in data_sources]
     results = list(itertools.chain.from_iterable(results))
-    results.sort(key=lambda g: g.price.byn)
+    results.sort(key=sort_by_price)
     return results
 
 

@@ -82,7 +82,7 @@ class WildberriesSearchService(DataSource):
         products = list(
             filter(
                 lambda pr: pr.get("subjectId") == self.game_category_id,
-                search_results.response.get("data", {}).get("products"),
+                search_results.response.get("data").get("products"),
             )
         )
         return self.build_results(products)
@@ -102,7 +102,7 @@ class OzonSearchService(DataSource):
 
     def _extract_search_results(self, resp: dict) -> Optional[dict]:
         """Extract search results from response"""
-        widget_states = resp.get("widgetStates", {})
+        widget_states = resp.get("widgetStates")
         key = self._find_search_v2_key(widget_states)
         return json.loads(widget_states.get(key, "{}"))
 
@@ -145,10 +145,24 @@ class BoardGameGeekService:
     @staticmethod
     def _get_game_id_from_search_result(search_resp: BGGAPIResponse) -> Optional[str]:
         """Get game id from result of searching"""
-        item = search_resp.response.get("items", {}).get("item")
+        item = search_resp.response.get("items").get("item")
         if not item:
             return
         if not isinstance(item, list):
             return item["id"]
         # get the latest item
         return item[-1]["id"]
+
+
+class OnlinerSearchService(DataSource):
+    """Search service for onliner.by"""
+
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+        response = await self._client.search(query, **kwargs)
+        # exclude non boardgames from the result and games without prices
+        results = [
+            product
+            for product in response.response.get("products")
+            if product["schema"]["key"] == "boardgame" and product["prices"]
+        ]
+        return self.build_results(results)

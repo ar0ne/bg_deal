@@ -221,3 +221,15 @@ class BoardGameGeekApiClient:
         """Get details about the game by id"""
         url = f"{self.THING_PATH}?stats=1&id={game_id}"
         return await self.connect("GET", self.BASE_URL, url)
+
+
+class OnlinerApiClient(ApiClient):
+    """Api client for onliner.by"""
+
+    BASE_SEARCH_URL = "https://catalog.onliner.by/sdapi"
+    SEARCH_PATH = "/catalog.api/search/products"
+
+    async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
+        """Search by query string"""
+        url = f"{self.SEARCH_PATH}?query={query}"
+        return await self.connect("GET", self.BASE_SEARCH_URL, url)
