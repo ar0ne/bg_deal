@@ -1,1 +1,1 @@
-web: uvicorn bgd.application:app --port $PORT
+web: uvicorn bgd.application:app --host=0.0.0.0 --port=${PORT:-5000}
