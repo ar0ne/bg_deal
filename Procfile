@@ -1,1 +1,1 @@
-web: uvicorn bgd.application:app
+web: uvicorn bgd.application:app --port $PORT
