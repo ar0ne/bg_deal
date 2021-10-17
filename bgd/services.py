@@ -41,9 +41,9 @@ class DataSource:
         self._log_errors(responses)
         # filter BaseExceptions
         ret: List[GameSearchResult] = [
-            resp for resp in responses if isinstance(resp, list) and len(resp)
+            resp[0] for resp in responses if isinstance(resp, list) and len(resp)
         ]
-        return ret[0] if ret else ret
+        return ret
 
     def build_results(self, items: Optional[list]) -> List[GameSearchResult]:
         """prepare search results for end user"""
@@ -62,12 +62,10 @@ class DataSource:
 class KufarSearchService(DataSource):
     """Service for work with Kufar api"""
 
-    async def do_search(
-        self, game_name: str, *args, **kwargs
-    ) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         """Search ads by game name"""
         search_response = await self._client.search(
-            game_name, {"category": self.game_category_id}
+            query, {"category": self.game_category_id}
         )
         return self.build_results(search_response.response.get("ads"))
 
@@ -75,14 +73,12 @@ class KufarSearchService(DataSource):
 class WildberriesSearchService(DataSource):
     """Service for work with Wildberries api"""
 
-    async def do_search(
-        self, game_name: str, *args, **kwargs
-    ) -> List[GameSearchResult]:
-        search_results = await self._client.search(game_name)
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+        search_results = await self._client.search(query)
         products = list(
             filter(
                 lambda pr: pr.get("subjectId") == self.game_category_id,
-                search_results.response.get("data").get("products"),
+                search_results.response["data"]["products"],
             )
         )
         return self.build_results(products)
@@ -91,20 +87,22 @@ class WildberriesSearchService(DataSource):
 class OzonSearchService(DataSource):
     """Search Service for ozon api"""
 
-    async def do_search(
-        self, game_name: str, *args, **kwargs
-    ) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         response = await self._client.search(
-            game_name, {"category": self.game_category_id, **kwargs}
+            query, {"category": self.game_category_id, **kwargs}
         )
         search_results = self._extract_search_results(response.response)
-        return self.build_results(search_results.get("items"))
+        if not search_results:
+            return []
+        return self.build_results(search_results["items"])
 
     def _extract_search_results(self, resp: dict) -> Optional[dict]:
         """Extract search results from response"""
-        widget_states = resp.get("widgetStates")
+        widget_states: dict = resp["widgetStates"]
         key = self._find_search_v2_key(widget_states)
-        return json.loads(widget_states.get(key, "{}"))
+        if not key:
+            return None
+        return json.loads(widget_states[key])
 
     @staticmethod
     def _find_search_v2_key(states: dict) -> Optional[str]:
@@ -112,16 +110,15 @@ class OzonSearchService(DataSource):
         for key in states.keys():
             if "searchResultsV2" in key:
                 return key
+        return None
 
 
 class OzBySearchService(DataSource):
     """Search service for oz.by"""
 
-    async def do_search(
-        self, game_name: str, *args, **kwargs
-    ) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         response = await self._client.search(
-            game_name, {"category": self.game_category_id, **kwargs}
+            query, {"category": self.game_category_id, **kwargs}
         )
         return self.build_results(response.response.get("data"))
 
@@ -150,7 +147,7 @@ class BoardGameGeekService:
         """
         item = search_resp.response.get("items").get("item")
         if not item:
-            return
+            return None
         if not isinstance(item, list):
             return item["id"]
 
@@ -171,9 +168,12 @@ class OnlinerSearchService(DataSource):
     async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         response = await self._client.search(query, **kwargs)
         # exclude non boardgames from the result and games without prices
+        products = response.response.get("products")
+        if not products:
+            return []
         results = [
             product
-            for product in response.response.get("products")
+            for product in products
             if product["schema"]["key"] == "boardgame" and product["prices"]
         ]
         return self.build_results(results)

@@ -11,7 +11,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from bgd.containers import ApplicationContainer
-from bgd.responses import GameDetailsResult, GameSearchResult, Price
+from bgd.responses import GameDetailsResult, GameSearchResult
 from bgd.services import BoardGameGeekService, DataSource
 
 router = APIRouter()
@@ -34,9 +34,9 @@ async def search_game(
 ) -> List[GameSearchResult]:
     """Search game endpoint"""
     results = [await source.search(game) for source in data_sources]
-    results = list(itertools.chain.from_iterable(results))
-    results.sort(key=sort_by_price)
-    return results
+    combined_results = list(itertools.chain.from_iterable(results))
+    combined_results.sort(key=sort_by_price)
+    return combined_results
 
 
 @router.get("/api/v1/games/{game}", response_model=GameDetailsResult)
@@ -45,6 +45,7 @@ async def game_details(
     game: str,
     service: BoardGameGeekService = Depends(Provide[ApplicationContainer.bgg_service]),
 ):
+    """Fetches board game info from provider"""
     return await service.get_board_game_info(game)
 
 
@@ -54,6 +55,7 @@ async def main_page(
     request: Request,
     templates: Jinja2Templates = Depends(Provide[ApplicationContainer.templates]),
 ):
+    """Render main page"""
     return templates.TemplateResponse("index.html", {"request": request})
 
 
@@ -64,6 +66,7 @@ async def search_page(
     name: str,
     templates: Jinja2Templates = Depends(Provide[ApplicationContainer.templates]),
 ):
+    """Render Search page"""
     results = await search_game(name)
     game_info = await asyncio.gather(game_details(name), return_exceptions=True)
     return templates.TemplateResponse(

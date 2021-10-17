@@ -26,6 +26,7 @@ from bgd.clients import (
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+# pylint: disable=I1101
 class ApplicationContainer(containers.DeclarativeContainer):
     """App container"""
 

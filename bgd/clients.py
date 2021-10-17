@@ -30,14 +30,15 @@ def handle_response(response: ClientResponse) -> None:
 class ApiClient:
     """Abstract api client"""
 
+    @staticmethod
     async def connect(
-        self,
         method: str,
         base_url: str,
         path: str,
         request_body_dict: str = "",
         headers: Optional[dict] = None,
     ) -> APIResponse:
+        """Connect Api to resource"""
         async with aiohttp.ClientSession() as session:
             url = base_url + path
             body_json = json.dumps(request_body_dict)
@@ -65,13 +66,14 @@ class KufarApiClient(ApiClient):
 
         url = f"{self.SEARCH_PATH}?query={query}"
 
-        if options.get("category"):
-            url += f"&cat={options['category']}"
-        if options.get("language"):
-            url += f"&lang={options['language']}"
-        size = options.get("size", 10)
-        if size:
-            url += f"&size={size}"
+        if options:
+            if options.get("category"):
+                url += f"&cat={options['category']}"
+            if options.get("language"):
+                url += f"&lang={options['language']}"
+            size = options.get("size", 10)
+            if size:
+                url += f"&size={size}"
 
         return await self.connect("GET", self.BASE_URL, url)
 
@@ -140,7 +142,7 @@ class OzonApiClient(ApiClient):
 
     async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
         """Search items by query"""
-        category = options.get("category")
+        category = options["category"]  # type: ignore
         url = f"{self.SEARCH_PATH}/{category}?text={query}"
         return await self.connect(
             "GET", self.BASE_SEARCH_URL, url, headers=self._headers
@@ -175,7 +177,7 @@ class OzByApiClient(ApiClient):
 
     async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
         """Search items by query"""
-        category = options.get("category")
+        category = options["category"]  # type: ignore
         url = (
             f"{self.SEARCH_PATH}?fieldsets[goods]=listing&"
             f"filter[id_catalog]={category}"
@@ -191,14 +193,16 @@ class BoardGameGeekApiClient:
     SEARCH_PATH = "/search"
     THING_PATH = "/thing"
 
+    # pylint: disable=unused-argument
+    @staticmethod
     async def connect(
-        self,
         method: str,
         base_url: str,
         path: str,
         request_body_dict: str = "",
         headers: Optional[dict] = None,
     ) -> BGGAPIResponse:
+        """Connect client to BGG api"""
         async with aiohttp.ClientSession() as session:
             url = base_url + path
             async with session.request(method, url, headers=headers) as resp:

@@ -1,10 +1,11 @@
 aiofiles
-aiohttp==3.6.3
+aiohttp==3.7.4
 brotlipy
 dependency-injector
 fastapi
 jinja2
 py-bgg
+pydantic
 pyyaml
 starlette
 uvicorn[standard]

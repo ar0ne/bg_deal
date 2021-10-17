@@ -83,6 +83,8 @@ class GameDetailsResultBuilder:
 
 
 class GameSearchResultBuilder:
+    """Base builder class for game search result"""
+
     @classmethod
     @abc.abstractmethod
     def from_search_result(cls, search_result: dict) -> GameSearchResult:
@@ -109,11 +111,11 @@ class GameSearchResultKufarBuilder(GameSearchResultBuilder):
         )
 
     @staticmethod
-    def _extract_price(ad_item: dict) -> Price:
+    def _extract_price(ad_item: dict) -> Optional[Price]:
         """Extract ad price"""
         return Price(
-            byn=int(ad_item.get("price_byn")),
-            usd=int(ad_item.get("price_usd")),
+            byn=int(ad_item["price_byn"]),
+            usd=int(ad_item["price_usd"]),
         )
 
     @classmethod
@@ -121,14 +123,14 @@ class GameSearchResultKufarBuilder(GameSearchResultBuilder):
         """Extracts ad images"""
         return [
             cls.IMAGE_URL.format(img.get("id")[:2], img.get("id"))
-            for img in ad_item.get("images")
+            for img in ad_item["images"]
             if img.get("yams_storage")
         ]
 
     @classmethod
     def _extract_product_location(cls, ad_item: dict) -> GameLocation:
         """Extract location of item"""
-        params = ad_item.get("ad_parameters")
+        params: list = ad_item["ad_parameters"]
         return GameLocation(
             area=cls._extract_ad_area(params) or "",
             city=cls._extract_ad_city(params) or "",
@@ -141,6 +143,7 @@ class GameSearchResultKufarBuilder(GameSearchResultBuilder):
         for param in ad_params:
             if param.get("pu") == "rgn":
                 return param.get("vl")
+        return None
 
     @staticmethod
     def _extract_ad_area(ad_params: list) -> Optional[str]:
@@ -148,13 +151,14 @@ class GameSearchResultKufarBuilder(GameSearchResultBuilder):
         for param in ad_params:
             if param.get("pu") == "ar":
                 return param.get("vl")
+        return None
 
     @staticmethod
     def _extract_owner_info(ad_item: dict) -> GameOwner:
         """Extract info about ads owner"""
         name = [
             v
-            for acc_param in ad_item.get("account_parameters")
+            for acc_param in ad_item["account_parameters"]
             for k, v in acc_param.items()
             if k == "v"
         ]
@@ -187,8 +191,7 @@ class GameSearchResultWildberriesBuilder(GameSearchResultBuilder):
     @staticmethod
     def _extract_price(product: dict) -> Price:
         """Extract prices for product in different currencies"""
-        # @todo: currently I hardcoded "currency" in client, and exchange rate
-        price_in_byn = product.get("salePriceU")
+        price_in_byn: int = product["salePriceU"]
         return Price(byn=price_in_byn, usd=convert_byn_to_usd(price_in_byn))
 
     @classmethod
@@ -230,9 +233,9 @@ class GameSearchResultOzonBuilder(GameSearchResultBuilder):
     @classmethod
     def _extract_url(cls, item: dict) -> Optional[str]:
         """Extract url"""
-        url = item.get("action").get("link")
+        url = item["action"]["link"]
         if not url:
-            return
+            return None
         return cls.ITEM_URL + url
 
     @staticmethod
@@ -241,10 +244,10 @@ class GameSearchResultOzonBuilder(GameSearchResultBuilder):
         main_state = item.get("mainState", [])
         price_state = next(filter(lambda it: it.get("id") == "atom", main_state))
         if not price_state:
-            return
+            return None
         price = price_state.get("atom").get("price").get("price")
         if not price:
-            return
+            return None
 
         price_in_byn = int(100 * float(price.split()[0].replace(",", ".")))
         return Price(byn=price_in_byn, usd=convert_byn_to_usd(price_in_byn))
@@ -252,16 +255,16 @@ class GameSearchResultOzonBuilder(GameSearchResultBuilder):
     @staticmethod
     def _extract_images(item: dict) -> list:
         """Extract images"""
-        return item.get("tileImage").get("images", [])
+        return item["tileImage"]["images"] or []
 
     @staticmethod
     def _extract_subject(item: dict) -> str:
         """Extract item subject"""
         main_state = item.get("mainState", [])
-        name_state = next(filter(lambda it: it.get("id") == "name", main_state))
+        name_state = next(filter(lambda it: it["id"] == "name", main_state))
         if not name_state:
             return ""
-        return name_state.get("atom").get("textAtom").get("text", "")
+        return name_state["atom"]["textAtom"]["text"] or ""
 
 
 class GameSearchResultOzByBuilder(GameSearchResultBuilder):
@@ -286,30 +289,30 @@ class GameSearchResultOzByBuilder(GameSearchResultBuilder):
     @staticmethod
     def _extract_images(item: dict) -> list[str]:
         """Get image of the game"""
-        return [item.get("attributes").get("main_image").get("200")]
+        return [item["attributes"]["main_image"]["200"]]
 
     @staticmethod
     def _extract_price(item: dict) -> Optional[Price]:
         """Extract game prices"""
-        price = item.get("attributes").get("cost").get("decimal")
+        price = item["attributes"]["cost"]["decimal"]
         if not price:
-            return
+            return None
         return Price(byn=price * 100, usd=convert_byn_to_usd(price * 100))
 
     @staticmethod
     def _extract_subject(item: dict) -> str:
         """Extracts subject"""
-        return item.get("attributes").get("title")
+        return item["attributes"]["title"]
 
     @classmethod
     def _extract_url(cls, item: dict) -> str:
         """Extracts item url"""
-        return cls.GAME_URL.format(item.get("id"))
+        return cls.GAME_URL.format(item["id"])
 
     @staticmethod
     def _extract_description(item: dict) -> str:
         """Extract item description"""
-        return item.get("attributes").get("small_desc")
+        return item["attributes"].get("small_desc")
 
 
 class GameSearchResultOnlinerBuilder(GameSearchResultBuilder):
@@ -319,13 +322,13 @@ class GameSearchResultOnlinerBuilder(GameSearchResultBuilder):
     def from_search_result(cls, search_result: dict) -> GameSearchResult:
         """Builds game search result from ozon data source search result"""
         return GameSearchResult(
-            description=search_result.get("description"),
+            description=search_result["description"],
             images=cls._extract_images(search_result),
             location=None,
             owner=None,
             price=cls._extract_price(search_result),
             source=ONLINER,
-            subject=search_result.get("name"),
+            subject=search_result["name"],
             url=cls._extract_url(search_result),
         )
 
@@ -334,8 +337,8 @@ class GameSearchResultOnlinerBuilder(GameSearchResultBuilder):
         """Extract product price"""
         price = product.get("prices")
         if not price:
-            return
-        price_in_byn = price.get("price_min").get("amount")
+            return None
+        price_in_byn = price["price_min"]["amount"]
         price_cents = int(float(price_in_byn) * 100)
         return Price(byn=price_cents, usd=convert_byn_to_usd(price_cents))
 
@@ -347,5 +350,5 @@ class GameSearchResultOnlinerBuilder(GameSearchResultBuilder):
     @staticmethod
     def _extract_images(product: dict) -> list:
         """Extract product images"""
-        image_url = remove_backslashes(product.get("images").get("header"))
+        image_url = remove_backslashes(product["images"]["header"])
         return [f"https:{image_url}"]

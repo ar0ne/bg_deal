@@ -1,3 +1,6 @@
+"""
+App Constants
+"""
 BELARUS = "Беларусь"
 KUFAR = "kufar"
 ONLINER = "onliner"

@@ -21,18 +21,20 @@ def create_app() -> FastAPI:
     container.config.from_yaml(f"{BASE_DIR}/config.yml")
     container.wire(modules=[endpoints])
 
-    app = FastAPI()
-    app.container = container  # type: ignore
-    app.exception_handler(ServiceException)(errors.service_exception_handler)
-    app.include_router(endpoints.router)
+    fast_api_app = FastAPI()
+    fast_api_app.container = container  # type: ignore
+    fast_api_app.exception_handler(ServiceException)(errors.service_exception_handler)
+    fast_api_app.include_router(endpoints.router)
 
-    logging.config.fileConfig(
+    logging.config.fileConfig(  # type: ignore
         f"{BASE_DIR}/logging.conf", disable_existing_loggers=False
     )
 
-    app.mount("/static", StaticFiles(directory=f"{BASE_DIR}/static"), name="static")
+    fast_api_app.mount(
+        "/static", StaticFiles(directory=f"{BASE_DIR}/static"), name="static"
+    )
 
-    return app
+    return fast_api_app
 
 
 app = create_app()
