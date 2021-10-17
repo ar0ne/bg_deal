@@ -14,6 +14,7 @@ from bgd.builders import (
     GameSearchResultOzByBuilder,
     GameSearchResultOzonBuilder,
     GameSearchResultTwentyFirstVekBuilder,
+    GameSearchResultVkontakteBuilder,
     GameSearchResultWildberriesBuilder,
 )
 from bgd.clients import (
@@ -24,6 +25,7 @@ from bgd.clients import (
     OzByApiClient,
     OzonApiClient,
     TwentyFirstVekApiClient,
+    VkontakteApiClient,
     WildberriesApiClient,
 )
 
@@ -120,6 +122,20 @@ class ApplicationContainer(containers.DeclarativeContainer):
         result_builder=GameSearchResultFifthElementBuilder,
     )
 
+    vkontkte_api_client = providers.Factory(
+        VkontakteApiClient,
+    )
+    vkontakte_service = providers.Factory(
+        services.VkontakteSearchService,
+        client=vkontkte_api_client,
+        game_category_id="",
+        group_id=config.vk.group_id,
+        group_name=config.vk.group_name,
+        api_token=config.vk.api_token,
+        api_version=config.vk.api_version,
+        result_builder=GameSearchResultVkontakteBuilder,
+    )
+
     data_sources = providers.List(
         kufar_search_service,
         wildberreis_search_service,
@@ -128,4 +144,5 @@ class ApplicationContainer(containers.DeclarativeContainer):
         onliner_search_service,
         twenty_first_vek_service,
         fifth_element_service,
+        vkontakte_service,
     )

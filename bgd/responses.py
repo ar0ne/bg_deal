@@ -23,6 +23,7 @@ class GameOwner(BaseModel):
 
     id: Union[str, int]
     name: str
+    url: Optional[str]
 
 
 class Price(BaseModel):

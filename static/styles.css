@@ -61,3 +61,6 @@ main {
 .fifthelement-logo {
     content: url("https://5element.by/public/resources/images/logo.svg");
 }
+.vk-logo {
+    content: url("https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/VK.com-logo.svg/192px-VK.com-logo.svg.png")
+}

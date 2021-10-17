@@ -58,7 +58,7 @@
                 </div>
                 <div class="card-block">
                     <div class="row">
-                        <div class="col-md-9">
+                        <div class="col-md-11">
                             <div class="card-body">
                                 <p class="card-text">Description: {% if result.description %}{{ result.description }}{% else %}N/A{% endif %}</p>
                                 <p class="card-text">Price: {% if result.price %}
@@ -71,13 +71,13 @@
                                 <p class="card-text">Location: {{ result.location.country }} / {{ result.location.city }} / {{ result.location.area }} </p>
                                 {% endif %}
                                 {% if result.owner %}
-                                <p class="card-text">Owner: {{ result.owner.name }} (ID: {{ result.owner.id }})</p>
+                                <p class="card-text">Owner: {{ result.owner.name }} (ID: {% if result.owner.url %}<a href="{{ result.owner.url }}">{{ result.owner.id }}</a>{% else %}{{ result.owner.id }}{% endif %})</p>
                                 {% endif %}
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-1">
                             {% if result.images %}
-                            <img src="{{ result.images[0] }}" alt="Search result image" class="rounded img-thumbnail float-right">
+                            <img src="{{ result.images[0] }}" alt="Search result image" class="rounded img-thumbnail float-left">
                             {% endif %}
                         </div>
                     </div>

@@ -3,6 +3,7 @@ App builders
 """
 import abc
 import html
+import itertools
 from typing import Generator, List, Optional, Tuple
 
 from libbgg.infodict import InfoDict
@@ -15,6 +16,7 @@ from bgd.constants import (
     OZBY,
     OZON,
     TWENTYFIRSTVEK,
+    VK,
     WILDBERRIES,
 )
 from bgd.responses import (
@@ -140,6 +142,7 @@ class GameSearchResultKufarBuilder(GameSearchResultBuilder):
     """builder for GameSearchResult from Kufar data source"""
 
     IMAGE_URL = "https://yams.kufar.by/api/v1/kufar-ads/images/{}/{}.jpg?rule=gallery"
+    USER_URL = "https://www.kufar.by/user/{}"
 
     @classmethod
     def from_search_result(cls, search_result: dict) -> GameSearchResult:
@@ -198,8 +201,8 @@ class GameSearchResultKufarBuilder(GameSearchResultBuilder):
                 return param.get("vl")
         return None
 
-    @staticmethod
-    def _extract_owner_info(ad_item: dict) -> GameOwner:
+    @classmethod
+    def _extract_owner_info(cls, ad_item: dict) -> GameOwner:
         """Extract info about ads owner"""
         name = [
             v
@@ -207,9 +210,9 @@ class GameSearchResultKufarBuilder(GameSearchResultBuilder):
             for k, v in acc_param.items()
             if k == "v"
         ]
+        user_id = ad_item.get("account_id")
         return GameOwner(
-            id=ad_item.get("account_id"),
-            name=" ".join(name),
+            id=user_id, name=" ".join(name), url=cls.USER_URL.format(user_id)
         )
 
 
@@ -474,3 +477,54 @@ class GameSearchResultFifthElementBuilder(GameSearchResultBuilder):
     def _extract_url(cls, product: dict) -> str:
         """Extract product url"""
         return f"{cls.BASE_URL}{product['url']}"
+
+
+class GameSearchResultVkontakteBuilder(GameSearchResultBuilder):
+    """Builder for search results from vk.com"""
+
+    BASE_URL = "https://vk.com"
+    GROUP_POST_PATH = "/{}?w=wall{}_{}"
+
+    @classmethod
+    def from_search_result(cls, search_result: dict) -> GameSearchResult:
+        return GameSearchResult(
+            description=search_result["text"],
+            images=cls._extract_images(search_result),
+            location=None,
+            owner=cls._extract_owner(search_result),
+            price=None,
+            source=VK,
+            subject="VK post",
+            url=cls._extract_url(search_result),
+        )
+
+    @classmethod
+    def _extract_url(cls, post: dict) -> str:
+        """Extract wall post url"""
+        # todo: group name should come from configs
+        return cls.BASE_URL + cls.GROUP_POST_PATH.format(
+            "baraholkanastolokrb", post["owner_id"], post["id"]
+        )
+
+    @classmethod
+    def _extract_images(cls, post: dict) -> list:
+        """Extract images"""
+        photo_attachments = filter(
+            lambda it: it["type"] == "photo", post["attachments"]
+        )
+        all_photos = map(lambda a: a["photo"]["sizes"], photo_attachments)
+        photos = itertools.chain.from_iterable(all_photos)
+        highest_resolution_photos = filter(lambda s: s["type"] == "z", photos)
+        return list(
+            map(lambda ph: remove_backslashes(ph["url"]), highest_resolution_photos)
+        )
+
+    @classmethod
+    def _extract_owner(cls, post: dict) -> GameOwner:
+        """extract post owner"""
+        user_id = post["signer_id"]
+        return GameOwner(
+            id=user_id,
+            name="",
+            url=f"{cls.BASE_URL}/id{user_id}",
+        )

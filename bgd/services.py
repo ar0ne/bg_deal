@@ -4,6 +4,7 @@ App Services
 import asyncio
 import json
 import logging
+import re
 from abc import abstractmethod
 from typing import Any, List, Optional, Tuple, Union
 
@@ -267,4 +268,48 @@ class FifthElementSearchService(DataSource):
             for product in products
             if product["is_presence"]
             and product["params_data"]["category_id"] in self.game_category_ids
+        ]
+
+
+class VkontakteSearchService(DataSource):
+    """Search service for vk.com"""
+
+    def __init__(
+        self,
+        client: ApiClient,
+        game_category_id: str,
+        result_builder: GameSearchResultBuilder,
+        api_version: str,
+        api_token: str,
+        group_id: str,
+        group_name: str,
+    ) -> None:
+        """Init 5th element Search Service"""
+        # there are more than one category that we should check
+        super().__init__(client, game_category_id, result_builder)
+        self.api_version = api_version
+        self.api_token = api_token
+        self.group_id = group_id
+        self.group_name = group_name
+
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+        search_response = await self._client.search(
+            query,
+            {
+                "api_token": self.api_token,
+                "api_version": self.api_version,
+                "group_id": self.group_id,
+            },
+        )
+        products = self.filter_results(search_response.response, query=query)
+        return self.build_results(products)
+
+    def filter_results(self, response: JsonResponse, *args, **kwargs) -> list:
+        """Filter only valid results"""
+        posts = response["response"]["items"]
+        # @todo: is it possible to do it better?  # typing: disable=fixme
+        return [
+            post
+            for post in posts
+            if re.search(kwargs.get("query"), post["text"], re.IGNORECASE)
         ]

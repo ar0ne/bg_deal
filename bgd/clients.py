@@ -35,13 +35,13 @@ class ApiClient:
         method: str,
         base_url: str,
         path: str,
-        request_body_dict: str = "",
+        request_body_dict: Optional[str] = None,
         headers: Optional[dict] = None,
     ) -> APIResponse:
         """Connect Api to resource"""
         async with aiohttp.ClientSession() as session:
             url = base_url + path
-            body_json = json.dumps(request_body_dict)
+            body_json = None if not request_body_dict else json.dumps(request_body_dict)
             async with session.request(
                 method, url, headers=headers, json=body_json
             ) as resp:
@@ -261,3 +261,26 @@ class FifthElementApiClient(ApiClient):
         search_app_id = options["search_app_id"]  # type: ignore
         url = f"?query={query}&id={search_app_id}&lang=ru&autocomplete=true"
         return await self.connect("GET", self.BASE_SEARCH_URL, url)
+
+
+class VkontakteApiClient(ApiClient):
+    """Api client for vk.com"""
+
+    BASE_URL = "https://api.vk.com/method"
+
+    async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
+        """Search query on group wall"""
+        count = options.get("count", 25)
+        group_id = f"-{options['group_id']}"
+        url = (
+            f"/wall.get"
+            f"?owner_id={group_id}"
+            f"&v={options['api_version']}"
+            f"&count={count}"
+            f"&access_token={options['api_token']}"
+        )
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
+        }
+        return await self.connect("GET", self.BASE_URL, url, headers=headers)

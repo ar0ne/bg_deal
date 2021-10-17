@@ -18,7 +18,7 @@ def create_app() -> FastAPI:
     """Create application"""
 
     container = ApplicationContainer()
-    container.config.from_yaml(f"{BASE_DIR}/config.yml")
+    container.config.from_yaml(f"{BASE_DIR}/config.yml", envs_required=True)
     container.wire(modules=[endpoints])
 
     fast_api_app = FastAPI()

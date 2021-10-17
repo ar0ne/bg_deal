@@ -11,3 +11,8 @@ ozby:
 fifthelement:
   game_category_id: 505,507
   search_app_id: 11432
+vk:
+  group_id: 183209921
+  group_name: baraholkanastolokrb
+  api_version: 5.131
+  api_token: ${VK_API_TOKEN}
