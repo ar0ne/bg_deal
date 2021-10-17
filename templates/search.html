@@ -5,6 +5,7 @@
 
 
 <div class="container-fluid">
+    {% if game_info %}
     <div class="bg-image p-5 shadow-1-strong rounded mb-5 text-white"
          style="background-image: url('{{ game_info.image }}');">
         <h1 class="mb-3 text-center">{{ game_info.name }}</h1>
@@ -32,8 +33,12 @@
             </div>
         </div>
     </div>
+    {% else %}
+    <h3>Game info about <b>{{ name }}</b> not found...</h3>
+    <br/>
+    {% endif %}
 
-    <h2>Search results:</h2>
+    <h2>Search results ({{ results|length }}):</h2>
     <div class="row search_result" id="search_results">
         {% if not results %}
         <p>No results. :(</p>
