@@ -300,7 +300,8 @@ class GameSearchResultOzonBuilder(GameSearchResultBuilder):
         name_state = next(filter(lambda it: it["id"] == "name", main_state))
         if not name_state:
             return ""
-        return name_state["atom"]["textAtom"]["text"] or ""
+        name = name_state["atom"]["textAtom"]["text"] or ""
+        return html.unescape(name)
 
 
 class GameSearchResultOzByBuilder(GameSearchResultBuilder):

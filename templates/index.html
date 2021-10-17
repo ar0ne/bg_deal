@@ -4,15 +4,17 @@
 {% block content %}
 
 <div class="container">
-    <h1>Find best deals to buy favoric board game!</h1>
+    <section class="jumbotron text-center">
+        <h1>Find best deals to buy favoric board game!</h1>
 
-    <form action="/search">
-        <div class="mb-3">
-            <label for="name" class="form-label">Search game:</label>
-            <input type="text" class="form-control" id="name" name="name" value="Gloomhaven">
-        </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
+        <form action="/search">
+            <div class="mb-3">
+                <label for="name" class="form-label">Search game</label>
+                <input type="text" class="form-control" id="name" name="name" value="Gloomhaven">
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </section>
 </div>
 
 {% endblock %}

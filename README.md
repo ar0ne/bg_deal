@@ -7,10 +7,11 @@
 
  - boardgamegeek.com (game info)
  - kufar.by
- - by.wildberries.ru/
+ - by.wildberries.ru
  - ozon.ru
  - oz.by
  - onliner.by
+ - 21vek.by (TBD)
 
 
 ## How to run
