@@ -39,11 +39,10 @@ class DataSource:
             self.do_search(query, *args, **kwargs), return_exceptions=True
         )
         self._log_errors(responses)
-        # filter BaseExceptions
-        ret: List[GameSearchResult] = [
-            resp[0] for resp in responses if isinstance(resp, list) and len(resp)
-        ]
-        return ret
+        # filter exceptions
+        results = list(filter(lambda res: res and isinstance(res, list), responses))
+        # extract results if results is not empty
+        return results[0] if results else results  # type: ignore
 
     def build_results(self, items: Optional[list]) -> List[GameSearchResult]:
         """prepare search results for end user"""
@@ -56,7 +55,7 @@ class DataSource:
         """Log errors if any occur"""
         for resp in all_responses:
             if not isinstance(resp, list):
-                log.warning("Error appeared during searching: %s", resp)
+                log.warning("Error appeared during searching: %s", resp, exc_info=True)
 
 
 class KufarSearchService(DataSource):
@@ -175,5 +174,23 @@ class OnlinerSearchService(DataSource):
             product
             for product in products
             if product["schema"]["key"] == "boardgame" and product["prices"]
+        ]
+        return self.build_results(results)
+
+
+class TwentyFirstVekSearchService(DataSource):
+    """Search service for 21vek.by"""
+
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+        """Search on api and build response"""
+        response = await self._client.search(query, **kwargs)
+        products = response.response.get("items")
+        if not products:
+            return []
+        # exclude non board games and not available products from response
+        results = [
+            product
+            for product in products
+            if product["type"] == "product" and product["price"] != "нет на складе"
         ]
         return self.build_results(results)

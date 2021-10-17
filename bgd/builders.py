@@ -7,7 +7,15 @@ from typing import Generator, List, Optional, Tuple
 
 from libbgg.infodict import InfoDict
 
-from bgd.constants import BELARUS, KUFAR, ONLINER, OZBY, OZON, WILDBERRIES
+from bgd.constants import (
+    BELARUS,
+    KUFAR,
+    ONLINER,
+    OZBY,
+    OZON,
+    TWENTYFIRSTVEK,
+    WILDBERRIES,
+)
 from bgd.responses import (
     GameDetailsResult,
     GameLocation,
@@ -92,7 +100,7 @@ class GameDetailsResultBuilder:
         suggested_num_players = next(
             (p["results"] for p in poll if p["name"] == "suggested_numplayers"), False
         )
-        best_votes = cls._extract_best_votes(suggested_num_players)
+        best_votes = cls._extract_best_votes(suggested_num_players)  # type: ignore
         highest_votes = max(best_votes, key=lambda bv: int(bv[1]))
         return highest_votes[0] if highest_votes and highest_votes[1] != "0" else None
 
@@ -108,7 +116,7 @@ class GameDetailsResultBuilder:
                 ),
                 False,
             )
-            yield vote["numplayers"], best_vote_num
+            yield vote["numplayers"], best_vote_num  # type: ignore
 
     @staticmethod
     def _extract_description(item: InfoDict) -> str:
@@ -389,3 +397,43 @@ class GameSearchResultOnlinerBuilder(GameSearchResultBuilder):
         """Extract product images"""
         image_url = remove_backslashes(product["images"]["header"])
         return [f"https:{image_url}"]
+
+
+class GameSearchResultTwentyFirstVekBuilder(GameSearchResultBuilder):
+    """Builder for 21vek"""
+
+    BASE_URL = "https://21vek.by"
+
+    @classmethod
+    def from_search_result(cls, search_result: dict) -> GameSearchResult:
+        return GameSearchResult(
+            description=search_result["highlighted"],
+            images=cls._extract_images(search_result),
+            location=None,
+            owner=None,
+            price=cls._extract_price(search_result),
+            source=TWENTYFIRSTVEK,
+            subject=search_result["name"],
+            url=cls._extract_url(search_result),
+        )
+
+    @staticmethod
+    def _extract_price(product: dict) -> Price:
+        """Extract price"""
+        # "price": "60,00 р."
+        price = product["price"]
+        price = price.split(" ")[0]
+        price = int(price.replace(",", ""))
+        return Price(byn=price, usd=convert_byn_to_usd(price))
+
+    @classmethod
+    def _extract_url(cls, product: dict) -> str:
+        """Extract product url"""
+        return f"{cls.BASE_URL}{product['url']}"
+
+    @staticmethod
+    def _extract_images(product: dict) -> list[str]:
+        """Extract product images"""
+        pic_url = product["picture"]
+        bigger_img = pic_url.replace("preview_s", "preview_b")
+        return [bigger_img]

@@ -12,6 +12,7 @@ from bgd.builders import (
     GameSearchResultOnlinerBuilder,
     GameSearchResultOzByBuilder,
     GameSearchResultOzonBuilder,
+    GameSearchResultTwentyFirstVekBuilder,
     GameSearchResultWildberriesBuilder,
 )
 from bgd.clients import (
@@ -20,6 +21,7 @@ from bgd.clients import (
     OnlinerApiClient,
     OzByApiClient,
     OzonApiClient,
+    TwentyFirstVekApiClient,
     WildberriesApiClient,
 )
 
@@ -32,10 +34,22 @@ class ApplicationContainer(containers.DeclarativeContainer):
 
     config = providers.Configuration()
 
+    templates = providers.Factory(
+        Jinja2Templates,
+        directory=config.templates.dir,
+    )
+
+    bgg_api_client = providers.Factory(
+        BoardGameGeekApiClient,
+    )
+    bgg_service = providers.Factory(
+        services.BoardGameGeekService,
+        client=bgg_api_client,
+    )
+
     kufar_api_client = providers.Factory(
         KufarApiClient,
     )
-
     kufar_search_service = providers.Factory(
         services.KufarSearchService,
         client=kufar_api_client,
@@ -83,23 +97,21 @@ class ApplicationContainer(containers.DeclarativeContainer):
         result_builder=GameSearchResultOnlinerBuilder,
     )
 
+    twenty_first_vek_api_client = providers.Factory(
+        TwentyFirstVekApiClient,
+    )
+    twenty_first_vek_service = providers.Factory(
+        services.TwentyFirstVekSearchService,
+        client=twenty_first_vek_api_client,
+        game_category_id="",
+        result_builder=GameSearchResultTwentyFirstVekBuilder,
+    )
+
     data_sources = providers.List(
         kufar_search_service,
         wildberreis_search_service,
         ozon_search_service,
         ozby_search_service,
         onliner_search_service,
-    )
-
-    bgg_api_client = providers.Factory(
-        BoardGameGeekApiClient,
-    )
-    bgg_service = providers.Factory(
-        services.BoardGameGeekService,
-        client=bgg_api_client,
-    )
-
-    templates = providers.Factory(
-        Jinja2Templates,
-        directory=config.templates.dir,
+        twenty_first_vek_service,
     )
