@@ -63,6 +63,7 @@ class GameStatistic(BaseModel):
 class GameDetailsResult(BaseModel):
     """Game details result model"""
 
+    best_num_players: Optional[str]
     description: str
     id: str
     image: str

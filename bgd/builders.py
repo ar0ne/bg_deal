@@ -2,7 +2,8 @@
 App builders
 """
 import abc
-from typing import List, Optional
+import html
+from typing import Generator, List, Optional, Tuple
 
 from libbgg.infodict import InfoDict
 
@@ -29,7 +30,8 @@ class GameDetailsResultBuilder:
         """Build details result for the game"""
         item = game_info.get("items").get("item")
         return GameDetailsResult(
-            description=item["description"]["TEXT"],
+            best_num_players=cls._extract_best_num_players(item),
+            description=cls._extract_description(item),
             id=item["id"],
             image=item["image"]["TEXT"],
             max_play_time=item["maxplaytime"]["value"],
@@ -80,6 +82,40 @@ class GameDetailsResultBuilder:
     def _build_game_url(cls, item: InfoDict) -> str:
         """Build url to the game on bgg website"""
         return f"{cls.GAME_URL}/{item['id']}"
+
+    @classmethod
+    def _extract_best_num_players(cls, item: InfoDict) -> Optional[str]:
+        """Extracts best number of players"""
+        poll = item.get("poll")
+        if not poll:
+            return None
+        suggested_num_players = next(
+            (p["results"] for p in poll if p["name"] == "suggested_numplayers"), False
+        )
+        best_votes = cls._extract_best_votes(suggested_num_players)
+        highest_votes = max(best_votes, key=lambda bv: int(bv[1]))
+        return highest_votes[0] if highest_votes and highest_votes[1] != "0" else None
+
+    @staticmethod
+    def _extract_best_votes(votes: list) -> Generator[Tuple[str, str], None, None]:
+        """Yields Tuple of num_players and value of 'best' votes"""
+        for vote in votes:
+            best_vote_num = next(
+                (
+                    value["numvotes"]
+                    for value in vote["result"]
+                    if value["value"] == "Best"
+                ),
+                False,
+            )
+            yield vote["numplayers"], best_vote_num
+
+    @staticmethod
+    def _extract_description(item: InfoDict) -> str:
+        """Extract game description"""
+        original_text = item["description"]["TEXT"]
+        unescaped_text = html.unescape(original_text)
+        return unescaped_text.replace("&#10;", "")
 
 
 class GameSearchResultBuilder:
