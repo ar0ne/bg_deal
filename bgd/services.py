@@ -194,3 +194,41 @@ class TwentyFirstVekSearchService(DataSource):
             if product["type"] == "product" and product["price"] != "нет на складе"
         ]
         return self.build_results(results)
+
+
+class FifthElementSearchService(DataSource):
+    """Search service for 5element.by"""
+
+    def __init__(
+        self,
+        client: ApiClient,
+        game_category_id: str,
+        result_builder: GameSearchResultBuilder,
+        search_app_id: str,
+    ) -> None:
+        """Init 5th element Search Service"""
+        # there are more than one category that we should check
+        self.game_category_ids = game_category_id.split(",")
+        super().__init__(client, game_category_id, result_builder)
+        self.search_app_id = search_app_id
+
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+        response = await self._client.search(
+            query, {"search_app_id": self.search_app_id}
+        )
+        products = response.response["results"]["items"]
+        if not products:
+            return []
+        # exclude non table and not available top boardgames from results
+        results = self._filter_valid_results(products)
+        return self.build_results(results)
+
+    def _filter_valid_results(self, products: list) -> list:
+        """Filter only valid results"""
+
+        return [
+            product
+            for product in products
+            if product["is_presence"]
+            and product["params_data"]["category_id"] in self.game_category_ids
+        ]

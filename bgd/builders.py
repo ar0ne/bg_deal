@@ -9,6 +9,7 @@ from libbgg.infodict import InfoDict
 
 from bgd.constants import (
     BELARUS,
+    FIFTHELEMENT,
     KUFAR,
     ONLINER,
     OZBY,
@@ -437,3 +438,39 @@ class GameSearchResultTwentyFirstVekBuilder(GameSearchResultBuilder):
         pic_url = product["picture"]
         bigger_img = pic_url.replace("preview_s", "preview_b")
         return [bigger_img]
+
+
+class GameSearchResultFifthElementBuilder(GameSearchResultBuilder):
+    """Builder for GameSearch results from 5element"""
+
+    BASE_URL = "https://5element.by"
+
+    @classmethod
+    def from_search_result(cls, search_result: dict) -> GameSearchResult:
+        """Build search result"""
+        return GameSearchResult(
+            description="",
+            images=cls._extract_images(search_result),
+            location=None,
+            owner=None,
+            price=cls._extract_price(search_result),
+            source=FIFTHELEMENT,
+            subject=search_result["name"],
+            url=cls._extract_url(search_result),
+        )
+
+    @staticmethod
+    def _extract_images(product: dict) -> list[str]:
+        """Extract product images"""
+        return [product["picture"]]
+
+    @staticmethod
+    def _extract_price(product: dict) -> Optional[Price]:
+        """Extract price"""
+        price = product["price"] * 100
+        return Price(byn=price, usd=convert_byn_to_usd(price))
+
+    @classmethod
+    def _extract_url(cls, product: dict) -> str:
+        """Extract product url"""
+        return f"{cls.BASE_URL}{product['url']}"

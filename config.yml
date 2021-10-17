@@ -1,3 +1,5 @@
+templates:
+  dir: templates
 kufar:
   game_category_id: 4140
 wildberries:
@@ -6,5 +8,6 @@ ozon:
   game_category_id: nastolnye-igry-13507
 ozby:
   game_category_id: 1103640
-templates:
-  dir: templates
+fifthelement:
+  game_category_id: 505,507
+  search_app_id: 11432

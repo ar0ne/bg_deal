@@ -2,6 +2,7 @@
 App Constants
 """
 BELARUS = "Беларусь"
+FIFTHELEMENT = "fifthelement"
 KUFAR = "kufar"
 ONLINER = "onliner"
 OZBY = "ozby"

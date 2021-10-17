@@ -249,3 +249,15 @@ class TwentyFirstVekApiClient(ApiClient):
         """Search by query string"""
         url = f"{self.SEARCH_PATH}?q={query}"
         return await self.connect("GET", self.BASE_SEARCH_URL, url)
+
+
+class FifthElementApiClient(ApiClient):
+    """Api client for 5element.by"""
+
+    BASE_SEARCH_URL = "https://api.multisearch.io"
+
+    async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
+        """Search query string"""
+        search_app_id = options["search_app_id"]  # type: ignore
+        url = f"?query={query}&id={search_app_id}&lang=ru&autocomplete=true"
+        return await self.connect("GET", self.BASE_SEARCH_URL, url)

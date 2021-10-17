@@ -8,6 +8,7 @@ from starlette.templating import Jinja2Templates
 
 from bgd import services
 from bgd.builders import (
+    GameSearchResultFifthElementBuilder,
     GameSearchResultKufarBuilder,
     GameSearchResultOnlinerBuilder,
     GameSearchResultOzByBuilder,
@@ -17,6 +18,7 @@ from bgd.builders import (
 )
 from bgd.clients import (
     BoardGameGeekApiClient,
+    FifthElementApiClient,
     KufarApiClient,
     OnlinerApiClient,
     OzByApiClient,
@@ -107,6 +109,17 @@ class ApplicationContainer(containers.DeclarativeContainer):
         result_builder=GameSearchResultTwentyFirstVekBuilder,
     )
 
+    fifth_element_api_client = providers.Factory(
+        FifthElementApiClient,
+    )
+    fifth_element_service = providers.Factory(
+        services.FifthElementSearchService,
+        client=fifth_element_api_client,
+        game_category_id=config.fifthelement.game_category_id,
+        search_app_id=config.fifthelement.search_app_id,
+        result_builder=GameSearchResultFifthElementBuilder,
+    )
+
     data_sources = providers.List(
         kufar_search_service,
         wildberreis_search_service,
@@ -114,4 +127,5 @@ class ApplicationContainer(containers.DeclarativeContainer):
         ozby_search_service,
         onliner_search_service,
         twenty_first_vek_service,
+        fifth_element_service,
     )
