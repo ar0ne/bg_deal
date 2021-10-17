@@ -11,7 +11,8 @@
  - ozon.ru
  - oz.by
  - onliner.by
- - 21vek.by (TBD)
+ - 21vek.by
+ - 5element.by
 
 
 ## How to run
