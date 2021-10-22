@@ -8,7 +8,7 @@
     {% if game_info %}
     <div class="bg-image p-5 shadow-1-strong rounded mb-5 text-white"
          style="background-image: url('{{ game_info.image }}');">
-        <h1 class="mb-3 text-center">{{ game_info.name }}</h1>
+        <h1 id="game-name" class="mb-3 text-center">{{ game_info.name }}</h1>
         <div class="game_info">
             <p>{{ game_info.description }}</p>
             <div class="row">
@@ -23,6 +23,7 @@
                 <div class="col-3"><p>Average rate: {{ game_info.statistics.avg_rate }}</p></div>
                 <div class="col-3"><p>Best for number of players: {{ game_info.best_num_players }}</p></div>
             </div>
+            {% if game_info.statistics.ranks %}
             <div class="row">
                 <div class="col-6">
                     <p>Ranks:</p>
@@ -30,8 +31,8 @@
                     <li>{{ rank.name }}: {{ rank.value }}</li>
                     {% endfor %}
                 </div>
-
             </div>
+            {% endif %}
         </div>
     </div>
     {% else %}

@@ -87,13 +87,15 @@ async def search_page(
 ):
     """Render Search page"""
     results = await search_game(name)
-    game_info = await game_details(name)
+    game_info = await asyncio.gather(game_details(name), return_exceptions=True)
     return templates.TemplateResponse(
         "search.html",
         {
             "request": request,
             "name": name,
             "results": results,
-            "game_info": game_info,
+            "game_info": game_info[0]
+            if isinstance(game_info[0], GameDetailsResult)
+            else None,
         },
     )

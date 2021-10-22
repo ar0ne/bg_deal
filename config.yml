@@ -18,4 +18,4 @@ vk:
   api_token: ${VK_API_TOKEN}
   limit: 50
 app:
-  suggested_games: Gloomhaven, Inis, Nemesis, Too Many Bones, Twilight Struggle, Mansions of Madness
+  suggested_games: Gloomhaven, Inis, Nemesis, Too Many Bones, Twilight Struggle, Mansions of Madness, Сумерки Империи, Война Кольца

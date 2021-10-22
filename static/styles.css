@@ -16,6 +16,9 @@ main {
     opacity: 90%;
     color: black;
 }
+#game-name {
+   background-color: rgba(0, 0, 0, 0.6);
+}
 .card-logo {
     float: right;
     height: 2em;
