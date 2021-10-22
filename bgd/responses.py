@@ -61,6 +61,8 @@ class GameDetailsResult(BaseModel):
     """Game details result model"""
 
     best_num_players: Optional[str]
+    bgg_id: str
+    bgg_url: str
     description: str
     id: str
     image: str
@@ -70,6 +72,7 @@ class GameDetailsResult(BaseModel):
     min_players: str
     name: str
     playing_time: str
+    source: str
     statistics: GameStatistic
     url: str
     year_published: str

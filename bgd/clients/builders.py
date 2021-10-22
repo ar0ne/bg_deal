@@ -4,17 +4,21 @@ App builders
 import abc
 import html
 import itertools
-from typing import Generator, List, Optional, Tuple
+from typing import Any, Generator, List, Optional, Tuple
 
 from libbgg.infodict import InfoDict
 
+from bgd.clients.utils import clean_html, convert_byn_to_usd, remove_backslashes
 from bgd.constants import (
     BELARUS,
+    BGG,
     FIFTHELEMENT,
     KUFAR,
+    NOT_AVAILABLE,
     ONLINER,
     OZBY,
     OZON,
+    TESERA,
     TWENTYFIRSTVEK,
     VK,
     WILDBERRIES,
@@ -28,20 +32,85 @@ from bgd.responses import (
     GameStatistic,
     Price,
 )
-from bgd.utils import convert_byn_to_usd, remove_backslashes
+
+BGG_GAME_URL = "https://boardgamegeek.com/boardgame"
 
 
-class GameDetailsResultBuilder:
-    """Builder for GameDetailsResult"""
-
-    GAME_URL = "https://boardgamegeek.com/boardgame"
+class GameDetailsResultBuilder(abc.ABC):
+    """Abstract GameDetailsResultBuilder class"""
 
     @classmethod
-    def from_game_info(cls, game_info: InfoDict) -> GameDetailsResult:
+    @abc.abstractmethod
+    def build(cls, game_info: Any) -> GameDetailsResult:
+        """Build game details result"""
+
+
+class TeseraGameDetailsResultBuilder(GameDetailsResultBuilder):
+    """Result builder for game details from Tesera service"""
+
+    @classmethod
+    def build(cls, game_info: Any) -> GameDetailsResult:
+        game = game_info["game"]
+        return GameDetailsResult(
+            best_num_players=cls._extract_best_num_players(game),
+            bgg_id=game["bggId"],
+            bgg_url=f"{BGG_GAME_URL}/{game['bggId']}",
+            description=cls._extract_description(game),
+            id=game["id"],
+            image=game["photoUrl"],
+            max_play_time=game["playtimeMax"],
+            max_players=game["playersMax"],
+            min_play_time=game["playtimeMin"],
+            min_players=game["playersMin"],
+            name=game["title"],
+            playing_time=game["playtimeMax"],
+            source=TESERA,
+            statistics=cls._build_game_statistics(game_info),
+            url=game["teseraUrl"],
+            year_published=game["year"],
+        )
+
+    @staticmethod
+    def _extract_description(game: dict) -> str:
+        """Extract game description"""
+        description = (
+            game["description"] if "description" in game else game["descriptionShort"]
+        )
+        description_without_html_tags = clean_html(description)
+        unescaped = html.unescape(description_without_html_tags)
+        removed_eol = unescaped.replace("\r\n", " ")
+        return removed_eol.strip()
+
+    @staticmethod
+    def _extract_best_num_players(game: dict) -> str:
+        """Extract best number of players"""
+        min_recommended = game["playersMinRecommend"]
+        max_recommended = game["playersMaxRecommend"]
+        if min_recommended == max_recommended:
+            return min_recommended
+        return f"{min_recommended},{max_recommended}"
+
+    @classmethod
+    def _build_game_statistics(cls, game_info: dict) -> GameStatistic:
+        """Build game statistics"""
+        return GameStatistic(
+            avg_rate=game_info["game"]["bggRating"],
+            ranks=[],
+            weight=NOT_AVAILABLE,
+        )
+
+
+class BGGGameDetailsResultBuilder(GameDetailsResultBuilder):
+    """Builder for GameDetailsResult"""
+
+    @classmethod
+    def build(cls, game_info: InfoDict) -> GameDetailsResult:
         """Build details result for the game"""
         item = game_info.get("items").get("item")
         return GameDetailsResult(
             best_num_players=cls._extract_best_num_players(item),
+            bgg_id=item["id"],
+            bgg_url=cls._build_game_url(item),
             description=cls._extract_description(item),
             id=item["id"],
             image=item["image"]["TEXT"],
@@ -51,6 +120,7 @@ class GameDetailsResultBuilder:
             min_players=item["minplayers"]["value"],
             name=cls._get_game_name(item),
             playing_time=item["playingtime"]["value"],
+            source=BGG,
             statistics=cls._build_game_statistics(item["statistics"]),
             url=cls._build_game_url(item),
             year_published=item["yearpublished"]["value"],
@@ -92,7 +162,7 @@ class GameDetailsResultBuilder:
     @classmethod
     def _build_game_url(cls, item: InfoDict) -> str:
         """Build url to the game on bgg website"""
-        return f"{cls.GAME_URL}/{item['id']}"
+        return f"{BGG_GAME_URL}/{item['id']}"
 
     @classmethod
     def _extract_best_num_players(cls, item: InfoDict) -> Optional[str]:

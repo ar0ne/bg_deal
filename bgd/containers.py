@@ -8,6 +8,7 @@ from starlette.templating import Jinja2Templates
 
 from bgd.clients import services
 from bgd.clients.builders import (
+    BGGGameDetailsResultBuilder,
     GameSearchResultFifthElementBuilder,
     GameSearchResultKufarBuilder,
     GameSearchResultOnlinerBuilder,
@@ -16,6 +17,7 @@ from bgd.clients.builders import (
     GameSearchResultTwentyFirstVekBuilder,
     GameSearchResultVkontakteBuilder,
     GameSearchResultWildberriesBuilder,
+    TeseraGameDetailsResultBuilder,
 )
 from bgd.clients.clients import (
     BoardGameGeekApiClient,
@@ -24,6 +26,7 @@ from bgd.clients.clients import (
     OnlinerApiClient,
     OzByApiClient,
     OzonApiClient,
+    TeseraApiClient,
     TwentyFirstVekApiClient,
     VkontakteApiClient,
     WildberriesApiClient,
@@ -49,6 +52,16 @@ class ApplicationContainer(containers.DeclarativeContainer):
     bgg_service = providers.Factory(
         services.BoardGameGeekGameInfoService,
         client=bgg_api_client,
+        builder=BGGGameDetailsResultBuilder,
+    )
+
+    tesera_api_client = providers.Factory(
+        TeseraApiClient,
+    )
+    tesera_service = providers.Factory(
+        services.TeseraGameInfoService,
+        client=tesera_api_client,
+        builder=TeseraGameDetailsResultBuilder,
     )
 
     kufar_api_client = providers.Factory(

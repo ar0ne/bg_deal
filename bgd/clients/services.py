@@ -9,52 +9,56 @@ import re
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional, Tuple, Union
 
+from libbgg.infodict import InfoDict
+
 from bgd.clients.builders import GameDetailsResultBuilder, GameSearchResultBuilder
-from bgd.clients.clients import (
-    BoardGameGeekApiClient,
-    GameSearchApiClient,
-    TeseraApiClient,
-)
-from bgd.clients.responses import BGGAPIResponse, JsonResponse
+from bgd.clients.clients import GameInfoSearchApiClient, GameSearchApiClient
+from bgd.clients.responses import JsonResponse
 from bgd.errors import GameNotFoundError
 from bgd.responses import GameDetailsResult, GameSearchResult
 
 log = logging.getLogger(__name__)
 
+GameAlias = Union[str, int]
+
 
 class GameInfoService(ABC):
     """Abstract game info service"""
 
+    def __init__(
+        self,
+        client: GameInfoSearchApiClient,
+        builder: GameDetailsResultBuilder,
+    ) -> None:
+        """Init Search Service"""
+        self.client = client
+        self.game_result_builder = builder
+
+    async def get_board_game_info(
+        self, game: str, exact: bool = True
+    ) -> GameDetailsResult:
+        """Get board game info from API"""
+        search_resp = await self.client.search_game_info(game, {"exact": exact})
+        game_alias = self.get_game_alias(search_resp.response)
+        if not game_alias:
+            raise GameNotFoundError(game)
+        game_info_resp = await self.client.get_game_details(game_alias)
+        return self.game_result_builder.build(game_info_resp.response)
+
     @abstractmethod
-    async def get_board_game_info(self, game: str, exact: bool) -> GameDetailsResult:
-        """Get info about board game"""
+    def get_game_alias(self, search_results: Any) -> Optional[GameAlias]:
+        """Choose the best option from search results"""
 
 
 class BoardGameGeekGameInfoService(GameInfoService):
     """Board Game Geek service"""
 
-    def __init__(self, client: BoardGameGeekApiClient) -> None:
-        """Init Search Service"""
-        self._client = client
-
-    async def get_board_game_info(
-        self, game_name: str, exact: bool = True
-    ) -> GameDetailsResult:
-        """Get info about board game"""
-        search_resp = await self._client.search_game_info(game_name, {"exact": exact})
-        game_id = self._get_game_id_from_search_result(search_resp)
-        if not game_id:
-            raise GameNotFoundError(game_name)
-        game_info_resp = await self._client.get_game_details(game_id)
-        return GameDetailsResultBuilder.from_game_info(game_info_resp.response)
-
-    @staticmethod
-    def _get_game_id_from_search_result(search_resp: BGGAPIResponse) -> Optional[str]:
+    def get_game_alias(self, search_resp: InfoDict) -> Optional[GameAlias]:
         """
         Get game id from result of searching.
         Skip all games without year of publishing and take the newest one.
         """
-        item = search_resp.response.get("items").get("item")
+        item = search_resp.get("items").get("item")
         if not item:
             return None
         if not isinstance(item, list):
@@ -74,12 +78,12 @@ class BoardGameGeekGameInfoService(GameInfoService):
 class TeseraGameInfoService(GameInfoService):
     """Game info service for tesera.ru"""
 
-    def __init__(self, client: TeseraApiClient) -> None:
-        """Init Search Service"""
-        self._client = client
-
-    async def get_board_game_info(self, game: str, exact: bool) -> GameDetailsResult:
-        """Get board game info from API"""
+    def get_game_alias(self, search_resp: JsonResponse) -> Optional[GameAlias]:
+        """Choose the game from search response and returns alias"""
+        # take first item in the list
+        if len(search_resp):
+            return search_resp[0]["alias"]
+        return None
 
 
 class DataSource:

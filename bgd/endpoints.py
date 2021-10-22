@@ -10,11 +10,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from bgd.clients.services import (
-    BoardGameGeekGameInfoService,
-    DataSource,
-    SuggestGameService,
-)
+from bgd.clients.services import DataSource, GameInfoService, SuggestGameService
 from bgd.containers import ApplicationContainer
 from bgd.responses import GameDetailsResult, GameSearchResult
 
@@ -47,12 +43,19 @@ async def search_game(
 @inject
 async def game_details(
     game: str,
-    service: BoardGameGeekGameInfoService = Depends(
-        Provide[ApplicationContainer.bgg_service]
+    bgg_service: GameInfoService = Depends(Provide[ApplicationContainer.bgg_service]),
+    tesera_service: GameInfoService = Depends(
+        Provide[ApplicationContainer.tesera_service]
     ),
 ):
     """Fetches board game info from provider"""
-    return await service.get_board_game_info(game)
+    game_info = await asyncio.gather(
+        bgg_service.get_board_game_info(game), return_exceptions=True
+    )
+    if isinstance(game_info[0], GameDetailsResult):
+        return game_info[0]
+    # try to backward result from tesera
+    return await tesera_service.get_board_game_info(game)
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -84,15 +87,13 @@ async def search_page(
 ):
     """Render Search page"""
     results = await search_game(name)
-    game_info = await asyncio.gather(game_details(name), return_exceptions=True)
+    game_info = await game_details(name)
     return templates.TemplateResponse(
         "search.html",
         {
             "request": request,
             "name": name,
             "results": results,
-            "game_info": game_info[0]
-            if isinstance(game_info[0], GameDetailsResult)
-            else None,
+            "game_info": game_info,
         },
     )
