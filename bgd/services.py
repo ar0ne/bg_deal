@@ -4,6 +4,7 @@ App Services
 import asyncio
 import json
 import logging
+import random
 import re
 from abc import abstractmethod
 from typing import Any, List, Optional, Tuple, Union
@@ -28,9 +29,11 @@ class BoardGameGeekService:
         """Init Search Service"""
         self._client = client
 
-    async def get_board_game_info(self, game_name: str) -> GameDetailsResult:
+    async def get_board_game_info(
+        self, game_name: str, exact: bool = True
+    ) -> GameDetailsResult:
         """Get info about board game"""
-        search_resp = await self._client.search_game(game_name)
+        search_resp = await self._client.search_game(game_name, exact=exact)
         game_id = self._get_game_id_from_search_result(search_resp)
         if not game_id:
             raise GameNotFoundError(game_name)
@@ -313,3 +316,15 @@ class VkontakteSearchService(DataSource):
             for post in posts
             if re.search(kwargs.get("query"), post["text"], re.IGNORECASE)
         ]
+
+
+class SuggestGameService:
+    """Suggest game service"""
+
+    def __init__(self, games: str) -> None:
+        """Init service"""
+        self.games = [game.strip() for game in games.split(",")]
+
+    async def suggest(self) -> str:
+        """Suggest random game from the list"""
+        return random.choice(self.games)

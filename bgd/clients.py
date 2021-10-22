@@ -214,11 +214,11 @@ class BoardGameGeekApiClient:
     async def search_game(
         self,
         query: str,
-        exact: int = 1,
+        exact: bool = True,
         game_type: str = "boardgame",
     ) -> BGGAPIResponse:
         """Search game by exact(1) query in game_type(boardgame) section"""
-        url = f"{self.SEARCH_PATH}?exact={exact}&type={game_type}&query={query}"
+        url = f"{self.SEARCH_PATH}?exact={1 if exact else 0}&type={game_type}&query={query}"
         return await self.connect("GET", self.BASE_URL, url)
 
     async def get_thing_by_id(self, game_id: Union[str, int]) -> BGGAPIResponse:

@@ -122,12 +122,12 @@ class ApplicationContainer(containers.DeclarativeContainer):
         result_builder=GameSearchResultFifthElementBuilder,
     )
 
-    vkontkte_api_client = providers.Factory(
+    vk_api_client = providers.Factory(
         VkontakteApiClient,
     )
-    vkontakte_service = providers.Factory(
+    vk_service = providers.Factory(
         services.VkontakteSearchService,
-        client=vkontkte_api_client,
+        client=vk_api_client,
         game_category_id="",
         group_id=config.vk.group_id,
         group_name=config.vk.group_name,
@@ -144,5 +144,10 @@ class ApplicationContainer(containers.DeclarativeContainer):
         onliner_search_service,
         twenty_first_vek_service,
         fifth_element_service,
-        vkontakte_service,
+        vk_service,
+    )
+
+    suggest_game_service = providers.Factory(
+        services.SuggestGameService,
+        games=config.app.suggested_games,
     )

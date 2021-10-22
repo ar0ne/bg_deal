@@ -12,7 +12,7 @@ from fastapi.templating import Jinja2Templates
 
 from bgd.containers import ApplicationContainer
 from bgd.responses import GameDetailsResult, GameSearchResult
-from bgd.services import BoardGameGeekService, DataSource
+from bgd.services import BoardGameGeekService, DataSource, SuggestGameService
 
 router = APIRouter()
 
@@ -54,9 +54,19 @@ async def game_details(
 async def main_page(
     request: Request,
     templates: Jinja2Templates = Depends(Provide[ApplicationContainer.templates]),
+    suggest_game_service: SuggestGameService = Depends(
+        Provide[ApplicationContainer.suggest_game_service]
+    ),
 ):
     """Render main page"""
-    return templates.TemplateResponse("index.html", {"request": request})
+    suggested_game = await suggest_game_service.suggest()
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "suggested_game": suggested_game,
+        },
+    )
 
 
 @router.get("/search", response_class=HTMLResponse)
