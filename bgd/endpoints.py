@@ -10,9 +10,13 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
+from bgd.clients.services import (
+    BoardGameGeekGameInfoService,
+    DataSource,
+    SuggestGameService,
+)
 from bgd.containers import ApplicationContainer
 from bgd.responses import GameDetailsResult, GameSearchResult
-from bgd.services import BoardGameGeekService, DataSource, SuggestGameService
 
 router = APIRouter()
 
@@ -43,7 +47,9 @@ async def search_game(
 @inject
 async def game_details(
     game: str,
-    service: BoardGameGeekService = Depends(Provide[ApplicationContainer.bgg_service]),
+    service: BoardGameGeekGameInfoService = Depends(
+        Provide[ApplicationContainer.bgg_service]
+    ),
 ):
     """Fetches board game info from provider"""
     return await service.get_board_game_info(game)

@@ -3,15 +3,15 @@ Api clients
 """
 import json
 import logging
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import Optional, Union
 
 import aiohttp
 from aiohttp import ClientResponse
 from libbgg.infodict import InfoDict
 
-from bgd.errors import ApiClientError, NotFoundApiClientError
-from bgd.responses import APIResponse, BGGAPIResponse
+from bgd.clients.responses import APIResponse, BGGAPIResponse
+from bgd.errors import ApiClientError, PageNotFoundError
 
 log = logging.getLogger(__name__)
 
@@ -20,14 +20,14 @@ def handle_response(response: ClientResponse) -> None:
     """Handle response status and raise exception if needed"""
     status = response.status
     if status == 404:
-        log.warning("NotFoundApiClient error occurs for response %s", response)
-        raise NotFoundApiClientError(str(response.url))
+        log.warning("PageNotFound error occurs for response %s", response)
+        raise PageNotFoundError(str(response.url))
     if not 200 <= status < 300:
         log.warning("ApiClient error occurs for response %s", response)
         raise ApiClientError(str(status))
 
 
-class ApiClient:
+class ApiClient(ABC):
     """Abstract api client"""
 
     @staticmethod
@@ -49,12 +49,30 @@ class ApiClient:
                 r_json = await resp.json(content_type=None)
                 return APIResponse(r_json, resp.status)
 
+
+class GameSearchApiClient(ApiClient):
+    """Api client for searching games"""
+
     @abstractmethod
     async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
         """Search by query"""
 
 
-class KufarApiClient(ApiClient):
+class GameInfoSearchApiClient(ApiClient):
+    """Api client for game info searching"""
+
+    @abstractmethod
+    async def search_game_info(
+        self, query: str, options: Optional[dict] = None
+    ) -> APIResponse:
+        """Search info about game"""
+
+    @abstractmethod
+    async def get_game_details(self, game_id: Union[str, int]) -> APIResponse:
+        """Get info about the game"""
+
+
+class KufarApiClient(GameSearchApiClient):
     """Client for Kufar API"""
 
     BASE_URL = "https://cre-api.kufar.by"
@@ -82,7 +100,7 @@ class KufarApiClient(ApiClient):
         return await self.connect("GET", self.BASE_URL, self.CATEGORIES_PATH)
 
 
-class WildberriesApiClient(ApiClient):
+class WildberriesApiClient(GameSearchApiClient):
     """Client for Wildberries API"""
 
     BASE_SEARCH_URL = "https://wbxsearch-by.wildberries.ru"
@@ -134,7 +152,7 @@ class WildberriesApiClient(ApiClient):
         return await self.connect("GET", self.BASE_SEARCH_URL, url)
 
 
-class OzonApiClient(ApiClient):
+class OzonApiClient(GameSearchApiClient):
     """Api client for ozon.ru"""
 
     BASE_SEARCH_URL = "https://www.ozon.ru"
@@ -169,7 +187,7 @@ class OzonApiClient(ApiClient):
         }
 
 
-class OzByApiClient(ApiClient):
+class OzByApiClient(GameSearchApiClient):
     """Api client for Oz.by"""
 
     BASE_SEARCH_URL = "https://api.oz.by"
@@ -186,7 +204,65 @@ class OzByApiClient(ApiClient):
         return await self.connect("GET", self.BASE_SEARCH_URL, url)
 
 
-class BoardGameGeekApiClient:
+class OnlinerApiClient(GameSearchApiClient):
+    """Api client for onliner.by"""
+
+    BASE_SEARCH_URL = "https://catalog.onliner.by/sdapi"
+    SEARCH_PATH = "/catalog.api/search/products"
+
+    async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
+        """Search by query string"""
+        url = f"{self.SEARCH_PATH}?query={query}"
+        return await self.connect("GET", self.BASE_SEARCH_URL, url)
+
+
+class TwentyFirstVekApiClient(GameSearchApiClient):
+    """Api client for 21vek.by"""
+
+    BASE_SEARCH_URL = "https://search.21vek.by/api/v1.0"
+    SEARCH_PATH = "/search/suggest"
+
+    async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
+        """Search by query string"""
+        url = f"{self.SEARCH_PATH}?q={query}"
+        return await self.connect("GET", self.BASE_SEARCH_URL, url)
+
+
+class FifthElementApiClient(GameSearchApiClient):
+    """Api client for 5element.by"""
+
+    BASE_SEARCH_URL = "https://api.multisearch.io"
+
+    async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
+        """Search query string"""
+        search_app_id = options["search_app_id"]  # type: ignore
+        url = f"?query={query}&id={search_app_id}&lang=ru&autocomplete=true"
+        return await self.connect("GET", self.BASE_SEARCH_URL, url)
+
+
+class VkontakteApiClient(GameSearchApiClient):
+    """Api client for vk.com"""
+
+    BASE_URL = "https://api.vk.com/method"
+
+    async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
+        """Search query on group wall"""
+        group_id = f"-{options['group_id']}"
+        url = (
+            f"/wall.get"
+            f"?owner_id={group_id}"
+            f"&v={options['api_version']}"
+            f"&count={options['limit']}"
+            f"&access_token={options['api_token']}"
+        )
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
+        }
+        return await self.connect("GET", self.BASE_URL, url, headers=headers)
+
+
+class BoardGameGeekApiClient(GameInfoSearchApiClient):
     """Api client for BoardGameGeek"""
 
     BASE_URL = "https://api.geekdo.com/xmlapi2"
@@ -211,76 +287,33 @@ class BoardGameGeekApiClient:
                 info_dict = InfoDict.xml_to_info_dict(r_text, strip_errors=True)
                 return BGGAPIResponse(info_dict, resp.status)
 
-    async def search_game(
+    async def search_game_info(
         self,
         query: str,
-        exact: bool = True,
-        game_type: str = "boardgame",
+        options: Optional[dict] = None,
     ) -> BGGAPIResponse:
         """Search game by exact(1) query in game_type(boardgame) section"""
+        options = options or {}
+        game_type = options.get("game_type", "boardgame")
+        exact = options.get("exact", True)
         url = f"{self.SEARCH_PATH}?exact={1 if exact else 0}&type={game_type}&query={query}"
         return await self.connect("GET", self.BASE_URL, url)
 
-    async def get_thing_by_id(self, game_id: Union[str, int]) -> BGGAPIResponse:
+    async def get_game_details(self, game_id: Union[str, int]) -> BGGAPIResponse:
         """Get details about the game by id"""
         url = f"{self.THING_PATH}?stats=1&id={game_id}"
         return await self.connect("GET", self.BASE_URL, url)
 
 
-class OnlinerApiClient(ApiClient):
-    """Api client for onliner.by"""
+class TeseraApiClient(GameInfoSearchApiClient):
+    """Api client for tesera.ru"""
 
-    BASE_SEARCH_URL = "https://catalog.onliner.by/sdapi"
-    SEARCH_PATH = "/catalog.api/search/products"
+    BASE_URL = "https://api.tesera.ru"
+    SEARCH_PATH = "/search/games"
 
-    async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
-        """Search by query string"""
+    async def search_game_info(
+        self, query: str, options: Optional[dict] = None
+    ) -> APIResponse:
+        """Search game info """
         url = f"{self.SEARCH_PATH}?query={query}"
-        return await self.connect("GET", self.BASE_SEARCH_URL, url)
-
-
-class TwentyFirstVekApiClient(ApiClient):
-    """Api client for 21vek.by"""
-
-    BASE_SEARCH_URL = "https://search.21vek.by/api/v1.0"
-    SEARCH_PATH = "/search/suggest"
-
-    async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
-        """Search by query string"""
-        url = f"{self.SEARCH_PATH}?q={query}"
-        return await self.connect("GET", self.BASE_SEARCH_URL, url)
-
-
-class FifthElementApiClient(ApiClient):
-    """Api client for 5element.by"""
-
-    BASE_SEARCH_URL = "https://api.multisearch.io"
-
-    async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
-        """Search query string"""
-        search_app_id = options["search_app_id"]  # type: ignore
-        url = f"?query={query}&id={search_app_id}&lang=ru&autocomplete=true"
-        return await self.connect("GET", self.BASE_SEARCH_URL, url)
-
-
-class VkontakteApiClient(ApiClient):
-    """Api client for vk.com"""
-
-    BASE_URL = "https://api.vk.com/method"
-
-    async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
-        """Search query on group wall"""
-        count = options.get("count", 25)
-        group_id = f"-{options['group_id']}"
-        url = (
-            f"/wall.get"
-            f"?owner_id={group_id}"
-            f"&v={options['api_version']}"
-            f"&count={count}"
-            f"&access_token={options['api_token']}"
-        )
-        headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/x-www-form-urlencoded",
-        }
-        return await self.connect("GET", self.BASE_URL, url, headers=headers)
+        return await self.connect("GET", self.BASE_URL, url)

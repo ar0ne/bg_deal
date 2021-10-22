@@ -6,6 +6,7 @@
 ## Data sources
 
  - boardgamegeek.com (game info)
+ - tesera.ru (game info)
  - kufar.by
  - by.wildberries.ru
  - ozon.ru

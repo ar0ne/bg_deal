@@ -6,8 +6,8 @@ import os
 from dependency_injector import containers, providers
 from starlette.templating import Jinja2Templates
 
-from bgd import services
-from bgd.builders import (
+from bgd.clients import services
+from bgd.clients.builders import (
     GameSearchResultFifthElementBuilder,
     GameSearchResultKufarBuilder,
     GameSearchResultOnlinerBuilder,
@@ -17,7 +17,7 @@ from bgd.builders import (
     GameSearchResultVkontakteBuilder,
     GameSearchResultWildberriesBuilder,
 )
-from bgd.clients import (
+from bgd.clients.clients import (
     BoardGameGeekApiClient,
     FifthElementApiClient,
     KufarApiClient,
@@ -47,7 +47,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
         BoardGameGeekApiClient,
     )
     bgg_service = providers.Factory(
-        services.BoardGameGeekService,
+        services.BoardGameGeekGameInfoService,
         client=bgg_api_client,
     )
 
@@ -133,6 +133,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
         group_name=config.vk.group_name,
         api_token=config.vk.api_token,
         api_version=config.vk.api_version,
+        limit=config.vk.limit,
         result_builder=GameSearchResultVkontakteBuilder,
     )
 

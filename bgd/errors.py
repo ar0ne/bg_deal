@@ -29,7 +29,7 @@ class ApiClientError(ServiceException):
         self.message = f"Api Client Error: status = {message}"
 
 
-class NotFoundApiClientError(ApiClientError):
+class PageNotFoundError(ApiClientError):
     """Page not found Api Client Error"""
 
     def __init__(self, url: str) -> None:

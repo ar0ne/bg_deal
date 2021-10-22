@@ -1,13 +1,9 @@
 """
 App response schemas
 """
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Union
+from typing import List, Optional, Union
 
-from libbgg.infodict import InfoDict
 from pydantic.main import BaseModel  # pylint: disable=no-name-in-module
-
-JsonResponse = Dict[str, Any]
 
 
 class GameLocation(BaseModel):
@@ -77,19 +73,3 @@ class GameDetailsResult(BaseModel):
     statistics: GameStatistic
     url: str
     year_published: str
-
-
-@dataclass
-class APIResponse:
-    """API Response class"""
-
-    response: JsonResponse
-    status: int
-
-
-@dataclass
-class BGGAPIResponse:
-    """BGG Api Response model"""
-
-    response: InfoDict
-    status: int

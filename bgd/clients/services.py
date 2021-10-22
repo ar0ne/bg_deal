@@ -6,23 +6,31 @@ import json
 import logging
 import random
 import re
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import Any, List, Optional, Tuple, Union
 
-from bgd.builders import GameDetailsResultBuilder, GameSearchResultBuilder
-from bgd.clients import ApiClient, BoardGameGeekApiClient
-from bgd.errors import GameNotFoundError
-from bgd.responses import (
-    BGGAPIResponse,
-    GameDetailsResult,
-    GameSearchResult,
-    JsonResponse,
+from bgd.clients.builders import GameDetailsResultBuilder, GameSearchResultBuilder
+from bgd.clients.clients import (
+    BoardGameGeekApiClient,
+    GameSearchApiClient,
+    TeseraApiClient,
 )
+from bgd.clients.responses import BGGAPIResponse, JsonResponse
+from bgd.errors import GameNotFoundError
+from bgd.responses import GameDetailsResult, GameSearchResult
 
 log = logging.getLogger(__name__)
 
 
-class BoardGameGeekService:
+class GameInfoService(ABC):
+    """Abstract game info service"""
+
+    @abstractmethod
+    async def get_board_game_info(self, game: str, exact: bool) -> GameDetailsResult:
+        """Get info about board game"""
+
+
+class BoardGameGeekGameInfoService(GameInfoService):
     """Board Game Geek service"""
 
     def __init__(self, client: BoardGameGeekApiClient) -> None:
@@ -33,11 +41,11 @@ class BoardGameGeekService:
         self, game_name: str, exact: bool = True
     ) -> GameDetailsResult:
         """Get info about board game"""
-        search_resp = await self._client.search_game(game_name, exact=exact)
+        search_resp = await self._client.search_game_info(game_name, {"exact": exact})
         game_id = self._get_game_id_from_search_result(search_resp)
         if not game_id:
             raise GameNotFoundError(game_name)
-        game_info_resp = await self._client.get_thing_by_id(game_id)
+        game_info_resp = await self._client.get_game_details(game_id)
         return GameDetailsResultBuilder.from_game_info(game_info_resp.response)
 
     @staticmethod
@@ -63,12 +71,23 @@ class BoardGameGeekService:
         return item[-1]["id"]
 
 
+class TeseraGameInfoService(GameInfoService):
+    """Game info service for tesera.ru"""
+
+    def __init__(self, client: TeseraApiClient) -> None:
+        """Init Search Service"""
+        self._client = client
+
+    async def get_board_game_info(self, game: str, exact: bool) -> GameDetailsResult:
+        """Get board game info from API"""
+
+
 class DataSource:
     """Abstract search service"""
 
     def __init__(
         self,
-        client: ApiClient,
+        client: GameSearchApiClient,
         game_category_id: Union[str, int],
         result_builder: GameSearchResultBuilder,
     ) -> None:
@@ -242,7 +261,7 @@ class FifthElementSearchService(DataSource):
 
     def __init__(
         self,
-        client: ApiClient,
+        client: GameSearchApiClient,
         game_category_id: str,
         result_builder: GameSearchResultBuilder,
         search_app_id: str,
@@ -279,13 +298,14 @@ class VkontakteSearchService(DataSource):
 
     def __init__(
         self,
-        client: ApiClient,
+        client: GameSearchApiClient,
         game_category_id: str,
         result_builder: GameSearchResultBuilder,
         api_version: str,
         api_token: str,
         group_id: str,
         group_name: str,
+        limit: int,
     ) -> None:
         """Init 5th element Search Service"""
         # there are more than one category that we should check
@@ -294,6 +314,7 @@ class VkontakteSearchService(DataSource):
         self.api_token = api_token
         self.group_id = group_id
         self.group_name = group_name
+        self.limit = limit
 
     async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         search_response = await self._client.search(
@@ -302,6 +323,7 @@ class VkontakteSearchService(DataSource):
                 "api_token": self.api_token,
                 "api_version": self.api_version,
                 "group_id": self.group_id,
+                "limit": self.limit,
             },
         )
         products = self.filter_results(search_response.response, query=query)
