@@ -53,12 +53,12 @@ class GameInfoService(ABC):
 class BoardGameGeekGameInfoService(GameInfoService):
     """Board Game Geek service"""
 
-    def get_game_alias(self, search_resp: InfoDict) -> Optional[GameAlias]:
+    def get_game_alias(self, search_results: InfoDict) -> Optional[GameAlias]:
         """
         Get game id from result of searching.
         Skip all games without year of publishing and take the newest one.
         """
-        item = search_resp.get("items").get("item")
+        item = search_results.get("items").get("item")
         if not item:
             return None
         if not isinstance(item, list):
@@ -78,11 +78,11 @@ class BoardGameGeekGameInfoService(GameInfoService):
 class TeseraGameInfoService(GameInfoService):
     """Game info service for tesera.ru"""
 
-    def get_game_alias(self, search_resp: JsonResponse) -> Optional[GameAlias]:
+    def get_game_alias(self, search_results: JsonResponse) -> Optional[GameAlias]:
         """Choose the game from search response and returns alias"""
         # take first item in the list
-        if len(search_resp):
-            return search_resp[0]["alias"]
+        if len(search_results) and isinstance(search_results, list):
+            return search_results[0]["alias"]
         return None
 
 
@@ -300,6 +300,7 @@ class FifthElementSearchService(DataSource):
 class VkontakteSearchService(DataSource):
     """Search service for vk.com"""
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         client: GameSearchApiClient,
@@ -333,14 +334,14 @@ class VkontakteSearchService(DataSource):
         products = self.filter_results(search_response.response, query=query)
         return self.build_results(products)
 
-    def filter_results(self, response: JsonResponse, *args, **kwargs) -> list:
+    def filter_results(self, response: JsonResponse, **kwargs) -> list:
         """Filter only valid results"""
         posts = response["response"]["items"]
         # @todo: is it possible to do it better?  # typing: disable=fixme
         return [
             post
             for post in posts
-            if re.search(kwargs.get("query"), post["text"], re.IGNORECASE)
+            if re.search(kwargs.get("query"), post["text"], re.IGNORECASE)  # type: ignore
         ]
 
 

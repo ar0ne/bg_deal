@@ -571,7 +571,7 @@ class GameSearchResultVkontakteBuilder(GameSearchResultBuilder):
     @classmethod
     def _extract_url(cls, post: dict) -> str:
         """Extract wall post url"""
-        # todo: group name should come from configs
+        # todo: group name should come from configs  # pylint: disable=fixme
         return cls.BASE_URL + cls.GROUP_POST_PATH.format(
             "baraholkanastolokrb", post["owner_id"], post["id"]
         )

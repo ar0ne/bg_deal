@@ -68,7 +68,7 @@ class GameInfoSearchApiClient(ApiClient):
         """Search info about game"""
 
     @abstractmethod
-    async def get_game_details(self, game_id: Union[str, int]) -> APIResponse:
+    async def get_game_details(self, game_alias: Union[str, int]) -> APIResponse:
         """Get info about the game"""
 
 
@@ -247,6 +247,7 @@ class VkontakteApiClient(GameSearchApiClient):
 
     async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
         """Search query on group wall"""
+        options = options or {}
         group_id = f"-{options['group_id']}"
         url = (
             f"/wall.get"
@@ -275,7 +276,7 @@ class BoardGameGeekApiClient(GameInfoSearchApiClient):
         method: str,
         base_url: str,
         path: str,
-        request_body_dict: str = "",
+        request_body_dict: Optional[str] = None,
         headers: Optional[dict] = None,
     ) -> BGGAPIResponse:
         """Connect client to BGG api"""
@@ -299,9 +300,9 @@ class BoardGameGeekApiClient(GameInfoSearchApiClient):
         url = f"{self.SEARCH_PATH}?exact={1 if exact else 0}&type={game_type}&query={query}"
         return await self.connect("GET", self.BASE_URL, url)
 
-    async def get_game_details(self, game_id: Union[str, int]) -> BGGAPIResponse:
+    async def get_game_details(self, game_alias: Union[str, int]) -> BGGAPIResponse:
         """Get details about the game by id"""
-        url = f"{self.THING_PATH}?stats=1&id={game_id}"
+        url = f"{self.THING_PATH}?stats=1&id={game_alias}"
         return await self.connect("GET", self.BASE_URL, url)
 
 
