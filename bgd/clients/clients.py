@@ -3,17 +3,23 @@ Api clients
 """
 import json
 import logging
-from abc import ABC, abstractmethod
-from typing import Optional, Union
+from typing import Optional, Protocol, Union
 
 import aiohttp
 from aiohttp import ClientResponse
 from libbgg.infodict import InfoDict
 
-from bgd.clients.responses import APIResponse, BGGAPIResponse
+from bgd.clients.responses import (
+    APIRequest,
+    APIResponse,
+    JSONAPIResponse,
+    XMLAPIResponse,
+)
 from bgd.errors import ApiClientError, PageNotFoundError
 
 log = logging.getLogger(__name__)
+
+GET = "GET"
 
 
 def handle_response(response: ClientResponse) -> None:
@@ -27,52 +33,114 @@ def handle_response(response: ClientResponse) -> None:
         raise ApiClientError(str(status))
 
 
-class ApiClient(ABC):
-    """Abstract api client"""
+class IApiClient(Protocol):
+    """api client interface"""
 
-    @staticmethod
     async def connect(
+        self,
         method: str,
         base_url: str,
         path: str,
-        request_body_dict: Optional[str] = None,
+        body: Optional[str] = None,
+        headers: Optional[dict] = None,
+    ) -> APIResponse:
+        ...
+
+    @staticmethod
+    def prepare_request(**kwargs) -> APIRequest:
+        ...
+
+    @staticmethod
+    async def prepare_response(response: ClientResponse) -> APIResponse:
+        ...
+
+
+class Connector:
+    """Simple API connector"""
+
+    async def connect(
+        self,
+        method: str,
+        base_url: str,
+        path: str,
+        body: Optional[str] = None,
         headers: Optional[dict] = None,
     ) -> APIResponse:
         """Connect Api to resource"""
         async with aiohttp.ClientSession() as session:
             url = base_url + path
-            body_json = None if not request_body_dict else json.dumps(request_body_dict)
-            async with session.request(
-                method, url, headers=headers, json=body_json
-            ) as resp:
+            request = self.prepare_request(
+                method=method, url=url, headers=headers, body=body
+            )
+            async with session.request(**request.to_dict()) as resp:
                 handle_response(resp)
-                r_json = await resp.json(content_type=None)
-                return APIResponse(r_json, resp.status)
+                return await self.prepare_response(resp)
 
 
-class GameSearchApiClient(ApiClient):
+class JSONResource:
+    """Json Resource"""
+
+    @staticmethod
+    def prepare_request(**kwargs: dict) -> APIRequest:
+        """Prepare request to work with JSON resources"""
+        body = kwargs.pop("body", None)
+        body = None if not body else json.dumps(body)
+        return APIRequest(**kwargs, json=body)
+
+    @staticmethod
+    async def prepare_response(response: ClientResponse) -> JSONAPIResponse:
+        """Prepare response from Json resource"""
+        r_json = await response.json(content_type=None)
+        return JSONAPIResponse(r_json, response.status)
+
+
+class XMLResource:
+    """XML Resource"""
+
+    @staticmethod
+    def prepare_request(**kwargs) -> APIRequest:
+        """Prepare request to work with XML resource"""
+        return APIRequest(**kwargs)
+
+    @staticmethod
+    async def prepare_response(response: ClientResponse) -> XMLAPIResponse:
+        """Prepare response from XML resource"""
+        r_text = await response.text(encoding=None)
+        info_dict = InfoDict.xml_to_info_dict(r_text, strip_errors=True)
+        return XMLAPIResponse(info_dict, response.status)
+
+
+class JSONAPIClient(JSONResource, Connector):
+    """Json API client"""
+
+
+class XMLAPIClient(XMLResource, Connector):
+    """Xml API client"""
+
+
+class GameSearcher(Protocol):
     """Api client for searching games"""
 
-    @abstractmethod
     async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
         """Search by query"""
+        ...
 
 
-class GameInfoSearchApiClient(ApiClient):
+class GameInfoSearcher(Protocol):
     """Api client for game info searching"""
 
-    @abstractmethod
     async def search_game_info(
         self, query: str, options: Optional[dict] = None
     ) -> APIResponse:
         """Search info about game"""
+        ...
 
-    @abstractmethod
     async def get_game_details(self, game_alias: Union[str, int]) -> APIResponse:
         """Get info about the game"""
+        ...
 
 
-class KufarApiClient(GameSearchApiClient):
+class KufarApiClient(GameSearcher, JSONAPIClient):
     """Client for Kufar API"""
 
     BASE_URL = "https://cre-api.kufar.by"
@@ -93,14 +161,14 @@ class KufarApiClient(GameSearchApiClient):
             if size:
                 url += f"&size={size}"
 
-        return await self.connect("GET", self.BASE_URL, url)
+        return await self.connect(GET, self.BASE_URL, url)
 
     async def get_all_categories(self) -> APIResponse:
         """Get all existing categories"""
-        return await self.connect("GET", self.BASE_URL, self.CATEGORIES_PATH)
+        return await self.connect(GET, self.BASE_URL, self.CATEGORIES_PATH)
 
 
-class WildberriesApiClient(GameSearchApiClient):
+class WildberriesApiClient(GameSearcher, JSONAPIClient):
     """Client for Wildberries API"""
 
     BASE_SEARCH_URL = "https://wbxsearch-by.wildberries.ru"
@@ -110,7 +178,7 @@ class WildberriesApiClient(GameSearchApiClient):
     async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
         """Search items by query"""
         url = await self._build_search_query_url(query)
-        return await self.connect("GET", self.BASE_CATALOG_URL, url)
+        return await self.connect(GET, self.BASE_CATALOG_URL, url)
 
     async def _build_search_query_url(
         self,
@@ -149,45 +217,37 @@ class WildberriesApiClient(GameSearchApiClient):
 
         """
         url = f"{self.SEARCH_PATH}?query={query}"
-        return await self.connect("GET", self.BASE_SEARCH_URL, url)
+        return await self.connect(GET, self.BASE_SEARCH_URL, url)
 
 
-class OzonApiClient(GameSearchApiClient):
+class OzonApiClient(GameSearcher, JSONAPIClient):
     """Api client for ozon.ru"""
 
     BASE_SEARCH_URL = "https://www.ozon.ru"
     SEARCH_PATH = "/api/composer-api.bx/page/json/v2?url=/category"
+    HEADERS = {
+        "dnt": "1",
+        "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/89.0.4389.82 Safari/537.36",
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,"
+        "image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+        "purpose": "prefetch",
+        "sec-fetch-site": "none",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-user": "?1",
+        "sec-fetch-dest": "document",
+        "accept-encoding": "gzip, deflate, br",
+        "accept-language": "en-US,en;q=0.9,ru;q=0.8",
+    }
 
     async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
         """Search items by query"""
         category = options["category"]  # type: ignore
         url = f"{self.SEARCH_PATH}/{category}?text={query}"
-        return await self.connect(
-            "GET", self.BASE_SEARCH_URL, url, headers=self._headers
-        )
-
-    @property
-    def _headers(self) -> dict:
-        """Prepare income headers for sending to ozon api"""
-        return {
-            "connection": "keep-alive",
-            "dnt": "1",
-            "upgrade-insecure-requests": "1",
-            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/89.0.4389.82 Safari/537.36",
-            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,"
-            "image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-            "purpose": "prefetch",
-            "sec-fetch-site": "none",
-            "sec-fetch-mode": "navigate",
-            "sec-fetch-user": "?1",
-            "sec-fetch-dest": "document",
-            "accept-encoding": "gzip, deflate, br",
-            "accept-language": "en-US,en;q=0.9,ru;q=0.8",
-        }
+        return await self.connect(GET, self.BASE_SEARCH_URL, url, headers=self.HEADERS)
 
 
-class OzByApiClient(GameSearchApiClient):
+class OzByApiClient(GameSearcher, JSONAPIClient):
     """Api client for Oz.by"""
 
     BASE_SEARCH_URL = "https://api.oz.by"
@@ -201,10 +261,10 @@ class OzByApiClient(GameSearchApiClient):
             f"filter[id_catalog]={category}"
             f"&filter[availability]=1&filter[q]={query}"
         )
-        return await self.connect("GET", self.BASE_SEARCH_URL, url)
+        return await self.connect(GET, self.BASE_SEARCH_URL, url)
 
 
-class OnlinerApiClient(GameSearchApiClient):
+class OnlinerApiClient(GameSearcher, JSONAPIClient):
     """Api client for onliner.by"""
 
     BASE_SEARCH_URL = "https://catalog.onliner.by/sdapi"
@@ -213,10 +273,10 @@ class OnlinerApiClient(GameSearchApiClient):
     async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
         """Search by query string"""
         url = f"{self.SEARCH_PATH}?query={query}"
-        return await self.connect("GET", self.BASE_SEARCH_URL, url)
+        return await self.connect(GET, self.BASE_SEARCH_URL, url)
 
 
-class TwentyFirstVekApiClient(GameSearchApiClient):
+class TwentyFirstVekApiClient(GameSearcher, JSONAPIClient):
     """Api client for 21vek.by"""
 
     BASE_SEARCH_URL = "https://search.21vek.by/api/v1.0"
@@ -225,10 +285,10 @@ class TwentyFirstVekApiClient(GameSearchApiClient):
     async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
         """Search by query string"""
         url = f"{self.SEARCH_PATH}?q={query}"
-        return await self.connect("GET", self.BASE_SEARCH_URL, url)
+        return await self.connect(GET, self.BASE_SEARCH_URL, url)
 
 
-class FifthElementApiClient(GameSearchApiClient):
+class FifthElementApiClient(GameSearcher, JSONAPIClient):
     """Api client for 5element.by"""
 
     BASE_SEARCH_URL = "https://api.multisearch.io"
@@ -237,10 +297,10 @@ class FifthElementApiClient(GameSearchApiClient):
         """Search query string"""
         search_app_id = options["search_app_id"]  # type: ignore
         url = f"?query={query}&id={search_app_id}&lang=ru&autocomplete=true"
-        return await self.connect("GET", self.BASE_SEARCH_URL, url)
+        return await self.connect(GET, self.BASE_SEARCH_URL, url)
 
 
-class VkontakteApiClient(GameSearchApiClient):
+class VkontakteApiClient(GameSearcher, JSONAPIClient):
     """Api client for vk.com"""
 
     BASE_URL = "https://api.vk.com/method"
@@ -260,53 +320,35 @@ class VkontakteApiClient(GameSearchApiClient):
             "Accept": "application/json",
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        return await self.connect("GET", self.BASE_URL, url, headers=headers)
+        return await self.connect(GET, self.BASE_URL, url, headers=headers)
 
 
-class BoardGameGeekApiClient(GameInfoSearchApiClient):
+class BoardGameGeekApiClient(GameInfoSearcher, XMLAPIClient):
     """Api client for BoardGameGeek"""
 
     BASE_URL = "https://api.geekdo.com/xmlapi2"
     SEARCH_PATH = "/search"
     THING_PATH = "/thing"
 
-    # pylint: disable=unused-argument
-    @staticmethod
-    async def connect(
-        method: str,
-        base_url: str,
-        path: str,
-        request_body_dict: Optional[str] = None,
-        headers: Optional[dict] = None,
-    ) -> BGGAPIResponse:
-        """Connect client to BGG api"""
-        async with aiohttp.ClientSession() as session:
-            url = base_url + path
-            async with session.request(method, url, headers=headers) as resp:
-                handle_response(resp)
-                r_text = await resp.text(encoding=None)
-                info_dict = InfoDict.xml_to_info_dict(r_text, strip_errors=True)
-                return BGGAPIResponse(info_dict, resp.status)
-
     async def search_game_info(
         self,
         query: str,
         options: Optional[dict] = None,
-    ) -> BGGAPIResponse:
+    ) -> APIResponse:
         """Search game by exact(1) query in game_type(boardgame) section"""
         options = options or {}
         game_type = options.get("game_type", "boardgame")
         exact = options.get("exact", True)
         url = f"{self.SEARCH_PATH}?exact={1 if exact else 0}&type={game_type}&query={query}"
-        return await self.connect("GET", self.BASE_URL, url)
+        return await self.connect(GET, self.BASE_URL, url)
 
-    async def get_game_details(self, game_alias: Union[str, int]) -> BGGAPIResponse:
+    async def get_game_details(self, game_alias: Union[str, int]) -> APIResponse:
         """Get details about the game by id"""
         url = f"{self.THING_PATH}?stats=1&id={game_alias}"
-        return await self.connect("GET", self.BASE_URL, url)
+        return await self.connect(GET, self.BASE_URL, url)
 
 
-class TeseraApiClient(GameInfoSearchApiClient):
+class TeseraApiClient(GameInfoSearcher, JSONAPIClient):
     """Api client for tesera.ru"""
 
     BASE_URL = "https://api.tesera.ru"
@@ -316,11 +358,11 @@ class TeseraApiClient(GameInfoSearchApiClient):
     async def search_game_info(
         self, query: str, options: Optional[dict] = None
     ) -> APIResponse:
-        """Search game info """
+        """Search game info"""
         url = f"{self.SEARCH_PATH}?query={query}"
-        return await self.connect("GET", self.BASE_URL, url)
+        return await self.connect(GET, self.BASE_URL, url)
 
     async def get_game_details(self, game_alias: Union[str, int]) -> APIResponse:
         """Get game details by alias"""
         url = f"{self.GAMES_PATH}/{game_alias}"
-        return await self.connect("GET", self.BASE_URL, url)
+        return await self.connect(GET, self.BASE_URL, url)

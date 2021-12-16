@@ -12,7 +12,7 @@ from typing import Any, List, Optional, Tuple, Union
 from libbgg.infodict import InfoDict
 
 from bgd.clients.builders import GameDetailsResultBuilder, GameSearchResultBuilder
-from bgd.clients.clients import GameInfoSearchApiClient, GameSearchApiClient
+from bgd.clients.clients import GameInfoSearcher, GameSearcher
 from bgd.clients.responses import JsonResponse
 from bgd.errors import GameNotFoundError
 from bgd.responses import GameDetailsResult, GameSearchResult
@@ -27,7 +27,7 @@ class GameInfoService(ABC):
 
     def __init__(
         self,
-        client: GameInfoSearchApiClient,
+        client: GameInfoSearcher,
         builder: GameDetailsResultBuilder,
     ) -> None:
         """Init Search Service"""
@@ -91,7 +91,7 @@ class DataSource:
 
     def __init__(
         self,
-        client: GameSearchApiClient,
+        client: GameSearcher,
         game_category_id: Union[str, int],
         result_builder: GameSearchResultBuilder,
     ) -> None:
@@ -265,7 +265,7 @@ class FifthElementSearchService(DataSource):
 
     def __init__(
         self,
-        client: GameSearchApiClient,
+        client: GameSearcher,
         game_category_id: str,
         result_builder: GameSearchResultBuilder,
         search_app_id: str,
@@ -303,7 +303,7 @@ class VkontakteSearchService(DataSource):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        client: GameSearchApiClient,
+        client: GameSearcher,
         game_category_id: str,
         result_builder: GameSearchResultBuilder,
         api_version: str,
