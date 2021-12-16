@@ -118,8 +118,10 @@ class CurrencyExchangeRateService:
         self._rates: Optional[ExchangeRates] = None
         self._expiration_date: Optional[datetime.date] = None
 
-    async def convert(self, price: Price) -> Optional[Price]:
+    async def convert(self, price: Optional[Price]) -> Optional[Price]:
         """Convert amount to another currency"""
+        if not price:
+            return None
         rates = await self.get_rates()
         if not (rates and self.target_currency in rates):
             return None
@@ -170,6 +172,7 @@ class DataSource:
 
     async def search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         """Searching games"""
+        log.info("Search data by: %s", self._client.__class__.__name__)
         responses = await asyncio.gather(
             self.do_search(query, *args, **kwargs), return_exceptions=True
         )
@@ -190,12 +193,16 @@ class DataSource:
             return []
         return [self.result_builder.from_search_result(item) for item in items]
 
-    @staticmethod
-    def _log_errors(all_responses: Tuple[Union[Any, Exception]]):
+    def _log_errors(self, all_responses: Tuple[Union[Any, Exception]]):
         """Log errors if any occur"""
         for resp in all_responses:
             if not isinstance(resp, list):
-                log.warning("Error appeared during searching: %s", resp, exc_info=True)
+                log.warning(
+                    "Error appeared during searching: %s in %s",
+                    resp,
+                    self._client.__class__.__name__,
+                    exc_info=True,
+                )
 
 
 class KufarSearchService(DataSource):
