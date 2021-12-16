@@ -25,8 +25,7 @@ class GameOwner(BaseModel):
 class Price(BaseModel):
     """Price model"""
 
-    byn: int
-    usd: int
+    amount: int
 
 
 class GameSearchResult(BaseModel):
@@ -40,6 +39,7 @@ class GameSearchResult(BaseModel):
     source: str
     subject: str
     url: str
+    price_converted: Optional[Price] = None
 
 
 class GameRank(BaseModel):

@@ -8,7 +8,7 @@ from typing import Any, Generator, List, Optional, Tuple
 
 from libbgg.infodict import InfoDict
 
-from bgd.clients.utils import clean_html, convert_byn_to_usd, remove_backslashes
+from bgd.clients.utils import clean_html, remove_backslashes
 from bgd.constants import (
     BELARUS,
     BGG,
@@ -231,10 +231,7 @@ class GameSearchResultKufarBuilder(GameSearchResultBuilder):
     @staticmethod
     def _extract_price(ad_item: dict) -> Optional[Price]:
         """Extract ad price"""
-        return Price(
-            byn=int(ad_item["price_byn"]),
-            usd=int(ad_item["price_usd"]),
-        )
+        return Price(amount=int(ad_item["price_byn"]))
 
     @classmethod
     def _extract_images(cls, ad_item: dict) -> list:
@@ -310,7 +307,7 @@ class GameSearchResultWildberriesBuilder(GameSearchResultBuilder):
     def _extract_price(product: dict) -> Price:
         """Extract prices for product in different currencies"""
         price_in_byn: int = product["salePriceU"]
-        return Price(byn=price_in_byn, usd=convert_byn_to_usd(price_in_byn))
+        return Price(amount=price_in_byn)
 
     @classmethod
     def _extract_url(cls, product: dict) -> str:
@@ -368,7 +365,7 @@ class GameSearchResultOzonBuilder(GameSearchResultBuilder):
             return None
 
         price_in_byn = int(100 * float(price.split()[0].replace(",", ".")))
-        return Price(byn=price_in_byn, usd=convert_byn_to_usd(price_in_byn))
+        return Price(amount=price_in_byn)
 
     @staticmethod
     def _extract_images(item: dict) -> list:
@@ -416,7 +413,7 @@ class GameSearchResultOzByBuilder(GameSearchResultBuilder):
         price = item["attributes"]["cost"]["decimal"]
         if not price:
             return None
-        return Price(byn=price * 100, usd=convert_byn_to_usd(price * 100))
+        return Price(amount=price * 100)
 
     @staticmethod
     def _extract_subject(item: dict) -> str:
@@ -459,7 +456,7 @@ class GameSearchResultOnlinerBuilder(GameSearchResultBuilder):
             return None
         price_in_byn = price["price_min"]["amount"]
         price_cents = int(float(price_in_byn) * 100)
-        return Price(byn=price_cents, usd=convert_byn_to_usd(price_cents))
+        return Price(amount=price_cents)
 
     @staticmethod
     def _extract_url(product: dict) -> str:
@@ -498,7 +495,7 @@ class GameSearchResultTwentyFirstVekBuilder(GameSearchResultBuilder):
         price = product["price"]
         price = price.split(" ")[0]
         price = int(price.replace(",", ""))
-        return Price(byn=price, usd=convert_byn_to_usd(price))
+        return Price(amount=price)
 
     @classmethod
     def _extract_url(cls, product: dict) -> str:
@@ -541,7 +538,7 @@ class GameSearchResultFifthElementBuilder(GameSearchResultBuilder):
     def _extract_price(product: dict) -> Optional[Price]:
         """Extract price"""
         price = product["price"] * 100
-        return Price(byn=price, usd=convert_byn_to_usd(price))
+        return Price(amount=price)
 
     @classmethod
     def _extract_url(cls, product: dict) -> str:

@@ -21,7 +21,7 @@ def sort_by_price(game: GameSearchResult) -> int:
     """Sort function for game search results"""
     if not (game and game.price):
         return 0
-    return game.price.byn
+    return game.price.amount
 
 
 @router.get("/api/v1/search/{game}", response_model=List[GameSearchResult])

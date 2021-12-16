@@ -1,6 +1,7 @@
 """
 Api clients
 """
+import datetime
 import json
 import logging
 from typing import Optional, Protocol, Union
@@ -20,6 +21,7 @@ from bgd.errors import ApiClientError, PageNotFoundError
 log = logging.getLogger(__name__)
 
 GET = "GET"
+Currency = str
 
 
 def handle_response(response: ClientResponse) -> None:
@@ -89,7 +91,7 @@ class JSONResource:
         """Prepare request to work with JSON resources"""
         kwargs_copy: dict = kwargs.copy()
         body = kwargs_copy.pop("body", None)
-        kwargs_copy["body"] = None if not body else json.dumps(body)
+        kwargs_copy["json"] = None if not body else json.dumps(body)
         return APIRequest(**kwargs_copy)
 
     @staticmethod
@@ -105,7 +107,9 @@ class XMLResource:
     @staticmethod
     def prepare_request(**kwargs) -> APIRequest:
         """Prepare request to work with XML resource"""
-        return APIRequest(**kwargs)
+        kwargs_copy: dict = kwargs.copy()
+        kwargs_copy.pop("body", None)
+        return APIRequest(**kwargs_copy)
 
     @staticmethod
     async def prepare_response(response: ClientResponse) -> XMLAPIResponse:
@@ -142,6 +146,14 @@ class GameInfoSearcher(Protocol):
 
     async def get_game_details(self, game_alias: Union[str, int]) -> APIResponse:
         """Get info about the game"""
+        ...
+
+
+class CurrencyExchangeRateSearcher(Protocol):
+    """Interface for currency exchange rate api's"""
+
+    async def get_currency_exchange_rates(self, on_date: datetime.date) -> APIResponse:
+        """Get currency exchange rates"""
         ...
 
 
@@ -370,4 +382,20 @@ class TeseraApiClient(JSONAPIClient):
     async def get_game_details(self, game_alias: Union[str, int]) -> APIResponse:
         """Get game details by alias"""
         url = f"{self.GAMES_PATH}/{game_alias}"
+        return await self.connect(GET, self.BASE_URL, url)
+
+
+class NationalBankAPIClient(XMLAPIClient):
+    """API client for Belarus national bank"""
+
+    BASE_URL = "https://www.nbrb.by"
+    EXCHANGE_RATE_PATH = "/services/xmlexrates.aspx"
+
+    async def get_currency_exchange_rates(self, on_date: datetime.date) -> APIResponse:
+        """
+        Get currency exchange rates at date.
+        :param date on_date: Date for which we need currency exchange rates.
+        """
+        formatted_date = on_date.strftime("%m/%d/%Y")
+        url = f"{self.EXCHANGE_RATE_PATH}?ondate={formatted_date}"
         return await self.connect(GET, self.BASE_URL, url)

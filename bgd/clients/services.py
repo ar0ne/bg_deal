@@ -2,6 +2,7 @@
 App Services
 """
 import asyncio
+import datetime
 import json
 import logging
 import random
@@ -12,10 +13,14 @@ from typing import Any, List, Optional, Tuple, Union
 from libbgg.infodict import InfoDict
 
 from bgd.clients.builders import GameDetailsResultBuilder, GameSearchResultBuilder
-from bgd.clients.clients import GameInfoSearcher, GameSearcher
+from bgd.clients.clients import (
+    CurrencyExchangeRateSearcher,
+    GameInfoSearcher,
+    GameSearcher,
+)
 from bgd.clients.responses import JsonResponse
 from bgd.errors import GameNotFoundError
-from bgd.responses import GameDetailsResult, GameSearchResult
+from bgd.responses import GameDetailsResult, GameSearchResult, Price
 
 log = logging.getLogger(__name__)
 
@@ -86,6 +91,38 @@ class TeseraGameInfoService(GameInfoService):
         return None
 
 
+class CurrencyExchangeRateService:
+    """Currency exchange rate service"""
+
+    def __init__(
+        self,
+        client: CurrencyExchangeRateSearcher,
+        to_currency: str,
+    ):
+        """Init exchange rate service"""
+        self.client = client
+        self.to_currency = to_currency
+        self._rates = None
+
+    async def convert(self, price: Price) -> Optional[Price]:
+        """Convert amount to another currency"""
+        if not self._rates:
+            today = datetime.date.today()
+            all_rates = await self.client.get_currency_exchange_rates(today)
+            if not (
+                all_rates
+                and all_rates.response
+                and hasattr(all_rates.response, "DailyExRates")
+            ):
+                return None
+            daily_ex_rates = all_rates.response.DailyExRates.Currency
+            self._rates = {
+                currency.CharCode.TEXT: float(currency.Rate.TEXT)
+                for currency in daily_ex_rates
+            }
+        return Price(amount=round(price.amount / self._rates[self.to_currency]))
+
+
 class DataSource:
     """Abstract search service"""
 
@@ -94,11 +131,13 @@ class DataSource:
         client: GameSearcher,
         game_category_id: Union[str, int],
         result_builder: GameSearchResultBuilder,
+        currency_exchange_rate_converter: CurrencyExchangeRateService,
     ) -> None:
         """Init Search Service"""
         self._client = client
         self.game_category_id = game_category_id
         self.result_builder = result_builder
+        self.currency_converter = currency_exchange_rate_converter
 
     @abstractmethod
     async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
@@ -117,7 +156,11 @@ class DataSource:
         # filter exceptions
         results = list(filter(lambda res: res and isinstance(res, list), responses))
         # extract results if results is not empty
-        return results[0] if results else results  # type: ignore
+        search_results = results[0] if results else results  # type: ignore
+        # provide converted prices
+        for res in search_results:
+            res.price_converted = await self.currency_converter.convert(res.price)
+        return search_results
 
     def build_results(self, items: Optional[list]) -> List[GameSearchResult]:
         """prepare search results for end user"""
@@ -269,11 +312,14 @@ class FifthElementSearchService(DataSource):
         game_category_id: str,
         result_builder: GameSearchResultBuilder,
         search_app_id: str,
+        currency_exchange_rate_converter: CurrencyExchangeRateService,
     ) -> None:
         """Init 5th element Search Service"""
         # there are more than one category that we should check
         self.game_category_ids = game_category_id.split(",")
-        super().__init__(client, game_category_id, result_builder)
+        super().__init__(
+            client, game_category_id, result_builder, currency_exchange_rate_converter
+        )
         self.search_app_id = search_app_id
 
     async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
@@ -311,10 +357,13 @@ class VkontakteSearchService(DataSource):
         group_id: str,
         group_name: str,
         limit: int,
+        currency_exchange_rate_converter: CurrencyExchangeRateService,
     ) -> None:
         """Init 5th element Search Service"""
         # there are more than one category that we should check
-        super().__init__(client, game_category_id, result_builder)
+        super().__init__(
+            client, game_category_id, result_builder, currency_exchange_rate_converter
+        )
         self.api_version = api_version
         self.api_token = api_token
         self.group_id = group_id

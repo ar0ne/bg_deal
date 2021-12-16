@@ -62,11 +62,7 @@
                         <div class="col-md-11">
                             <div class="card-body">
                                 <p class="card-text">Description: {% if result.description %}{{ result.description }}{% else %}N/A{% endif %}</p>
-                                <p class="card-text">Price: {% if result.price %}
-                                    {% for currency, price in result.price %}
-                                    {{ "%.2f"|format(price/100) }} {{ currency }}{% if not loop.last %} /{% endif %}
-                                    {% endfor %}
-                                    {% else %}N/A{% endif %}
+                                <p class="card-text">Price: {% if result.price %}{{ "%.2f"|format(result.price.amount/100) }} BYN / {{ "%.2f"|format(result.price_converted.amount/100) }} USD {% else %}N/A{% endif %}
                                 </p>
                                 {% if result.location %}
                                 <p class="card-text">Location: {{ result.location.country }} / {{ result.location.city }} / {{ result.location.area }} </p>

@@ -23,6 +23,7 @@ from bgd.clients.clients import (
     BoardGameGeekApiClient,
     FifthElementApiClient,
     KufarApiClient,
+    NationalBankAPIClient,
     OnlinerApiClient,
     OzByApiClient,
     OzonApiClient,
@@ -46,99 +47,93 @@ class ApplicationContainer(containers.DeclarativeContainer):
         directory=config.templates.dir,
     )
 
-    bgg_api_client = providers.Factory(
-        BoardGameGeekApiClient,
-    )
-    bgg_service = providers.Factory(
+    bgg_api_client = providers.Singleton(BoardGameGeekApiClient)
+    bgg_service = providers.Singleton(
         services.BoardGameGeekGameInfoService,
         client=bgg_api_client,
         builder=BGGGameDetailsResultBuilder,
     )
 
-    tesera_api_client = providers.Factory(
-        TeseraApiClient,
-    )
-    tesera_service = providers.Factory(
+    tesera_api_client = providers.Singleton(TeseraApiClient)
+    tesera_service = providers.Singleton(
         services.TeseraGameInfoService,
         client=tesera_api_client,
         builder=TeseraGameDetailsResultBuilder,
     )
 
-    kufar_api_client = providers.Factory(
-        KufarApiClient,
+    exchange_rate_api_client = providers.Singleton(NationalBankAPIClient)
+    exchange_rate_service = providers.Singleton(
+        services.CurrencyExchangeRateService,
+        client=exchange_rate_api_client,
+        to_currency=config.exchange_rate.target,
     )
-    kufar_search_service = providers.Factory(
+
+    kufar_api_client = providers.Singleton(KufarApiClient)
+    kufar_search_service = providers.Singleton(
         services.KufarSearchService,
         client=kufar_api_client,
         game_category_id=config.kufar.game_category_id,
         result_builder=GameSearchResultKufarBuilder,
+        currency_exchange_rate_converter=exchange_rate_service,
     )
 
-    wildberries_api_client = providers.Factory(
-        WildberriesApiClient,
-    )
-    wildberreis_search_service = providers.Factory(
+    wildberries_api_client = providers.Singleton(WildberriesApiClient)
+    wildberreis_search_service = providers.Singleton(
         services.WildberriesSearchService,
         client=wildberries_api_client,
         game_category_id=config.wildberries.game_category_id,
         result_builder=GameSearchResultWildberriesBuilder,
+        currency_exchange_rate_converter=exchange_rate_service,
     )
 
-    ozon_api_client = providers.Factory(
-        OzonApiClient,
-    )
-    ozon_search_service = providers.Factory(
+    ozon_api_client = providers.Singleton(OzonApiClient)
+    ozon_search_service = providers.Singleton(
         services.OzonSearchService,
         client=ozon_api_client,
         game_category_id=config.ozon.game_category_id,
         result_builder=GameSearchResultOzonBuilder,
+        currency_exchange_rate_converter=exchange_rate_service,
     )
 
-    ozby_api_client = providers.Factory(
-        OzByApiClient,
-    )
-    ozby_search_service = providers.Factory(
+    ozby_api_client = providers.Singleton(OzByApiClient)
+    ozby_search_service = providers.Singleton(
         services.OzBySearchService,
         client=ozby_api_client,
         game_category_id=config.ozby.game_category_id,
         result_builder=GameSearchResultOzByBuilder,
+        currency_exchange_rate_converter=exchange_rate_service,
     )
 
-    onliner_api_client = providers.Factory(
-        OnlinerApiClient,
-    )
-    onliner_search_service = providers.Factory(
+    onliner_api_client = providers.Singleton(OnlinerApiClient)
+    onliner_search_service = providers.Singleton(
         services.OnlinerSearchService,
         client=onliner_api_client,
         game_category_id="",
         result_builder=GameSearchResultOnlinerBuilder,
+        currency_exchange_rate_converter=exchange_rate_service,
     )
 
-    twenty_first_vek_api_client = providers.Factory(
-        TwentyFirstVekApiClient,
-    )
-    twenty_first_vek_service = providers.Factory(
+    twenty_first_vek_api_client = providers.Singleton(TwentyFirstVekApiClient)
+    twenty_first_vek_service = providers.Singleton(
         services.TwentyFirstVekSearchService,
         client=twenty_first_vek_api_client,
         game_category_id="",
         result_builder=GameSearchResultTwentyFirstVekBuilder,
+        currency_exchange_rate_converter=exchange_rate_service,
     )
 
-    fifth_element_api_client = providers.Factory(
-        FifthElementApiClient,
-    )
-    fifth_element_service = providers.Factory(
+    fifth_element_api_client = providers.Singleton(FifthElementApiClient)
+    fifth_element_service = providers.Singleton(
         services.FifthElementSearchService,
         client=fifth_element_api_client,
         game_category_id=config.fifthelement.game_category_id,
-        search_app_id=config.fifthelement.search_app_id,
         result_builder=GameSearchResultFifthElementBuilder,
+        search_app_id=config.fifthelement.search_app_id,
+        currency_exchange_rate_converter=exchange_rate_service,
     )
 
-    vk_api_client = providers.Factory(
-        VkontakteApiClient,
-    )
-    vk_service = providers.Factory(
+    vk_api_client = providers.Singleton(VkontakteApiClient)
+    vk_service = providers.Singleton(
         services.VkontakteSearchService,
         client=vk_api_client,
         game_category_id="",
@@ -148,6 +143,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
         api_version=config.vk.api_version,
         limit=config.vk.limit,
         result_builder=GameSearchResultVkontakteBuilder,
+        currency_exchange_rate_converter=exchange_rate_service,
     )
 
     data_sources = providers.List(
@@ -161,7 +157,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
         vk_service,
     )
 
-    suggest_game_service = providers.Factory(
+    suggest_game_service = providers.Singleton(
         services.SuggestGameService,
         games=config.app.suggested_games,
     )
