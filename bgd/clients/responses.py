@@ -27,7 +27,7 @@ class JSONAPIResponse(APIResponse):
 
 @dataclass
 class XMLAPIResponse(APIResponse):
-    """BGG Api Response model"""
+    """XML Api Response model"""
 
     response: InfoDict
     status: int
@@ -35,6 +35,8 @@ class XMLAPIResponse(APIResponse):
 
 @dataclass
 class APIRequest:
+    """API request model"""
+
     method: str
     url: str
     headers: dict

@@ -44,20 +44,24 @@ class IApiClient(Protocol):
         body: Optional[str] = None,
         headers: Optional[dict] = None,
     ) -> APIResponse:
+        """Connect to api"""
         ...
 
     @staticmethod
     def prepare_request(**kwargs) -> APIRequest:
+        """Prepare request for execution"""
         ...
 
     @staticmethod
     async def prepare_response(response: ClientResponse) -> APIResponse:
+        """Prepare response after execution"""
         ...
 
 
 class Connector:
     """Simple API connector"""
 
+    # pylint: disable=no-member
     async def connect(
         self,
         method: str,
@@ -69,12 +73,12 @@ class Connector:
         """Connect Api to resource"""
         async with aiohttp.ClientSession() as session:
             url = base_url + path
-            request = self.prepare_request(
+            request = self.prepare_request(  # type: ignore
                 method=method, url=url, headers=headers, body=body
             )
             async with session.request(**request.to_dict()) as resp:
                 handle_response(resp)
-                return await self.prepare_response(resp)
+                return await self.prepare_response(resp)  # type: ignore
 
 
 class JSONResource:
@@ -83,9 +87,10 @@ class JSONResource:
     @staticmethod
     def prepare_request(**kwargs: dict) -> APIRequest:
         """Prepare request to work with JSON resources"""
-        body = kwargs.pop("body", None)
-        body = None if not body else json.dumps(body)
-        return APIRequest(**kwargs, json=body)
+        kwargs_copy: dict = kwargs.copy()
+        body = kwargs_copy.pop("body", None)
+        kwargs_copy["body"] = None if not body else json.dumps(body)
+        return APIRequest(**kwargs_copy)
 
     @staticmethod
     async def prepare_response(response: ClientResponse) -> JSONAPIResponse:
@@ -140,7 +145,7 @@ class GameInfoSearcher(Protocol):
         ...
 
 
-class KufarApiClient(GameSearcher, JSONAPIClient):
+class KufarApiClient(JSONAPIClient):
     """Client for Kufar API"""
 
     BASE_URL = "https://cre-api.kufar.by"
@@ -168,14 +173,14 @@ class KufarApiClient(GameSearcher, JSONAPIClient):
         return await self.connect(GET, self.BASE_URL, self.CATEGORIES_PATH)
 
 
-class WildberriesApiClient(GameSearcher, JSONAPIClient):
+class WildberriesApiClient(JSONAPIClient):
     """Client for Wildberries API"""
 
     BASE_SEARCH_URL = "https://wbxsearch-by.wildberries.ru"
     BASE_CATALOG_URL = "https://wbxcatalog-sng.wildberries.ru"
     SEARCH_PATH = "/exactmatch/common"
 
-    async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
+    async def search(self, query: str, _: Optional[dict] = None) -> APIResponse:
         """Search items by query"""
         url = await self._build_search_query_url(query)
         return await self.connect(GET, self.BASE_CATALOG_URL, url)
@@ -220,7 +225,7 @@ class WildberriesApiClient(GameSearcher, JSONAPIClient):
         return await self.connect(GET, self.BASE_SEARCH_URL, url)
 
 
-class OzonApiClient(GameSearcher, JSONAPIClient):
+class OzonApiClient(JSONAPIClient):
     """Api client for ozon.ru"""
 
     BASE_SEARCH_URL = "https://www.ozon.ru"
@@ -247,7 +252,7 @@ class OzonApiClient(GameSearcher, JSONAPIClient):
         return await self.connect(GET, self.BASE_SEARCH_URL, url, headers=self.HEADERS)
 
 
-class OzByApiClient(GameSearcher, JSONAPIClient):
+class OzByApiClient(JSONAPIClient):
     """Api client for Oz.by"""
 
     BASE_SEARCH_URL = "https://api.oz.by"
@@ -264,31 +269,31 @@ class OzByApiClient(GameSearcher, JSONAPIClient):
         return await self.connect(GET, self.BASE_SEARCH_URL, url)
 
 
-class OnlinerApiClient(GameSearcher, JSONAPIClient):
+class OnlinerApiClient(JSONAPIClient):
     """Api client for onliner.by"""
 
     BASE_SEARCH_URL = "https://catalog.onliner.by/sdapi"
     SEARCH_PATH = "/catalog.api/search/products"
 
-    async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
+    async def search(self, query: str, _: Optional[dict] = None) -> APIResponse:
         """Search by query string"""
         url = f"{self.SEARCH_PATH}?query={query}"
         return await self.connect(GET, self.BASE_SEARCH_URL, url)
 
 
-class TwentyFirstVekApiClient(GameSearcher, JSONAPIClient):
+class TwentyFirstVekApiClient(JSONAPIClient):
     """Api client for 21vek.by"""
 
     BASE_SEARCH_URL = "https://search.21vek.by/api/v1.0"
     SEARCH_PATH = "/search/suggest"
 
-    async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
+    async def search(self, query: str, _: Optional[dict] = None) -> APIResponse:
         """Search by query string"""
         url = f"{self.SEARCH_PATH}?q={query}"
         return await self.connect(GET, self.BASE_SEARCH_URL, url)
 
 
-class FifthElementApiClient(GameSearcher, JSONAPIClient):
+class FifthElementApiClient(JSONAPIClient):
     """Api client for 5element.by"""
 
     BASE_SEARCH_URL = "https://api.multisearch.io"
@@ -300,12 +305,12 @@ class FifthElementApiClient(GameSearcher, JSONAPIClient):
         return await self.connect(GET, self.BASE_SEARCH_URL, url)
 
 
-class VkontakteApiClient(GameSearcher, JSONAPIClient):
+class VkontakteApiClient(JSONAPIClient):
     """Api client for vk.com"""
 
     BASE_URL = "https://api.vk.com/method"
 
-    async def search(self, query: str, options: Optional[dict] = None) -> APIResponse:
+    async def search(self, _: str, options: Optional[dict] = None) -> APIResponse:
         """Search query on group wall"""
         options = options or {}
         group_id = f"-{options['group_id']}"
@@ -323,7 +328,7 @@ class VkontakteApiClient(GameSearcher, JSONAPIClient):
         return await self.connect(GET, self.BASE_URL, url, headers=headers)
 
 
-class BoardGameGeekApiClient(GameInfoSearcher, XMLAPIClient):
+class BoardGameGeekApiClient(XMLAPIClient):
     """Api client for BoardGameGeek"""
 
     BASE_URL = "https://api.geekdo.com/xmlapi2"
@@ -348,7 +353,7 @@ class BoardGameGeekApiClient(GameInfoSearcher, XMLAPIClient):
         return await self.connect(GET, self.BASE_URL, url)
 
 
-class TeseraApiClient(GameInfoSearcher, JSONAPIClient):
+class TeseraApiClient(JSONAPIClient):
     """Api client for tesera.ru"""
 
     BASE_URL = "https://api.tesera.ru"
@@ -356,7 +361,7 @@ class TeseraApiClient(GameInfoSearcher, JSONAPIClient):
     GAMES_PATH = "/games"
 
     async def search_game_info(
-        self, query: str, options: Optional[dict] = None
+        self, query: str, _: Optional[dict] = None
     ) -> APIResponse:
         """Search game info"""
         url = f"{self.SEARCH_PATH}?query={query}"
