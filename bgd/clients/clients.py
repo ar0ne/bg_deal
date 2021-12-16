@@ -21,7 +21,6 @@ from bgd.errors import ApiClientError, PageNotFoundError
 log = logging.getLogger(__name__)
 
 GET = "GET"
-Currency = str
 
 
 def handle_response(response: ClientResponse) -> None:

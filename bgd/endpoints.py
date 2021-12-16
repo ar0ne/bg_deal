@@ -13,15 +13,12 @@ from fastapi.templating import Jinja2Templates
 from bgd.clients.services import DataSource, GameInfoService, SuggestGameService
 from bgd.containers import ApplicationContainer
 from bgd.responses import GameDetailsResult, GameSearchResult
+from bgd.utils import game_search_result_price
+
+INDEX_PAGE = "index.html"
+SEARCH_PAGE = "search.html"
 
 router = APIRouter()
-
-
-def sort_by_price(game: GameSearchResult) -> int:
-    """Sort function for game search results"""
-    if not (game and game.price):
-        return 0
-    return game.price.amount
 
 
 @router.get("/api/v1/search/{game}", response_model=List[GameSearchResult])
@@ -35,7 +32,7 @@ async def search_game(
     """Search game endpoint"""
     results = [await source.search(game) for source in data_sources]
     combined_results = list(itertools.chain.from_iterable(results))
-    combined_results.sort(key=sort_by_price)
+    combined_results.sort(key=game_search_result_price)
     return combined_results
 
 
@@ -70,7 +67,7 @@ async def main_page(
     """Render main page"""
     suggested_game = await suggest_game_service.suggest()
     return templates.TemplateResponse(
-        "index.html",
+        INDEX_PAGE,
         {
             "request": request,
             "suggested_game": suggested_game,
@@ -88,14 +85,15 @@ async def search_page(
     """Render Search page"""
     results = await search_game(name)
     game_info = await asyncio.gather(game_details(name), return_exceptions=True)
+    game_info_extracted = (
+        game_info[0] if isinstance(game_info[0], GameDetailsResult) else None
+    )
     return templates.TemplateResponse(
-        "search.html",
+        SEARCH_PAGE,
         {
             "request": request,
             "name": name,
             "results": results,
-            "game_info": game_info[0]
-            if isinstance(game_info[0], GameDetailsResult)
-            else None,
+            "game_info": game_info_extracted,
         },
     )

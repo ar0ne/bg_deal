@@ -12,19 +12,22 @@ from typing import Any, List, Optional, Tuple, Union
 
 from libbgg.infodict import InfoDict
 
-from bgd.clients.builders import GameDetailsResultBuilder, GameSearchResultBuilder
+from bgd.clients.builders import (
+    CurrencyExchangeRateBuilder,
+    GameDetailsResultBuilder,
+    GameSearchResultBuilder,
+)
 from bgd.clients.clients import (
     CurrencyExchangeRateSearcher,
     GameInfoSearcher,
     GameSearcher,
 )
 from bgd.clients.responses import JsonResponse
+from bgd.clients.types import ExchangeRates, GameAlias
 from bgd.errors import GameNotFoundError
 from bgd.responses import GameDetailsResult, GameSearchResult, Price
 
 log = logging.getLogger(__name__)
-
-GameAlias = Union[str, int]
 
 
 class GameInfoService(ABC):
@@ -97,34 +100,48 @@ class CurrencyExchangeRateService:
     def __init__(
         self,
         client: CurrencyExchangeRateSearcher,
-        to_currency: str,
-    ):
-        """Init exchange rate service"""
+        rate_builder: CurrencyExchangeRateBuilder,
+        base_currency: str,
+        target_currency: str,
+    ) -> None:
+        """
+        Init exchange rate service
+        :param CurrencyExchangeRateSearcher client: A searcher of currency exchange rates.
+        :param CurrencyExchangeRateBuilder rate_builder: Builder for ExchangeRates model.
+        :param str base_currency: 3-letters currency code from which service does conversion.
+        :param str target_currency: 3-letters currency code for conversion.
+        """
         self.client = client
-        self.to_currency = to_currency
-        self._rates = None
+        self.builder = rate_builder
+        self.target_currency = target_currency
+        self.base_currency = base_currency
+        self._rates: Optional[ExchangeRates] = None
+        self._expiration_date: Optional[datetime.date] = None
 
     async def convert(self, price: Price) -> Optional[Price]:
         """Convert amount to another currency"""
-        if not self._rates:
-            # for safety let's use yesterday rate
-            yesterday = datetime.date.today() - datetime.timedelta(days=1)
-            all_rates = await self.client.get_currency_exchange_rates(yesterday)
-            if not (
-                all_rates
-                and all_rates.response
-                and hasattr(all_rates.response, "DailyExRates")
-            ):
-                return None
-            daily_ex_rates = all_rates.response.DailyExRates.Currency
-            self._rates = {
-                currency.CharCode.TEXT: float(currency.Rate.TEXT)
-                for currency in daily_ex_rates
-            }
+        rates = await self.get_rates()
+        if not (rates and self.target_currency in rates):
+            return None
+        exchange_rate = rates[self.target_currency]
         return Price(
-            amount=round(price.amount / self._rates[self.to_currency]),
-            currency=self.to_currency,
+            amount=round(price.amount / exchange_rate),
+            currency=self.target_currency,
         )
+
+    async def get_rates(self) -> Optional[ExchangeRates]:
+        """Get actual currency exchange rates"""
+        today = datetime.date.today()
+        if self._expiration_date and self._expiration_date <= today:
+            self._rates = None
+            self._expiration_date = None
+        if not self._rates:
+            # for safety let's use yesterday rates
+            yesterday = today - datetime.timedelta(days=1)
+            resp = await self.client.get_currency_exchange_rates(yesterday)
+            self._rates = self.builder.from_response(resp.response)
+            self._expiration_date = today + datetime.timedelta(days=1)
+        return self._rates
 
 
 class DataSource:
@@ -158,13 +175,14 @@ class DataSource:
         )
         self._log_errors(responses)
         # filter exceptions
-        results = list(filter(lambda res: res and isinstance(res, list), responses))
+        results = list(filter(lambda r: r and isinstance(r, list), responses))
         # extract results if results is not empty
-        search_results = results[0] if results else results  # type: ignore
+        search_results = results[0] if results else results
         # provide converted prices
-        for res in search_results:
-            res.price_converted = await self.currency_converter.convert(res.price)
-        return search_results
+        for result in search_results:  # type: ignore
+            target_price = await self.currency_converter.convert(result.price)  # type: ignore
+            result.price_converted = target_price  # type: ignore
+        return search_results  # type: ignore
 
     def build_results(self, items: Optional[list]) -> List[GameSearchResult]:
         """prepare search results for end user"""

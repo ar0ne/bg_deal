@@ -2,11 +2,11 @@
 Client responses
 """
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from libbgg.infodict import InfoDict
 
-JsonResponse = Dict[str, Any]
+from bgd.clients.types import JsonResponse
 
 
 @dataclass

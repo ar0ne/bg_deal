@@ -17,6 +17,7 @@ from bgd.clients.builders import (
     GameSearchResultTwentyFirstVekBuilder,
     GameSearchResultVkontakteBuilder,
     GameSearchResultWildberriesBuilder,
+    NationalBankCurrencyExchangeRateBuilder,
     TeseraGameDetailsResultBuilder,
 )
 from bgd.clients.clients import (
@@ -65,7 +66,9 @@ class ApplicationContainer(containers.DeclarativeContainer):
     exchange_rate_service = providers.Singleton(
         services.CurrencyExchangeRateService,
         client=exchange_rate_api_client,
-        to_currency=config.exchange_rate.target,
+        base_currency=config.exchange_rate.base,
+        rate_builder=NationalBankCurrencyExchangeRateBuilder,
+        target_currency=config.exchange_rate.target,
     )
 
     kufar_api_client = providers.Singleton(KufarApiClient)

@@ -4,10 +4,11 @@ App builders
 import abc
 import html
 import itertools
-from typing import Any, Generator, List, Optional, Tuple
+from typing import Any, Generator, List, Optional, Protocol, Tuple
 
 from libbgg.infodict import InfoDict
 
+from bgd.clients.types import ExchangeRates
 from bgd.clients.utils import clean_html, remove_backslashes
 from bgd.constants import (
     BELARUS,
@@ -595,3 +596,26 @@ class GameSearchResultVkontakteBuilder(GameSearchResultBuilder):
             name="",
             url=f"{cls.BASE_URL}/id{user_id}",
         )
+
+
+class CurrencyExchangeRateBuilder(Protocol):
+    """Interface for builders of currency exchange rates"""
+
+    @staticmethod
+    def from_response(response: Any) -> Optional[ExchangeRates]:
+        """Build exchange rates from response"""
+        ...
+
+
+class NationalBankCurrencyExchangeRateBuilder:
+    """Builder for ExchangeRates"""
+
+    @staticmethod
+    def from_response(response: InfoDict) -> Optional[ExchangeRates]:
+        """Converts response to list of exchange rates"""
+        if not (response and hasattr(response, "DailyExRates")):
+            return None
+        currencies = response.DailyExRates.Currency
+        return {
+            currency.CharCode.TEXT: float(currency.Rate.TEXT) for currency in currencies
+        }
