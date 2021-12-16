@@ -5,6 +5,8 @@ from typing import List, Optional, Union
 
 from pydantic.main import BaseModel  # pylint: disable=no-name-in-module
 
+from bgd.constants import BYN
+
 
 class GameLocation(BaseModel):
     """Game location model"""
@@ -26,6 +28,7 @@ class Price(BaseModel):
     """Price model"""
 
     amount: int
+    currency: str = BYN
 
 
 class GameSearchResult(BaseModel):

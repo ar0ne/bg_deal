@@ -107,8 +107,9 @@ class CurrencyExchangeRateService:
     async def convert(self, price: Price) -> Optional[Price]:
         """Convert amount to another currency"""
         if not self._rates:
-            today = datetime.date.today()
-            all_rates = await self.client.get_currency_exchange_rates(today)
+            # for safety let's use yesterday rate
+            yesterday = datetime.date.today() - datetime.timedelta(days=1)
+            all_rates = await self.client.get_currency_exchange_rates(yesterday)
             if not (
                 all_rates
                 and all_rates.response
@@ -120,7 +121,10 @@ class CurrencyExchangeRateService:
                 currency.CharCode.TEXT: float(currency.Rate.TEXT)
                 for currency in daily_ex_rates
             }
-        return Price(amount=round(price.amount / self._rates[self.to_currency]))
+        return Price(
+            amount=round(price.amount / self._rates[self.to_currency]),
+            currency=self.to_currency,
+        )
 
 
 class DataSource:

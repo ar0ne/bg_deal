@@ -13,3 +13,5 @@ TESERA = "tesera"
 TWENTYFIRSTVEK = "twentyfirstvek"
 VK = "vk"
 WILDBERRIES = "wb"
+
+BYN = "BYN"
