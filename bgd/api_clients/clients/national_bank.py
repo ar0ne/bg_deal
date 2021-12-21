@@ -1,7 +1,7 @@
 """
 National Bank (nb.by) API Client
 """
-from datetime import datetime
+import datetime
 
 from bgd.api_clients.constants import GET
 from bgd.api_clients.protocols import XmlHttpApiClient
