@@ -8,8 +8,8 @@ from typing import Any, Generator, List, Optional, Protocol, Tuple
 
 from libbgg.infodict import InfoDict
 
-from bgd.clients.types import ExchangeRates
-from bgd.clients.utils import clean_html, remove_backslashes
+from bgd.api_clients.types import ExchangeRates
+from bgd.api_clients.utils import clean_html, remove_backslashes
 from bgd.constants import (
     BELARUS,
     BGG,

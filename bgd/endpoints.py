@@ -10,9 +10,9 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from bgd.clients.services import DataSource, GameInfoService, SuggestGameService
 from bgd.containers import ApplicationContainer
 from bgd.responses import GameDetailsResult, GameSearchResult
+from bgd.services import DataSource, GameInfoService, SuggestGameService
 from bgd.utils import game_search_result_price
 
 INDEX_PAGE = "index.html"

@@ -6,8 +6,8 @@ import os
 from dependency_injector import containers, providers
 from starlette.templating import Jinja2Templates
 
-from bgd.clients import services
-from bgd.clients.builders import (
+from bgd import services
+from bgd.api_clients.builders import (
     BGGGameDetailsResultBuilder,
     GameSearchResultFifthElementBuilder,
     GameSearchResultKufarBuilder,
@@ -20,19 +20,17 @@ from bgd.clients.builders import (
     NationalBankCurrencyExchangeRateBuilder,
     TeseraGameDetailsResultBuilder,
 )
-from bgd.clients.clients import (
-    BoardGameGeekApiClient,
-    FifthElementApiClient,
-    KufarApiClient,
-    NationalBankAPIClient,
-    OnlinerApiClient,
-    OzByApiClient,
-    OzonApiClient,
-    TeseraApiClient,
-    TwentyFirstVekApiClient,
-    VkontakteApiClient,
-    WildberriesApiClient,
-)
+from bgd.api_clients.clients.bgg import BoardGameGeekApiClient
+from bgd.api_clients.clients.fifth_element import FifthElementApiClient
+from bgd.api_clients.clients.kufar import KufarApiClient
+from bgd.api_clients.clients.national_bank import NationalBankAPIClient
+from bgd.api_clients.clients.onliner import OnlinerApiClient
+from bgd.api_clients.clients.ozby import OzByApiClient
+from bgd.api_clients.clients.ozon import OzonApiClient
+from bgd.api_clients.clients.tesera import TeseraApiClient
+from bgd.api_clients.clients.twenty_first_vek import TwentyFirstVekApiClient
+from bgd.api_clients.clients.vkontakte import VkontakteApiClient
+from bgd.api_clients.clients.wildberries import WildberriesApiClient
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

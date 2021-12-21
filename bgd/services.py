@@ -12,18 +12,18 @@ from typing import Any, List, Optional, Tuple, Union
 
 from libbgg.infodict import InfoDict
 
-from bgd.clients.builders import (
+from bgd.api_clients.builders import (
     CurrencyExchangeRateBuilder,
     GameDetailsResultBuilder,
     GameSearchResultBuilder,
 )
-from bgd.clients.clients import (
+from bgd.api_clients.protocols import (
     CurrencyExchangeRateSearcher,
     GameInfoSearcher,
     GameSearcher,
 )
-from bgd.clients.responses import JsonResponse
-from bgd.clients.types import ExchangeRates, GameAlias
+from bgd.api_clients.responses import JsonResponse
+from bgd.api_clients.types import ExchangeRates, GameAlias
 from bgd.errors import GameNotFoundError
 from bgd.responses import GameDetailsResult, GameSearchResult, Price
 
