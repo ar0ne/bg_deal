@@ -34,7 +34,7 @@ class NationalBankApiClient(XmlHttpApiClient):
         return await self.connect(GET, self.BASE_URL, url)
 
 
-class NationalBankCurrencyExchangeRateBuilder:
+class NationalBankCurrencyExchangeRateBuilder(CurrencyExchangeRateBuilder):
     """Builder for ExchangeRates"""
 
     @staticmethod

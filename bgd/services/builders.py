@@ -2,7 +2,7 @@
 App builders
 """
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Protocol
+from typing import Any, Optional
 
 from bgd.responses import GameDetailsResult, GameSearchResult
 
@@ -18,7 +18,7 @@ class GameDetailsResultBuilder(ABC):
         """Build game details result"""
 
 
-class GameSearchResultBuilder:
+class GameSearchResultBuilder(ABC):
     """Base builder class for game search result"""
 
     @classmethod
@@ -27,10 +27,11 @@ class GameSearchResultBuilder:
         """Build game search result from search result"""
 
 
-class CurrencyExchangeRateBuilder(Protocol):
+class CurrencyExchangeRateBuilder(ABC):
     """Interface for builders of currency exchange rates"""
 
     @staticmethod
+    @abstractmethod
     def from_response(response: Any) -> Optional[ExchangeRates]:
         """Build exchange rates from response"""
         ...
