@@ -6,11 +6,11 @@ from typing import Any, Optional, Union
 
 from bgd.constants import NOT_AVAILABLE, TESERA
 from bgd.responses import GameDetailsResult, GameStatistic
+from bgd.services.api_clients import JsonHttpApiClient
 from bgd.services.apis.bgg import BGG_GAME_URL
 from bgd.services.base import GameInfoService
 from bgd.services.builders import GameDetailsResultBuilder
 from bgd.services.constants import GET
-from bgd.services.protocols import JsonHttpApiClient
 from bgd.services.responses import APIResponse
 from bgd.services.types import GameAlias, JsonResponse
 from bgd.services.utils import clean_html

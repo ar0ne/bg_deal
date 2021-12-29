@@ -8,10 +8,10 @@ from libbgg.infodict import InfoDict
 
 from bgd.constants import BGG
 from bgd.responses import GameDetailsResult, GameRank, GameStatistic
+from bgd.services.api_clients import XmlHttpApiClient
 from bgd.services.base import GameInfoService
 from bgd.services.builders import GameDetailsResultBuilder
 from bgd.services.constants import GET
-from bgd.services.protocols import XmlHttpApiClient
 from bgd.services.responses import APIResponse
 from bgd.services.types import GameAlias
 

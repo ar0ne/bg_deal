@@ -5,10 +5,10 @@ from typing import List, Optional
 
 from bgd.constants import TWENTYFIRSTVEK
 from bgd.responses import GameSearchResult, Price
+from bgd.services.api_clients import JsonHttpApiClient
 from bgd.services.base import GameSearchService
 from bgd.services.builders import GameSearchResultBuilder
 from bgd.services.constants import GET
-from bgd.services.protocols import JsonHttpApiClient
 from bgd.services.responses import APIResponse
 
 
