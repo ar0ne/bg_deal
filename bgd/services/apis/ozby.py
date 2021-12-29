@@ -3,8 +3,10 @@ Oz.by API Client
 """
 from typing import List, Optional
 
-from bgd.responses import GameSearchResult
+from bgd.constants import OZBY
+from bgd.responses import GameSearchResult, Price
 from bgd.services.base import GameSearchService
+from bgd.services.builders import GameSearchResultBuilder
 from bgd.services.constants import GET
 from bgd.services.protocols import JsonHttpApiClient
 from bgd.services.responses import APIResponse
@@ -36,3 +38,51 @@ class OzBySearchService(GameSearchService):
         )
         products = self.filter_results(response.response["data"])
         return self.build_results(products)
+
+
+class GameSearchResultOzByBuilder(GameSearchResultBuilder):
+    """GameSearchResult Builder for oz.by"""
+
+    GAME_URL = "https://oz.by/boardgames/more{}.html"
+
+    @classmethod
+    def from_search_result(cls, search_result: dict) -> GameSearchResult:
+        """Builds game search result from ozon data source search result"""
+        return GameSearchResult(
+            description=cls._extract_description(search_result),
+            images=cls._extract_images(search_result),
+            location=None,
+            owner=None,
+            price=cls._extract_price(search_result),
+            source=OZBY,
+            subject=cls._extract_subject(search_result),
+            url=cls._extract_url(search_result),
+        )
+
+    @staticmethod
+    def _extract_images(item: dict) -> list[str]:
+        """Get image of the game"""
+        return [item["attributes"]["main_image"]["200"]]
+
+    @staticmethod
+    def _extract_price(item: dict) -> Optional[Price]:
+        """Extract game prices"""
+        price = item["attributes"]["cost"]["decimal"]
+        if not price:
+            return None
+        return Price(amount=price * 100)
+
+    @staticmethod
+    def _extract_subject(item: dict) -> str:
+        """Extracts subject"""
+        return item["attributes"]["title"]
+
+    @classmethod
+    def _extract_url(cls, item: dict) -> str:
+        """Extracts item url"""
+        return cls.GAME_URL.format(item["id"])
+
+    @staticmethod
+    def _extract_description(item: dict) -> str:
+        """Extract item description"""
+        return item["attributes"].get("small_desc")

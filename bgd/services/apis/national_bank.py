@@ -2,10 +2,14 @@
 National Bank (nb.by) API Client
 """
 import datetime
+from typing import Optional
+
+from libbgg.infodict import InfoDict
 
 from bgd.services.constants import GET
 from bgd.services.protocols import XmlHttpApiClient
 from bgd.services.responses import APIResponse
+from bgd.services.types import ExchangeRates
 
 
 class NationalBankApiClient(XmlHttpApiClient):
@@ -22,3 +26,17 @@ class NationalBankApiClient(XmlHttpApiClient):
         formatted_date = on_date.strftime("%m/%d/%Y")
         url = f"{self.EXCHANGE_RATE_PATH}?ondate={formatted_date}"
         return await self.connect(GET, self.BASE_URL, url)
+
+
+class NationalBankCurrencyExchangeRateBuilder:
+    """Builder for ExchangeRates"""
+
+    @staticmethod
+    def from_response(response: InfoDict) -> Optional[ExchangeRates]:
+        """Converts response to list of exchange rates"""
+        if not (response and hasattr(response, "DailyExRates")):
+            return None
+        currencies = response.DailyExRates.Currency
+        return {
+            currency.CharCode.TEXT: float(currency.Rate.TEXT) for currency in currencies
+        }

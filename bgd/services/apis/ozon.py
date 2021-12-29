@@ -1,11 +1,14 @@
 """
 Ozon.ru API Client
 """
+import html
 import json
 from typing import List, Optional
 
-from bgd.responses import GameSearchResult
+from bgd.constants import OZON
+from bgd.responses import GameSearchResult, Price
 from bgd.services.base import GameSearchService
+from bgd.services.builders import GameSearchResultBuilder
 from bgd.services.constants import GET
 from bgd.services.protocols import JsonHttpApiClient
 from bgd.services.responses import APIResponse
@@ -66,3 +69,60 @@ class OzonSearchService(GameSearchService):
             if "searchResultsV2" in key:
                 return key
         return None
+
+
+class GameSearchResultOzonBuilder(GameSearchResultBuilder):
+    """Builder for game search results from Ozon"""
+
+    ITEM_URL = "https://ozon.ru"
+
+    @classmethod
+    def from_search_result(cls, search_result: dict) -> GameSearchResult:
+        """Builds game search result from ozon data source search result"""
+        return GameSearchResult(
+            description="",  # @TODO: how to get it?
+            images=cls._extract_images(search_result),
+            location=None,
+            owner=None,
+            price=cls._extract_price(search_result),
+            source=OZON,
+            subject=cls._extract_subject(search_result),
+            url=cls._extract_url(search_result),
+        )
+
+    @classmethod
+    def _extract_url(cls, item: dict) -> Optional[str]:
+        """Extract url"""
+        url = item["action"]["link"]
+        if not url:
+            return None
+        return cls.ITEM_URL + url
+
+    @staticmethod
+    def _extract_price(item: dict) -> Optional[Price]:
+        """Extract item prices in cents"""
+        main_state = item.get("mainState", [])
+        price_state = next(filter(lambda it: it.get("id") == "atom", main_state))
+        if not price_state:
+            return None
+        price = price_state.get("atom").get("price").get("price")
+        if not price:
+            return None
+
+        price_in_byn = int(100 * float(price.split()[0].replace(",", ".")))
+        return Price(amount=price_in_byn)
+
+    @staticmethod
+    def _extract_images(item: dict) -> list:
+        """Extract images"""
+        return item["tileImage"]["images"] or []
+
+    @staticmethod
+    def _extract_subject(item: dict) -> str:
+        """Extract item subject"""
+        main_state = item.get("mainState", [])
+        name_state = next(filter(lambda it: it["id"] == "name", main_state))
+        if not name_state:
+            return ""
+        name = name_state["atom"]["textAtom"]["text"] or ""
+        return html.unescape(name)

@@ -6,39 +6,66 @@ import os
 from dependency_injector import containers, providers
 from starlette.templating import Jinja2Templates
 
-from bgd.services.apis.bgg import BoardGameGeekApiClient, BoardGameGeekGameInfoService
+from bgd.services.apis.bgg import (
+    BGGGameDetailsResultBuilder,
+    BoardGameGeekApiClient,
+    BoardGameGeekGameInfoService,
+)
 from bgd.services.apis.fifth_element import (
     FifthElementApiClient,
     FifthElementSearchService,
+    GameSearchResultFifthElementBuilder,
 )
-from bgd.services.apis.kufar import KufarApiClient, KufarSearchService
-from bgd.services.apis.national_bank import NationalBankApiClient
-from bgd.services.apis.onliner import OnlinerApiClient, OnlinerSearchService
-from bgd.services.apis.ozby import OzByApiClient, OzBySearchService
-from bgd.services.apis.ozon import OzonApiClient, OzonSearchService
-from bgd.services.apis.tesera import TeseraApiClient, TeseraGameInfoService
+from bgd.services.apis.kufar import (
+    GameSearchResultKufarBuilder,
+    KufarApiClient,
+    KufarSearchService,
+)
+from bgd.services.apis.national_bank import (
+    NationalBankApiClient,
+    NationalBankCurrencyExchangeRateBuilder,
+)
+from bgd.services.apis.onliner import (
+    GameSearchResultOnlinerBuilder,
+    OnlinerApiClient,
+    OnlinerSearchService,
+)
+from bgd.services.apis.ozby import (
+    GameSearchResultOzByBuilder,
+    OzByApiClient,
+    OzBySearchService,
+)
+from bgd.services.apis.ozon import (
+    GameSearchResultOzonBuilder,
+    OzonApiClient,
+    OzonSearchService,
+)
+from bgd.services.apis.tesera import (
+    TeseraApiClient,
+    TeseraGameDetailsResultBuilder,
+    TeseraGameInfoService,
+)
 from bgd.services.apis.twenty_first_vek import (
+    GameSearchResultTwentyFirstVekBuilder,
     TwentyFirstVekApiClient,
     TwentyFirstVekSearchService,
 )
-from bgd.services.apis.vkontakte import VkontakteApiClient, VkontakteSearchService
-from bgd.services.apis.wildberries import WildberriesApiClient, WildberriesSearchService
-from bgd.services.apis.znaemigraem import ZnaemIgraemApiClient, ZnaemIgraemSearchService
-from bgd.services.base import BaseCurrencyExchangeRateService, SimpleSuggestGameService
-from bgd.services.builders import (
-    BGGGameDetailsResultBuilder,
-    GameSearchResultFifthElementBuilder,
-    GameSearchResultKufarBuilder,
-    GameSearchResultOnlinerBuilder,
-    GameSearchResultOzByBuilder,
-    GameSearchResultOzonBuilder,
-    GameSearchResultTwentyFirstVekBuilder,
+from bgd.services.apis.vkontakte import (
     GameSearchResultVkontakteBuilder,
-    GameSearchResultWildberriesBuilder,
-    GameSearchResultZnaemIgraemBuilder,
-    NationalBankCurrencyExchangeRateBuilder,
-    TeseraGameDetailsResultBuilder,
+    VkontakteApiClient,
+    VkontakteSearchService,
 )
+from bgd.services.apis.wildberries import (
+    GameSearchResultWildberriesBuilder,
+    WildberriesApiClient,
+    WildberriesSearchService,
+)
+from bgd.services.apis.znaemigraem import (
+    GameSearchResultZnaemIgraemBuilder,
+    ZnaemIgraemApiClient,
+    ZnaemIgraemSearchService,
+)
+from bgd.services.base import BaseCurrencyExchangeRateService, SimpleSuggestGameService
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

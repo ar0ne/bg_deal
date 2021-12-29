@@ -3,7 +3,8 @@
 """
 from typing import List, Optional
 
-from bgd.responses import GameSearchResult
+from bgd.constants import FIFTHELEMENT
+from bgd.responses import GameSearchResult, Price
 from bgd.services.base import CurrencyExchangeRateService, GameSearchService
 from bgd.services.builders import GameSearchResultBuilder
 from bgd.services.constants import GET
@@ -57,3 +58,39 @@ class FifthElementSearchService(GameSearchService):
             product["is_presence"]
             and product["params_data"]["category_id"] in self._game_category_ids
         )
+
+
+class GameSearchResultFifthElementBuilder(GameSearchResultBuilder):
+    """Builder for GameSearch results from 5element"""
+
+    BASE_URL = "https://5element.by"
+
+    @classmethod
+    def from_search_result(cls, search_result: dict) -> GameSearchResult:
+        """Build search result"""
+        return GameSearchResult(
+            description="",
+            images=cls._extract_images(search_result),
+            location=None,
+            owner=None,
+            price=cls._extract_price(search_result),
+            source=FIFTHELEMENT,
+            subject=search_result["name"],
+            url=cls._extract_url(search_result),
+        )
+
+    @staticmethod
+    def _extract_images(product: dict) -> list[str]:
+        """Extract product images"""
+        return [product["picture"]]
+
+    @staticmethod
+    def _extract_price(product: dict) -> Optional[Price]:
+        """Extract price"""
+        price = product["price"] * 100
+        return Price(amount=price)
+
+    @classmethod
+    def _extract_url(cls, product: dict) -> str:
+        """Extract product url"""
+        return f"{cls.BASE_URL}{product['url']}"

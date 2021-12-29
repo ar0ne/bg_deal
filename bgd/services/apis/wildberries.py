@@ -3,8 +3,10 @@ Wildberries API Client
 """
 from typing import List, Optional
 
-from bgd.responses import GameSearchResult
+from bgd.constants import WILDBERRIES
+from bgd.responses import GameSearchResult, Price
 from bgd.services.base import GameSearchService
+from bgd.services.builders import GameSearchResultBuilder
 from bgd.services.constants import GET
 from bgd.services.protocols import JsonHttpApiClient
 from bgd.services.responses import APIResponse
@@ -75,3 +77,46 @@ class WildberriesSearchService(GameSearchService):
     def _is_available_game(self, product: dict) -> bool:
         """True if it's available board game"""
         return product.get("subjectId") == self._game_category_id
+
+
+class GameSearchResultWildberriesBuilder(GameSearchResultBuilder):
+    """Build GameSearchResult for Wildberrries datasource"""
+
+    ITEM_URL = "https://by.wildberries.ru/catalog/{}/detail.aspx"
+    IMAGE_URL = "https://images.wbstatic.net/big/new/{}0000/{}-1.jpg"
+
+    @classmethod
+    def from_search_result(cls, search_result: dict) -> GameSearchResult:
+        """Build game search result"""
+        return GameSearchResult(
+            description="",
+            images=cls._extract_images(search_result),
+            location=None,
+            owner=None,
+            price=cls._extract_price(search_result),
+            source=WILDBERRIES,
+            subject=cls._extract_subject(search_result),
+            url=cls._extract_url(search_result),
+        )
+
+    @staticmethod
+    def _extract_price(product: dict) -> Price:
+        """Extract prices for product in different currencies"""
+        price_in_byn: int = product["salePriceU"]
+        return Price(amount=price_in_byn)
+
+    @classmethod
+    def _extract_url(cls, product: dict) -> str:
+        """Extract url to product"""
+        return cls.ITEM_URL.format(product.get("id"))
+
+    @classmethod
+    def _extract_images(cls, product: dict) -> list:
+        """Extract product images"""
+        product_id = str(product.get("id"))
+        return [cls.IMAGE_URL.format(product_id[:4], product_id)]
+
+    @staticmethod
+    def _extract_subject(product: dict) -> str:
+        """Extract product subject"""
+        return f"{product.get('brand')} / {product.get('name')}"

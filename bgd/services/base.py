@@ -165,7 +165,7 @@ class GameSearchService(ABC):
         """prepare search results for end user"""
         if not (items and len(items)):
             return []
-        return [self._result_builder.from_search_result(item) for item in items]
+        return list(map(self._result_builder.from_search_result, items))
 
     def _log_errors(self, all_responses: Tuple[Union[Any, Exception]]) -> None:
         """Log errors if any occur"""
