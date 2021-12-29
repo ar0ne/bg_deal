@@ -46,15 +46,27 @@ class ZnaemIgraemSearchService(GameSearchService):
             # filter unavailable products
             if item.find(class_="catalog-item__amount").find("span"):
                 continue
+            name = item.find(class_="name").get_text()
+            # filter not relevant products
+            if not self._relevant_result(name, query):
+                continue
             product = {
                 "image": item.find("img")["src"],
-                "name": item.find(class_="name").get_text(),
+                "name": name,
                 "price": item.find(class_="catalog-item__price").get_text(),
                 "url": item.find(class_="image")["href"],
             }
             products.append(product)
 
         return self.build_results(products)
+
+    def _relevant_result(self, product_name, query) -> bool:
+        """True if search result is relevant to query"""
+        words = query.split(" ")
+        for word in words:
+            if word in product_name:
+                return True
+        return False
 
 
 class GameSearchResultZnaemIgraemBuilder(GameSearchResultBuilder):
