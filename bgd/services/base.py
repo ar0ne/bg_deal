@@ -120,9 +120,9 @@ class GameSearchService(ABC):
     def __init__(
         self,
         client: GameSearcher,
-        game_category_id: Union[str, int],
         result_builder: GameSearchResultBuilder,
         currency_exchange_rate_converter: CurrencyExchangeRateService,
+        game_category_id: Optional[Union[str, int]] = None,
     ) -> None:
         """Init Search Service"""
         self._client = client

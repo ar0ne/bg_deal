@@ -45,19 +45,19 @@ class VkontakteSearchService(GameSearchService):
     def __init__(
         self,
         client: GameSearcher,
-        game_category_id: str,
         result_builder: GameSearchResultBuilder,
+        currency_exchange_rate_converter: CurrencyExchangeRateService,
         api_version: str,
         api_token: str,
         group_id: str,
         group_name: str,
         limit: int,
-        currency_exchange_rate_converter: CurrencyExchangeRateService,
+        game_category_id: str = "",
     ) -> None:
         """Init 5th element Search Service"""
         # there are more than one category that we should check
         super().__init__(
-            client, game_category_id, result_builder, currency_exchange_rate_converter
+            client, result_builder, currency_exchange_rate_converter, game_category_id
         )
         self.api_version = api_version
         self.api_token = api_token

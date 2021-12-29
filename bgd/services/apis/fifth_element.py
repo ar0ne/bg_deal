@@ -30,17 +30,15 @@ class FifthElementSearchService(GameSearchService):
     def __init__(
         self,
         client: GameSearcher,
-        game_category_id: str,
         result_builder: GameSearchResultBuilder,
-        search_app_id: str,
         currency_exchange_rate_converter: CurrencyExchangeRateService,
+        game_category_id: str,
+        search_app_id: str,
     ) -> None:
         """Init 5th element Search Service"""
         # there are more than one category that we should check
         self._game_category_ids = game_category_id.split(",")
-        super().__init__(
-            client, game_category_id, result_builder, currency_exchange_rate_converter
-        )
+        super().__init__(client, result_builder, currency_exchange_rate_converter)
         self._search_app_id = search_app_id
 
     async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
