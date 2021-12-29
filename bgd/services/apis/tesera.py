@@ -3,9 +3,11 @@ Tesera.ru API Client
 """
 from typing import Optional, Union
 
-from bgd.api_clients.constants import GET
-from bgd.api_clients.protocols import JsonHttpApiClient
-from bgd.api_clients.responses import APIResponse
+from bgd.services.base import GameInfoService
+from bgd.services.constants import GET
+from bgd.services.protocols import JsonHttpApiClient
+from bgd.services.responses import APIResponse
+from bgd.services.types import GameAlias, JsonResponse
 
 
 class TeseraApiClient(JsonHttpApiClient):
@@ -26,3 +28,14 @@ class TeseraApiClient(JsonHttpApiClient):
         """Get game details by alias"""
         url = f"{self.GAMES_PATH}/{game_alias}"
         return await self.connect(GET, self.BASE_URL, url)
+
+
+class TeseraGameInfoService(GameInfoService):
+    """Game info service for tesera.ru"""
+
+    def get_game_alias(self, search_results: JsonResponse) -> Optional[GameAlias]:
+        """Choose the game from search response and returns alias"""
+        # take first item in the list
+        if len(search_results) and isinstance(search_results, list):
+            return search_results[0]["alias"]
+        return None

@@ -6,7 +6,7 @@ from typing import Any, Optional
 
 from libbgg.infodict import InfoDict
 
-from bgd.api_clients.types import JsonResponse
+from .types import JsonResponse
 
 
 @dataclass

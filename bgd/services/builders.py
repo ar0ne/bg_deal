@@ -8,8 +8,6 @@ from typing import Any, Generator, List, Optional, Protocol, Tuple
 
 from libbgg.infodict import InfoDict
 
-from bgd.api_clients.types import ExchangeRates
-from bgd.api_clients.utils import clean_html, remove_backslashes
 from bgd.constants import (
     BELARUS,
     BGG,
@@ -34,6 +32,9 @@ from bgd.responses import (
     GameStatistic,
     Price,
 )
+
+from .types import ExchangeRates
+from .utils import clean_html, remove_backslashes
 
 BGG_GAME_URL = "https://boardgamegeek.com/boardgame"
 
@@ -625,7 +626,7 @@ class NationalBankCurrencyExchangeRateBuilder:
 class GameSearchResultZnaemIgraemBuilder(GameSearchResultBuilder):
     """Game search builder for znaemigraem"""
 
-    BASE_URL = "https://znaemigraem.by/"
+    BASE_URL = "https://znaemigraem.by"
 
     @classmethod
     def from_search_result(cls, search_result: dict) -> GameSearchResult:

@@ -3,12 +3,12 @@ National Bank (nb.by) API Client
 """
 import datetime
 
-from bgd.api_clients.constants import GET
-from bgd.api_clients.protocols import XmlHttpApiClient
-from bgd.api_clients.responses import APIResponse
+from bgd.services.constants import GET
+from bgd.services.protocols import XmlHttpApiClient
+from bgd.services.responses import APIResponse
 
 
-class NationalBankAPIClient(XmlHttpApiClient):
+class NationalBankApiClient(XmlHttpApiClient):
     """API client for Belarus national bank"""
 
     BASE_URL = "https://www.nbrb.by"

@@ -1,11 +1,13 @@
 """
 Kufar.by API Client
 """
-from typing import Optional
+from typing import List, Optional
 
-from bgd.api_clients.constants import GET
-from bgd.api_clients.protocols import JsonHttpApiClient
-from bgd.api_clients.responses import APIResponse
+from bgd.responses import GameSearchResult
+from bgd.services.base import GameSearchService
+from bgd.services.constants import GET
+from bgd.services.protocols import JsonHttpApiClient
+from bgd.services.responses import APIResponse
 
 
 class KufarApiClient(JsonHttpApiClient):
@@ -34,3 +36,15 @@ class KufarApiClient(JsonHttpApiClient):
     async def get_all_categories(self) -> APIResponse:
         """Get all existing categories"""
         return await self.connect(GET, self.BASE_URL, self.CATEGORIES_PATH)
+
+
+class KufarSearchService(GameSearchService):
+    """Service for work with Kufar api"""
+
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+        """Search ads by game name"""
+        search_response = await self._client.search(
+            query, {"category": self._game_category_id}
+        )
+        products = self.filter_results(search_response.response["ads"])
+        return self.build_results(products)

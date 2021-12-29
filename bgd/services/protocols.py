@@ -10,14 +10,15 @@ import aiohttp
 from aiohttp import ClientResponse
 from libbgg.infodict import InfoDict
 
-from bgd.api_clients.responses import (
+from bgd.errors import ApiClientError, PageNotFoundError
+
+from .responses import (
     APIRequest,
     APIResponse,
     HTMLAPIResponse,
     JSONAPIResponse,
     XMLAPIResponse,
 )
-from bgd.errors import ApiClientError, PageNotFoundError
 
 log = logging.getLogger(__name__)
 

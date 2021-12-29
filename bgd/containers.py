@@ -6,8 +6,26 @@ import os
 from dependency_injector import containers, providers
 from starlette.templating import Jinja2Templates
 
-from bgd import services
-from bgd.api_clients.builders import (
+from bgd.services.apis.bgg import BoardGameGeekApiClient, BoardGameGeekGameInfoService
+from bgd.services.apis.fifth_element import (
+    FifthElementApiClient,
+    FifthElementSearchService,
+)
+from bgd.services.apis.kufar import KufarApiClient, KufarSearchService
+from bgd.services.apis.national_bank import NationalBankApiClient
+from bgd.services.apis.onliner import OnlinerApiClient, OnlinerSearchService
+from bgd.services.apis.ozby import OzByApiClient, OzBySearchService
+from bgd.services.apis.ozon import OzonApiClient, OzonSearchService
+from bgd.services.apis.tesera import TeseraApiClient, TeseraGameInfoService
+from bgd.services.apis.twenty_first_vek import (
+    TwentyFirstVekApiClient,
+    TwentyFirstVekSearchService,
+)
+from bgd.services.apis.vkontakte import VkontakteApiClient, VkontakteSearchService
+from bgd.services.apis.wildberries import WildberriesApiClient, WildberriesSearchService
+from bgd.services.apis.znaemigraem import ZnaemIgraemApiClient, ZnaemIgraemSearchService
+from bgd.services.base import BaseCurrencyExchangeRateService, SimpleSuggestGameService
+from bgd.services.builders import (
     BGGGameDetailsResultBuilder,
     GameSearchResultFifthElementBuilder,
     GameSearchResultKufarBuilder,
@@ -21,19 +39,6 @@ from bgd.api_clients.builders import (
     NationalBankCurrencyExchangeRateBuilder,
     TeseraGameDetailsResultBuilder,
 )
-from bgd.api_clients.clients.bgg import BoardGameGeekApiClient
-from bgd.api_clients.clients.fifth_element import FifthElementApiClient
-from bgd.api_clients.clients.kufar import KufarApiClient
-from bgd.api_clients.clients.national_bank import NationalBankAPIClient
-from bgd.api_clients.clients.onliner import OnlinerApiClient
-from bgd.api_clients.clients.ozby import OzByApiClient
-from bgd.api_clients.clients.ozon import OzonApiClient
-from bgd.api_clients.clients.tesera import TeseraApiClient
-from bgd.api_clients.clients.twenty_first_vek import TwentyFirstVekApiClient
-from bgd.api_clients.clients.vkontakte import VkontakteApiClient
-from bgd.api_clients.clients.wildberries import WildberriesApiClient
-from bgd.api_clients.clients.znaemigraem import ZnaemIgraemApiClient
-from bgd.services import ZnaemIgraemSearchService
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -49,97 +54,86 @@ class ApplicationContainer(containers.DeclarativeContainer):
         directory=config.templates.dir,
     )
 
-    bgg_api_client = providers.Singleton(BoardGameGeekApiClient)
     bgg_service = providers.Singleton(
-        services.BoardGameGeekGameInfoService,
-        client=bgg_api_client,
+        BoardGameGeekGameInfoService,
+        client=providers.Singleton(BoardGameGeekApiClient),
         builder=BGGGameDetailsResultBuilder,
     )
 
-    tesera_api_client = providers.Singleton(TeseraApiClient)
     tesera_service = providers.Singleton(
-        services.TeseraGameInfoService,
-        client=tesera_api_client,
+        TeseraGameInfoService,
+        client=providers.Singleton(TeseraApiClient),
         builder=TeseraGameDetailsResultBuilder,
     )
 
-    exchange_rate_api_client = providers.Singleton(NationalBankAPIClient)
     exchange_rate_service = providers.Singleton(
-        services.CurrencyExchangeRateService,
-        client=exchange_rate_api_client,
+        BaseCurrencyExchangeRateService,
+        client=providers.Singleton(NationalBankApiClient),
         base_currency=config.exchange_rate.base,
         rate_builder=NationalBankCurrencyExchangeRateBuilder,
         target_currency=config.exchange_rate.target,
     )
 
-    kufar_api_client = providers.Singleton(KufarApiClient)
     kufar_search_service = providers.Singleton(
-        services.KufarSearchService,
-        client=kufar_api_client,
+        KufarSearchService,
+        client=providers.Singleton(KufarApiClient),
         game_category_id=config.kufar.game_category_id,
         result_builder=GameSearchResultKufarBuilder,
         currency_exchange_rate_converter=exchange_rate_service,
     )
 
-    wildberries_api_client = providers.Singleton(WildberriesApiClient)
     wildberreis_search_service = providers.Singleton(
-        services.WildberriesSearchService,
-        client=wildberries_api_client,
+        WildberriesSearchService,
+        client=providers.Singleton(WildberriesApiClient),
         game_category_id=config.wildberries.game_category_id,
         result_builder=GameSearchResultWildberriesBuilder,
         currency_exchange_rate_converter=exchange_rate_service,
     )
 
-    ozon_api_client = providers.Singleton(OzonApiClient)
     ozon_search_service = providers.Singleton(
-        services.OzonSearchService,
-        client=ozon_api_client,
+        OzonSearchService,
+        client=providers.Singleton(OzonApiClient),
         game_category_id=config.ozon.game_category_id,
         result_builder=GameSearchResultOzonBuilder,
         currency_exchange_rate_converter=exchange_rate_service,
     )
 
-    ozby_api_client = providers.Singleton(OzByApiClient)
     ozby_search_service = providers.Singleton(
-        services.OzBySearchService,
-        client=ozby_api_client,
+        OzBySearchService,
+        client=providers.Singleton(OzByApiClient),
         game_category_id=config.ozby.game_category_id,
         result_builder=GameSearchResultOzByBuilder,
         currency_exchange_rate_converter=exchange_rate_service,
     )
 
-    onliner_api_client = providers.Singleton(OnlinerApiClient)
     onliner_search_service = providers.Singleton(
-        services.OnlinerSearchService,
-        client=onliner_api_client,
+        OnlinerSearchService,
+        client=providers.Singleton(OnlinerApiClient),
         game_category_id="",
         result_builder=GameSearchResultOnlinerBuilder,
         currency_exchange_rate_converter=exchange_rate_service,
     )
 
-    twenty_first_vek_api_client = providers.Singleton(TwentyFirstVekApiClient)
     twenty_first_vek_service = providers.Singleton(
-        services.TwentyFirstVekSearchService,
-        client=twenty_first_vek_api_client,
+        TwentyFirstVekSearchService,
+        client=providers.Singleton(TwentyFirstVekApiClient),
         game_category_id="",
         result_builder=GameSearchResultTwentyFirstVekBuilder,
         currency_exchange_rate_converter=exchange_rate_service,
     )
 
-    fifth_element_api_client = providers.Singleton(FifthElementApiClient)
     fifth_element_service = providers.Singleton(
-        services.FifthElementSearchService,
-        client=fifth_element_api_client,
+        FifthElementSearchService,
+        client=providers.Singleton(FifthElementApiClient),
         game_category_id=config.fifthelement.game_category_id,
         result_builder=GameSearchResultFifthElementBuilder,
         search_app_id=config.fifthelement.search_app_id,
         currency_exchange_rate_converter=exchange_rate_service,
     )
 
-    vk_api_client = providers.Singleton(VkontakteApiClient)
     vk_service = providers.Singleton(
-        services.VkontakteSearchService,
-        client=vk_api_client,
+        VkontakteSearchService,
+        client=providers.Singleton(VkontakteApiClient),
         game_category_id="",
         group_id=config.vk.group_id,
         group_name=config.vk.group_name,
@@ -149,10 +143,9 @@ class ApplicationContainer(containers.DeclarativeContainer):
         result_builder=GameSearchResultVkontakteBuilder,
         currency_exchange_rate_converter=exchange_rate_service,
     )
-    znaem_igraem_api_client = providers.Singleton(ZnaemIgraemApiClient)
     znaem_igraem_service = providers.Singleton(
         ZnaemIgraemSearchService,
-        client=znaem_igraem_api_client,
+        client=providers.Singleton(ZnaemIgraemApiClient),
         game_category_id="",
         result_builder=GameSearchResultZnaemIgraemBuilder,
         currency_exchange_rate_converter=exchange_rate_service,
@@ -171,6 +164,6 @@ class ApplicationContainer(containers.DeclarativeContainer):
     )
 
     suggest_game_service = providers.Singleton(
-        services.SuggestGameService,
+        SimpleSuggestGameService,
         games=config.app.suggested_games,
     )

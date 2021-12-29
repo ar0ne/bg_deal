@@ -1,11 +1,13 @@
 """
 Wildberries API Client
 """
-from typing import Optional
+from typing import List, Optional
 
-from bgd.api_clients.constants import GET
-from bgd.api_clients.protocols import JsonHttpApiClient
-from bgd.api_clients.responses import APIResponse
+from bgd.responses import GameSearchResult
+from bgd.services.base import GameSearchService
+from bgd.services.constants import GET
+from bgd.services.protocols import JsonHttpApiClient
+from bgd.services.responses import APIResponse
 
 
 class WildberriesApiClient(JsonHttpApiClient):
@@ -58,3 +60,18 @@ class WildberriesApiClient(JsonHttpApiClient):
         """
         url = f"{self.SEARCH_PATH}?query={query}"
         return await self.connect(GET, self.BASE_SEARCH_URL, url)
+
+
+class WildberriesSearchService(GameSearchService):
+    """Service for work with Wildberries api"""
+
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+        search_results = await self._client.search(query)
+        products = self.filter_results(
+            search_results.response["data"]["products"], self._is_available_game
+        )
+        return self.build_results(products)
+
+    def _is_available_game(self, product: dict) -> bool:
+        """True if it's available board game"""
+        return product.get("subjectId") == self._game_category_id

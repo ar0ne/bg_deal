@@ -12,7 +12,7 @@ from fastapi.templating import Jinja2Templates
 
 from bgd.containers import ApplicationContainer
 from bgd.responses import GameDetailsResult, GameSearchResult
-from bgd.services import DataSource, GameInfoService, SuggestGameService
+from bgd.services.base import GameInfoService, GameSearchService, SuggestGameService
 from bgd.utils import game_search_result_price
 
 INDEX_PAGE = "index.html"
@@ -25,7 +25,7 @@ router = APIRouter()
 @inject
 async def search_game(
     game: str,
-    data_sources: List[DataSource] = Depends(
+    data_sources: List[GameSearchService] = Depends(
         Provide[ApplicationContainer.data_sources]
     ),
 ) -> List[GameSearchResult]:
@@ -40,19 +40,19 @@ async def search_game(
 @inject
 async def game_details(
     game: str,
-    bgg_service: GameInfoService = Depends(Provide[ApplicationContainer.bgg_service]),
-    tesera_service: GameInfoService = Depends(
-        Provide[ApplicationContainer.tesera_service]
+    board_game_geek: GameInfoService = Depends(
+        Provide[ApplicationContainer.bgg_service]
     ),
+    tesera: GameInfoService = Depends(Provide[ApplicationContainer.tesera_service]),
 ):
     """Fetches board game info from provider"""
     game_info = await asyncio.gather(
-        bgg_service.get_board_game_info(game), return_exceptions=True
+        board_game_geek.get_board_game_info(game), return_exceptions=True
     )
     if isinstance(game_info[0], GameDetailsResult):
         return game_info[0]
-    # try to backward result from tesera
-    return await tesera_service.get_board_game_info(game)
+    # if not found, will try to fall back to result from Tesera
+    return await tesera.get_board_game_info(game)
 
 
 @router.get("/", response_class=HTMLResponse)
