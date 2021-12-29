@@ -10,8 +10,8 @@ from typing import Any, Callable, List, Optional, Protocol, Tuple, Union
 from bgd.errors import GameNotFoundError
 from bgd.responses import GameDetailsResult, GameSearchResult, Price
 
+from .api_clients import GameInfoSearcher, GameSearcher
 from .builders import GameDetailsResultBuilder, GameSearchResultBuilder
-from .protocols import GameInfoSearcher, GameSearcher
 from .types import ExchangeRates, GameAlias
 
 log = logging.getLogger(__name__)
