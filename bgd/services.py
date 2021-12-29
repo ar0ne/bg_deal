@@ -8,7 +8,7 @@ import logging
 import random
 import re
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 from libbgg.infodict import InfoDict
 
@@ -39,19 +39,19 @@ class GameInfoService(ABC):
         builder: GameDetailsResultBuilder,
     ) -> None:
         """Init Search Service"""
-        self.client = client
-        self.game_result_builder = builder
+        self._client = client
+        self._game_result_builder = builder
 
     async def get_board_game_info(
         self, game: str, exact: bool = True
     ) -> GameDetailsResult:
         """Get board game info from API"""
-        search_resp = await self.client.search_game_info(game, {"exact": exact})
+        search_resp = await self._client.search_game_info(game, {"exact": exact})
         game_alias = self.get_game_alias(search_resp.response)
         if not game_alias:
             raise GameNotFoundError(game)
-        game_info_resp = await self.client.get_game_details(game_alias)
-        return self.game_result_builder.build(game_info_resp.response)
+        game_info_resp = await self._client.get_game_details(game_alias)
+        return self._game_result_builder.build(game_info_resp.response)
 
     @abstractmethod
     def get_game_alias(self, search_results: Any) -> Optional[GameAlias]:
@@ -111,10 +111,10 @@ class CurrencyExchangeRateService:
         :param str base_currency: 3-letters currency code from which service does conversion.
         :param str target_currency: 3-letters currency code for conversion.
         """
-        self.client = client
-        self.builder = rate_builder
-        self.target_currency = target_currency
-        self.base_currency = base_currency
+        self._client = client
+        self._builder = rate_builder
+        self._target_currency = target_currency
+        self._base_currency = base_currency
         self._rates: Optional[ExchangeRates] = None
         self._expiration_date: Optional[datetime.date] = None
 
@@ -123,12 +123,12 @@ class CurrencyExchangeRateService:
         if not price:
             return None
         rates = await self.get_rates()
-        if not (rates and self.target_currency in rates):
+        if not (rates and self._target_currency in rates):
             return None
-        exchange_rate = rates[self.target_currency]
+        exchange_rate = rates[self._target_currency]
         return Price(
             amount=round(price.amount / exchange_rate),
-            currency=self.target_currency,
+            currency=self._target_currency,
         )
 
     async def get_rates(self) -> Optional[ExchangeRates]:
@@ -140,8 +140,8 @@ class CurrencyExchangeRateService:
         if not self._rates:
             # for safety let's use yesterday rates
             yesterday = today - datetime.timedelta(days=1)
-            resp = await self.client.get_currency_exchange_rates(yesterday)
-            self._rates = self.builder.from_response(resp.response)
+            resp = await self._client.get_currency_exchange_rates(yesterday)
+            self._rates = self._builder.from_response(resp.response)
             self._expiration_date = today + datetime.timedelta(days=1)
         return self._rates
 
@@ -158,23 +158,31 @@ class DataSource:
     ) -> None:
         """Init Search Service"""
         self._client = client
-        self.game_category_id = game_category_id
-        self.result_builder = result_builder
-        self.currency_converter = currency_exchange_rate_converter
+        self._game_category_id = game_category_id
+        self._result_builder = result_builder
+        self._currency_converter = currency_exchange_rate_converter
+        self._query = None
 
     @abstractmethod
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
         """search query"""
 
-    @abstractmethod
-    def filter_results(self, response: JsonResponse) -> list:
+    def filter_results(
+        self, products: list, filter_func: Optional[Callable] = None
+    ) -> list:
         """Filter valid results"""
+        if not products:
+            return []
+        if not filter_func:
+            return products
+        return list(filter(filter_func, products))
 
     async def search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         """Searching games"""
         log.info("Search data by: %s", self._client.__class__.__name__)
+        self._query = query
         responses = await asyncio.gather(
-            self.do_search(query, *args, **kwargs), return_exceptions=True
+            self.do_search(*args, **kwargs), return_exceptions=True
         )
         self._log_errors(responses)
         # filter exceptions
@@ -183,7 +191,7 @@ class DataSource:
         search_results = results[0] if results else results
         # provide converted prices
         for result in search_results:  # type: ignore
-            target_price = await self.currency_converter.convert(result.price)  # type: ignore
+            target_price = await self._currency_converter.convert(result.price)  # type: ignore
             result.price_converted = target_price  # type: ignore
         return search_results  # type: ignore
 
@@ -191,9 +199,9 @@ class DataSource:
         """prepare search results for end user"""
         if not (items and len(items)):
             return []
-        return [self.result_builder.from_search_result(item) for item in items]
+        return [self._result_builder.from_search_result(item) for item in items]
 
-    def _log_errors(self, all_responses: Tuple[Union[Any, Exception]]):
+    def _log_errors(self, all_responses: Tuple[Union[Any, Exception]]) -> None:
         """Log errors if any occur"""
         for resp in all_responses:
             if not isinstance(resp, list):
@@ -208,52 +216,40 @@ class DataSource:
 class KufarSearchService(DataSource):
     """Service for work with Kufar api"""
 
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
         """Search ads by game name"""
         search_response = await self._client.search(
-            query, {"category": self.game_category_id}
+            self._query, {"category": self._game_category_id}
         )
-        products = self.filter_results(search_response.response)
+        products = self.filter_results(search_response.response["ads"])
         return self.build_results(products)
-
-    def filter_results(self, response: JsonResponse) -> list:
-        """Filter only valid results"""
-        return response["ads"]
 
 
 class WildberriesSearchService(DataSource):
     """Service for work with Wildberries api"""
 
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
-        search_results = await self._client.search(query)
-        products = self.filter_results(search_results.response)
+    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
+        search_results = await self._client.search(self._query)
+        products = self.filter_results(
+            search_results.response["data"]["products"], self._is_available_game
+        )
         return self.build_results(products)
 
-    def filter_results(self, response: JsonResponse) -> list:
-        """Filter only valid results"""
-        return list(
-            filter(
-                lambda pr: pr.get("subjectId") == self.game_category_id,
-                response["data"]["products"],
-            )
-        )
+    def _is_available_game(self, product: dict) -> bool:
+        """True if it's available board game"""
+        return product.get("subjectId") == self._game_category_id
 
 
 class OzonSearchService(DataSource):
     """Search Service for ozon api"""
 
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
         response = await self._client.search(
-            query, {"category": self.game_category_id, **kwargs}
+            self._query, {"category": self._game_category_id, **kwargs}
         )
-        products = self.filter_results(response.response)
+        results = self._extract_search_results(response.response)
+        products = self.filter_results(results["items"])
         return self.build_results(products)
-
-    def filter_results(self, response: JsonResponse) -> list:
-        search_results = self._extract_search_results(response)
-        if not search_results:
-            return []
-        return search_results["items"]
 
     def _extract_search_results(self, resp: dict) -> Optional[dict]:
         """Extract search results from response"""
@@ -275,61 +271,47 @@ class OzonSearchService(DataSource):
 class OzBySearchService(DataSource):
     """Search service for oz.by"""
 
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
         response = await self._client.search(
-            query, {"category": self.game_category_id, **kwargs}
+            self._query, {"category": self._game_category_id, **kwargs}
         )
-        products = self.filter_results(response.response)
+        products = self.filter_results(response.response["data"])
         return self.build_results(products)
-
-    def filter_results(self, response: JsonResponse) -> list:
-        """Filter valid results"""
-        return response["data"]
 
 
 class OnlinerSearchService(DataSource):
     """Search service for onliner.by"""
 
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
-        response = await self._client.search(query, **kwargs)
-        products = self.filter_results(response.response)
+    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
+        response = await self._client.search(self._query, **kwargs)
+        products = self.filter_results(
+            response.response["products"], self._is_available_game
+        )
         return self.build_results(products)
 
-    def filter_results(self, response: JsonResponse) -> list:
-        """Filter valid results"""
-        # exclude non boardgames from the result and games without prices
-        products = response["products"]
-        if not products:
-            return []
-        return [
-            product
-            for product in products
-            if product["schema"]["key"] == "boardgame" and product["prices"]
-        ]
+    def _is_available_game(self, product: dict) -> bool:
+        """True if it's available board game"""
+        return product["schema"]["key"] == "boardgame" and product["prices"]
 
 
 class TwentyFirstVekSearchService(DataSource):
     """Search service for 21vek.by"""
 
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
-        """Search on api and build response"""
-        response = await self._client.search(query, **kwargs)
-        products = self.filter_results(response.response)
-        return self.build_results(products)
-
-    def filter_results(self, response: JsonResponse) -> list:
-        """Filter only valid results"""
-        products = response["items"]
-        if not products:
-            return []
-        # exclude non board games and not available products from response
-        return [
-            product
-            for product in products
-            if product["type"] == "product"
+    def _is_available_game(self, product: dict) -> bool:
+        """True if it's available board game"""
+        return (
+            product["type"] == "product"
             and product["price"] != "нет на складе"
             and "board_games" in product["url"]
-        ]
+        )
+
+    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
+        """Search on api and build response"""
+        response = await self._client.search(self._query, **kwargs)
+        products = self.filter_results(
+            response.response["items"], self._is_available_game
+        )
+        return self.build_results(products)
 
 
 class FifthElementSearchService(DataSource):
@@ -345,31 +327,27 @@ class FifthElementSearchService(DataSource):
     ) -> None:
         """Init 5th element Search Service"""
         # there are more than one category that we should check
-        self.game_category_ids = game_category_id.split(",")
+        self._game_category_ids = game_category_id.split(",")
         super().__init__(
             client, game_category_id, result_builder, currency_exchange_rate_converter
         )
-        self.search_app_id = search_app_id
+        self._search_app_id = search_app_id
 
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
         response = await self._client.search(
-            query, {"search_app_id": self.search_app_id}
+            self._query, {"search_app_id": self._search_app_id}
         )
-        products = self.filter_results(response.response)
+        products = self.filter_results(
+            response.response["results"]["items"], self._is_available_game
+        )
         return self.build_results(products)
 
-    def filter_results(self, response: JsonResponse) -> list:
-        """Filter only valid results"""
-        products = response["results"]["items"]
-        if not products:
-            return []
-        # exclude non table and not available top boardgames from results
-        return [
-            product
-            for product in products
-            if product["is_presence"]
-            and product["params_data"]["category_id"] in self.game_category_ids
-        ]
+    def _is_available_game(self, product: dict) -> bool:
+        """True if it's available board game"""
+        return (
+            product["is_presence"]
+            and product["params_data"]["category_id"] in self._game_category_ids
+        )
 
 
 class VkontakteSearchService(DataSource):
@@ -399,9 +377,9 @@ class VkontakteSearchService(DataSource):
         self.group_name = group_name
         self.limit = limit
 
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
         search_response = await self._client.search(
-            query,
+            self._query,
             {
                 "api_token": self.api_token,
                 "api_version": self.api_version,
@@ -409,18 +387,21 @@ class VkontakteSearchService(DataSource):
                 "limit": self.limit,
             },
         )
-        products = self.filter_results(search_response.response, query=query)
+        products = self.filter_results(
+            search_response.response["response"]["items"], self._is_available_game
+        )
         return self.build_results(products)
 
-    def filter_results(self, response: JsonResponse, **kwargs) -> list:
-        """Filter only valid results"""
-        posts = response["response"]["items"]
+    def _is_available_game(self, product: dict, query: str) -> bool:
+        """True if it's available board game"""
         # @todo: is it possible to do it better?  # typing: disable=fixme
-        return [
-            post
-            for post in posts
-            if re.search(kwargs.get("query"), post["text"], re.IGNORECASE)  # type: ignore
-        ]
+        return re.search(query, product["text"], re.IGNORECASE)  # type: ignore
+
+    def filter_results(
+        self, products: list, filter_func: Optional[Callable] = None
+    ) -> list:
+        """Filter only valid results"""
+        return [product for product in products if filter_func(product, self._query)]
 
 
 class SuggestGameService:
