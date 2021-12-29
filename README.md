@@ -14,6 +14,7 @@
  - onliner.by
  - 21vek.by
  - 5element.by
+ - znaemigraem.by
 
 
 ## How to run

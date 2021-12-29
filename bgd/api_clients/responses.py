@@ -34,6 +34,14 @@ class XMLAPIResponse(APIResponse):
 
 
 @dataclass
+class HTMLAPIResponse(APIResponse):
+    """Html API Resource"""
+
+    response: str
+    status: int
+
+
+@dataclass
 class APIRequest:
     """API request model"""
 

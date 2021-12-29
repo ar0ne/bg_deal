@@ -17,6 +17,7 @@ from bgd.api_clients.builders import (
     GameSearchResultTwentyFirstVekBuilder,
     GameSearchResultVkontakteBuilder,
     GameSearchResultWildberriesBuilder,
+    GameSearchResultZnaemIgraemBuilder,
     NationalBankCurrencyExchangeRateBuilder,
     TeseraGameDetailsResultBuilder,
 )
@@ -31,6 +32,8 @@ from bgd.api_clients.clients.tesera import TeseraApiClient
 from bgd.api_clients.clients.twenty_first_vek import TwentyFirstVekApiClient
 from bgd.api_clients.clients.vkontakte import VkontakteApiClient
 from bgd.api_clients.clients.wildberries import WildberriesApiClient
+from bgd.api_clients.clients.znaemigraem import ZnaemIgraemApiClient
+from bgd.services import ZnaemIgraemSearchService
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -146,16 +149,25 @@ class ApplicationContainer(containers.DeclarativeContainer):
         result_builder=GameSearchResultVkontakteBuilder,
         currency_exchange_rate_converter=exchange_rate_service,
     )
+    znaem_igraem_api_client = providers.Singleton(ZnaemIgraemApiClient)
+    znaem_igraem_service = providers.Singleton(
+        ZnaemIgraemSearchService,
+        client=znaem_igraem_api_client,
+        game_category_id="",
+        result_builder=GameSearchResultZnaemIgraemBuilder,
+        currency_exchange_rate_converter=exchange_rate_service,
+    )
 
     data_sources = providers.List(
-        kufar_search_service,
-        wildberreis_search_service,
-        ozon_search_service,
-        ozby_search_service,
-        onliner_search_service,
-        twenty_first_vek_service,
         fifth_element_service,
+        kufar_search_service,
+        onliner_search_service,
+        ozby_search_service,
+        ozon_search_service,
+        twenty_first_vek_service,
         vk_service,
+        wildberreis_search_service,
+        znaem_igraem_service,
     )
 
     suggest_game_service = providers.Singleton(

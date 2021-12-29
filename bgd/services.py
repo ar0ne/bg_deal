@@ -10,6 +10,7 @@ import re
 from abc import ABC, abstractmethod
 from typing import Any, Callable, List, Optional, Tuple, Union
 
+from bs4 import BeautifulSoup
 from libbgg.infodict import InfoDict
 
 from bgd.api_clients.builders import (
@@ -414,3 +415,34 @@ class SuggestGameService:
     async def suggest(self) -> str:
         """Suggest random game from the list"""
         return random.choice(self.games)
+
+
+class ZnaemIgraemSearchService(DataSource):
+    """Search service for znaemigraem.by"""
+
+    def _is_available_game(self, product: dict) -> bool:
+        """True if game is available for purchase"""
+        return product["available"]
+
+    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
+        """Search query"""
+        html_page = await self._client.search(self._query)
+        # find products on search page
+        soup = BeautifulSoup(html_page.response, "html.parser")
+
+        search_results = soup.find(class_="c-search__results")
+        items = search_results.find_all(class_="catalog-item")
+        products = []
+        for item in items:
+            # filter unavailable products
+            if item.find(class_="catalog-item__amount").find("span"):
+                continue
+            product = {
+                "image": item.find("img")["src"],
+                "name": item.find(class_="name").get_text(),
+                "price": item.find(class_="catalog-item__price").get_text(),
+                "url": item.find(class_="image")["href"],
+            }
+            products.append(product)
+
+        return self.build_results(products)

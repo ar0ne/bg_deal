@@ -13,6 +13,7 @@ from libbgg.infodict import InfoDict
 from bgd.api_clients.responses import (
     APIRequest,
     APIResponse,
+    HTMLAPIResponse,
     JSONAPIResponse,
     XMLAPIResponse,
 )
@@ -116,12 +117,26 @@ class XMLResource:
         return XMLAPIResponse(info_dict, response.status)
 
 
+class HTMLResource(XMLResource):
+    """Html Resource"""
+
+    @staticmethod
+    async def prepare_response(response: ClientResponse) -> HTMLAPIResponse:
+        """Prepare response from HTML resource"""
+        r_text = await response.text(encoding=None)
+        return HTMLAPIResponse(r_text, response.status)
+
+
 class JsonHttpApiClient(JSONResource, Connector):
     """Json Http API client"""
 
 
 class XmlHttpApiClient(XMLResource, Connector):
     """Xml Http API client"""
+
+
+class HtmlHttpApiClient(HTMLResource, Connector):
+    """Html Http API Client"""
 
 
 class GameSearcher(Protocol):

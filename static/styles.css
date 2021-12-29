@@ -67,3 +67,6 @@ main {
 .vk-logo {
     content: url("https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/VK.com-logo.svg/192px-VK.com-logo.svg.png")
 }
+.znaemigraem-logo {
+    content: url("https://znaemigraem.by/local/templates/zi/img/logo.svg");
+}
