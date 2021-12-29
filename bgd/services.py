@@ -162,10 +162,9 @@ class DataSource:
         self._game_category_id = game_category_id
         self._result_builder = result_builder
         self._currency_converter = currency_exchange_rate_converter
-        self._query = None
 
     @abstractmethod
-    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         """search query"""
 
     def filter_results(
@@ -181,9 +180,8 @@ class DataSource:
     async def search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         """Searching games"""
         log.info("Search data by: %s", self._client.__class__.__name__)
-        self._query = query
         responses = await asyncio.gather(
-            self.do_search(*args, **kwargs), return_exceptions=True
+            self.do_search(query, *args, **kwargs), return_exceptions=True
         )
         self._log_errors(responses)
         # filter exceptions
@@ -217,10 +215,10 @@ class DataSource:
 class KufarSearchService(DataSource):
     """Service for work with Kufar api"""
 
-    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         """Search ads by game name"""
         search_response = await self._client.search(
-            self._query, {"category": self._game_category_id}
+            query, {"category": self._game_category_id}
         )
         products = self.filter_results(search_response.response["ads"])
         return self.build_results(products)
@@ -229,8 +227,8 @@ class KufarSearchService(DataSource):
 class WildberriesSearchService(DataSource):
     """Service for work with Wildberries api"""
 
-    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
-        search_results = await self._client.search(self._query)
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+        search_results = await self._client.search(query)
         products = self.filter_results(
             search_results.response["data"]["products"], self._is_available_game
         )
@@ -244,11 +242,13 @@ class WildberriesSearchService(DataSource):
 class OzonSearchService(DataSource):
     """Search Service for ozon api"""
 
-    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         response = await self._client.search(
-            self._query, {"category": self._game_category_id, **kwargs}
+            query, {"category": self._game_category_id, **kwargs}
         )
         results = self._extract_search_results(response.response)
+        if not results:
+            return []
         products = self.filter_results(results["items"])
         return self.build_results(products)
 
@@ -272,9 +272,9 @@ class OzonSearchService(DataSource):
 class OzBySearchService(DataSource):
     """Search service for oz.by"""
 
-    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         response = await self._client.search(
-            self._query, {"category": self._game_category_id, **kwargs}
+            query, {"category": self._game_category_id, **kwargs}
         )
         products = self.filter_results(response.response["data"])
         return self.build_results(products)
@@ -283,8 +283,8 @@ class OzBySearchService(DataSource):
 class OnlinerSearchService(DataSource):
     """Search service for onliner.by"""
 
-    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
-        response = await self._client.search(self._query, **kwargs)
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+        response = await self._client.search(query, **kwargs)
         products = self.filter_results(
             response.response["products"], self._is_available_game
         )
@@ -306,9 +306,9 @@ class TwentyFirstVekSearchService(DataSource):
             and "board_games" in product["url"]
         )
 
-    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         """Search on api and build response"""
-        response = await self._client.search(self._query, **kwargs)
+        response = await self._client.search(query, **kwargs)
         products = self.filter_results(
             response.response["items"], self._is_available_game
         )
@@ -334,9 +334,9 @@ class FifthElementSearchService(DataSource):
         )
         self._search_app_id = search_app_id
 
-    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         response = await self._client.search(
-            self._query, {"search_app_id": self._search_app_id}
+            query, {"search_app_id": self._search_app_id}
         )
         products = self.filter_results(
             response.response["results"]["items"], self._is_available_game
@@ -377,10 +377,12 @@ class VkontakteSearchService(DataSource):
         self.group_id = group_id
         self.group_name = group_name
         self.limit = limit
+        self._query = ""
 
-    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+        self._query = query
         search_response = await self._client.search(
-            self._query,
+            query,
             {
                 "api_token": self.api_token,
                 "api_version": self.api_version,
@@ -393,16 +395,12 @@ class VkontakteSearchService(DataSource):
         )
         return self.build_results(products)
 
-    def _is_available_game(self, product: dict, query: str) -> bool:
+    def _is_available_game(self, product: dict) -> bool:
         """True if it's available board game"""
         # @todo: is it possible to do it better?  # typing: disable=fixme
-        return re.search(query, product["text"], re.IGNORECASE)  # type: ignore
-
-    def filter_results(
-        self, products: list, filter_func: Optional[Callable] = None
-    ) -> list:
-        """Filter only valid results"""
-        return [product for product in products if filter_func(product, self._query)]
+        if not self._query:
+            return False
+        return re.search(self._query, product["text"], re.IGNORECASE)  # type: ignore
 
 
 class SuggestGameService:
@@ -424,9 +422,9 @@ class ZnaemIgraemSearchService(DataSource):
         """True if game is available for purchase"""
         return product["available"]
 
-    async def do_search(self, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         """Search query"""
-        html_page = await self._client.search(self._query)
+        html_page = await self._client.search(query)
         # find products on search page
         soup = BeautifulSoup(html_page.response, "html.parser")
 

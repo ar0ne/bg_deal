@@ -117,8 +117,15 @@ class XMLResource:
         return XMLAPIResponse(info_dict, response.status)
 
 
-class HTMLResource(XMLResource):
+class HTMLResource:
     """Html Resource"""
+
+    @staticmethod
+    def prepare_request(**kwargs) -> APIRequest:
+        """Prepare request to work with XML resource"""
+        kwargs_copy: dict = kwargs.copy()
+        kwargs_copy.pop("body", None)
+        return APIRequest(**kwargs_copy)
 
     @staticmethod
     async def prepare_response(response: ClientResponse) -> HTMLAPIResponse:

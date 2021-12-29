@@ -4,7 +4,6 @@ App builders
 import abc
 import html
 import itertools
-import math
 from typing import Any, Generator, List, Optional, Protocol, Tuple
 
 from libbgg.infodict import InfoDict

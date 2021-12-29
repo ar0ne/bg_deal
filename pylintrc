@@ -54,7 +54,7 @@ ignore-docstrings=yes
 ignore-imports=yes
 
 [MESSAGES CONTROL]
-disable = C0330, C0326, R0801
+disable = C0330, C0326, R0801, R0201
 
 [CLASSES]
 
