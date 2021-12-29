@@ -24,6 +24,7 @@ from bgd.services.apis.kufar import (
 from bgd.services.apis.national_bank import (
     NationalBankApiClient,
     NationalBankCurrencyExchangeRateBuilder,
+    NBCurrencyExchangeRateService,
 )
 from bgd.services.apis.onliner import (
     GameSearchResultOnlinerBuilder,
@@ -65,7 +66,7 @@ from bgd.services.apis.znaemigraem import (
     ZnaemIgraemApiClient,
     ZnaemIgraemSearchService,
 )
-from bgd.services.base import BaseCurrencyExchangeRateService, SimpleSuggestGameService
+from bgd.services.base import SimpleSuggestGameService
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -75,92 +76,80 @@ class ApplicationContainer(containers.DeclarativeContainer):
     """App container"""
 
     config = providers.Configuration()
-
     templates = providers.Factory(
         Jinja2Templates,
         directory=config.templates.dir,
     )
-
     bgg_service = providers.Singleton(
         BoardGameGeekGameInfoService,
         client=providers.Singleton(BoardGameGeekApiClient),
         builder=BGGGameDetailsResultBuilder,
     )
-
     tesera_service = providers.Singleton(
         TeseraGameInfoService,
         client=providers.Singleton(TeseraApiClient),
         builder=TeseraGameDetailsResultBuilder,
     )
-
-    exchange_rate_service = providers.Singleton(
-        BaseCurrencyExchangeRateService,
+    nb_exchange_rate_service = providers.Singleton(
+        NBCurrencyExchangeRateService,
         client=providers.Singleton(NationalBankApiClient),
         rate_builder=NationalBankCurrencyExchangeRateBuilder,
         base_currency=config.exchange_rate.base,
         target_currency=config.exchange_rate.target,
     )
-
     kufar_search_service = providers.Singleton(
         KufarSearchService,
         client=providers.Singleton(KufarApiClient),
         result_builder=GameSearchResultKufarBuilder,
-        currency_exchange_rate_converter=exchange_rate_service,
+        currency_exchange_rate_converter=nb_exchange_rate_service,
         game_category_id=config.kufar.game_category_id,
     )
-
     wildberreis_search_service = providers.Singleton(
         WildberriesSearchService,
         client=providers.Singleton(WildberriesApiClient),
         result_builder=GameSearchResultWildberriesBuilder,
-        currency_exchange_rate_converter=exchange_rate_service,
+        currency_exchange_rate_converter=nb_exchange_rate_service,
         game_category_id=config.wildberries.game_category_id,
     )
-
     ozon_search_service = providers.Singleton(
         OzonSearchService,
         client=providers.Singleton(OzonApiClient),
         result_builder=GameSearchResultOzonBuilder,
-        currency_exchange_rate_converter=exchange_rate_service,
+        currency_exchange_rate_converter=nb_exchange_rate_service,
         game_category_id=config.ozon.game_category_id,
     )
-
     ozby_search_service = providers.Singleton(
         OzBySearchService,
         client=providers.Singleton(OzByApiClient),
         result_builder=GameSearchResultOzByBuilder,
-        currency_exchange_rate_converter=exchange_rate_service,
+        currency_exchange_rate_converter=nb_exchange_rate_service,
         game_category_id=config.ozby.game_category_id,
     )
-
     onliner_search_service = providers.Singleton(
         OnlinerSearchService,
         client=providers.Singleton(OnlinerApiClient),
         result_builder=GameSearchResultOnlinerBuilder,
-        currency_exchange_rate_converter=exchange_rate_service,
+        currency_exchange_rate_converter=nb_exchange_rate_service,
     )
-
     twenty_first_vek_service = providers.Singleton(
         TwentyFirstVekSearchService,
         client=providers.Singleton(TwentyFirstVekApiClient),
         result_builder=GameSearchResultTwentyFirstVekBuilder,
-        currency_exchange_rate_converter=exchange_rate_service,
+        currency_exchange_rate_converter=nb_exchange_rate_service,
     )
-
     fifth_element_service = providers.Singleton(
         FifthElementSearchService,
         client=providers.Singleton(FifthElementApiClient),
         result_builder=GameSearchResultFifthElementBuilder,
-        currency_exchange_rate_converter=exchange_rate_service,
+        currency_exchange_rate_converter=nb_exchange_rate_service,
         game_category_id=config.fifthelement.game_category_id,
         search_app_id=config.fifthelement.search_app_id,
     )
-
     vk_service = providers.Singleton(
         VkontakteSearchService,
         client=providers.Singleton(VkontakteApiClient),
         result_builder=GameSearchResultVkontakteBuilder,
-        currency_exchange_rate_converter=exchange_rate_service,
+        currency_exchange_rate_converter=nb_exchange_rate_service,
         group_id=config.vk.group_id,
         group_name=config.vk.group_name,
         api_token=config.vk.api_token,
@@ -171,9 +160,8 @@ class ApplicationContainer(containers.DeclarativeContainer):
         ZnaemIgraemSearchService,
         client=providers.Singleton(ZnaemIgraemApiClient),
         result_builder=GameSearchResultZnaemIgraemBuilder,
-        currency_exchange_rate_converter=exchange_rate_service,
+        currency_exchange_rate_converter=nb_exchange_rate_service,
     )
-
     data_sources = providers.List(
         fifth_element_service,
         kufar_search_service,
@@ -185,7 +173,6 @@ class ApplicationContainer(containers.DeclarativeContainer):
         wildberreis_search_service,
         znaem_igraem_service,
     )
-
     suggest_game_service = providers.Singleton(
         SimpleSuggestGameService,
         games=config.app.suggested_games,

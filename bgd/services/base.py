@@ -2,21 +2,16 @@
 App Services
 """
 import asyncio
-import datetime
 import logging
 import random
 from abc import ABC, abstractmethod
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Protocol, Tuple, Union
 
 from bgd.errors import GameNotFoundError
 from bgd.responses import GameDetailsResult, GameSearchResult, Price
 
-from .builders import (
-    CurrencyExchangeRateBuilder,
-    GameDetailsResultBuilder,
-    GameSearchResultBuilder,
-)
-from .protocols import CurrencyExchangeRateSearcher, GameInfoSearcher, GameSearcher
+from .builders import GameDetailsResultBuilder, GameSearchResultBuilder
+from .protocols import GameInfoSearcher, GameSearcher
 from .types import ExchangeRates, GameAlias
 
 log = logging.getLogger(__name__)
@@ -50,68 +45,16 @@ class GameInfoService(ABC):
         """Choose the best option from search results"""
 
 
-class CurrencyExchangeRateService(ABC):
+class CurrencyExchangeRateService(Protocol):
     """Currency exchange rate service interface"""
 
-    @abstractmethod
     async def convert(self, price: Optional[Price]) -> Optional[Price]:
         """Convert amount to another currency"""
-
-    @abstractmethod
-    async def get_rates(self) -> Optional[ExchangeRates]:
-        """Get actual currency exchange rates"""
-
-
-class BaseCurrencyExchangeRateService(CurrencyExchangeRateService):
-    """Base currency exchange rate service implementation"""
-
-    def __init__(
-        self,
-        client: CurrencyExchangeRateSearcher,
-        rate_builder: CurrencyExchangeRateBuilder,
-        base_currency: str,
-        target_currency: str,
-    ) -> None:
-        """
-        Init exchange rate service
-        :param CurrencyExchangeRateSearcher client: A searcher of currency exchange rates.
-        :param CurrencyExchangeRateBuilder rate_builder: Builder for ExchangeRates model.
-        :param str base_currency: 3-letters currency code from which service does conversion.
-        :param str target_currency: 3-letters currency code for conversion.
-        """
-        self._client = client
-        self._builder = rate_builder
-        self._target_currency = target_currency
-        self._base_currency = base_currency
-        self._rates: Optional[ExchangeRates] = None
-        self._expiration_date: Optional[datetime.date] = None
-
-    async def convert(self, price: Optional[Price]) -> Optional[Price]:
-        """Convert amount to another currency"""
-        if not price:
-            return None
-        rates = await self.get_rates()
-        if not (rates and self._target_currency in rates):
-            return None
-        exchange_rate = rates[self._target_currency]
-        return Price(
-            amount=round(price.amount / exchange_rate),
-            currency=self._target_currency,
-        )
+        ...
 
     async def get_rates(self) -> Optional[ExchangeRates]:
         """Get actual currency exchange rates"""
-        today = datetime.date.today()
-        if self._expiration_date and self._expiration_date <= today:
-            self._rates = None
-            self._expiration_date = None
-        if not self._rates:
-            # for safety let's use yesterday rates
-            yesterday = today - datetime.timedelta(days=1)
-            resp = await self._client.get_currency_exchange_rates(yesterday)
-            self._rates = self._builder.from_response(resp.response)
-            self._expiration_date = today + datetime.timedelta(days=1)
-        return self._rates
+        ...
 
 
 class GameSearchService(ABC):
