@@ -24,14 +24,16 @@
     var list = document.createElement("ul");
     var source = deals[0]["source"];
     deals.forEach(function(deal) {
+        var a = document.createElement("a");
         var item = document.createElement("li");
         var name = deal["subject"];
-
-        var price = deal["price"]["amount"];
-
-        item.appendChild(document.createTextNode(name + " | "));
-        item.appendChild(document.createTextNode(price));
-
+        var link = deal["url"];
+        var price = (deal["price"] ? deal["price"]["amount"] : "N/A");
+        var text = name + " | " + price;
+        a.title = name
+        a.href = link;
+        a.appendChild(document.createTextNode(text));
+        item.appendChild(a);
         list.appendChild(item);
     });
     container.appendChild(document.createTextNode(source));
