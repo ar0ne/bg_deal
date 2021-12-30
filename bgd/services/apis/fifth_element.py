@@ -42,9 +42,7 @@ class FifthElementSearchService(GameSearchService):
         self._search_app_id = search_app_id
 
     async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
-        response = await self._client.search(
-            query, {"search_app_id": self._search_app_id}
-        )
+        response = await self._client.search(query, {"search_app_id": self._search_app_id})
         products = self.filter_results(
             response.response["results"]["items"], self._is_available_game
         )

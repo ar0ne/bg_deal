@@ -38,9 +38,7 @@ class TwentyFirstVekSearchService(GameSearchService):
     async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         """Search on api and build response"""
         response = await self._client.search(query, **kwargs)
-        products = self.filter_results(
-            response.response["items"], self._is_available_game
-        )
+        products = self.filter_results(response.response["items"], self._is_available_game)
         return self.build_results(products)
 
 

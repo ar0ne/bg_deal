@@ -23,9 +23,7 @@ class TeseraApiClient(JsonHttpApiClient):
     SEARCH_PATH = "/search/games"
     GAMES_PATH = "/games"
 
-    async def search_game_info(
-        self, query: str, _: Optional[dict] = None
-    ) -> APIResponse:
+    async def search_game_info(self, query: str, _: Optional[dict] = None) -> APIResponse:
         """Search game info"""
         url = f"{self.SEARCH_PATH}?query={query}"
         return await self.connect(GET, self.BASE_URL, url)
@@ -75,9 +73,7 @@ class TeseraGameDetailsResultBuilder(GameDetailsResultBuilder):
     @staticmethod
     def _extract_description(game: dict) -> str:
         """Extract game description"""
-        description = (
-            game["description"] if "description" in game else game["descriptionShort"]
-        )
+        description = game["description"] if "description" in game else game["descriptionShort"]
         description_without_html_tags = clean_html(description)
         unescaped = html.unescape(description_without_html_tags)
         removed_eol = unescaped.replace("\r\n", " ")

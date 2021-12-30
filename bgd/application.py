@@ -30,9 +30,7 @@ def create_app() -> FastAPI:
         f"{BASE_DIR}/logging.conf", disable_existing_loggers=False
     )
 
-    fast_api_app.mount(
-        "/static", StaticFiles(directory=f"{BASE_DIR}/static"), name="static"
-    )
+    fast_api_app.mount("/static", StaticFiles(directory=f"{BASE_DIR}/static"), name="static")
 
     return fast_api_app
 

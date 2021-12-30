@@ -12,13 +12,7 @@ from libbgg.infodict import InfoDict
 
 from bgd.errors import ApiClientError, PageNotFoundError
 
-from .responses import (
-    APIRequest,
-    APIResponse,
-    HTMLAPIResponse,
-    JSONAPIResponse,
-    XMLAPIResponse,
-)
+from .responses import APIRequest, APIResponse, HTMLAPIResponse, JSONAPIResponse, XMLAPIResponse
 
 log = logging.getLogger(__name__)
 
@@ -158,9 +152,7 @@ class GameSearcher(Protocol):
 class GameInfoSearcher(Protocol):
     """Api client for game info searching"""
 
-    async def search_game_info(
-        self, query: str, options: Optional[dict] = None
-    ) -> APIResponse:
+    async def search_game_info(self, query: str, options: Optional[dict] = None) -> APIResponse:
         """Search info about game"""
         ...
 

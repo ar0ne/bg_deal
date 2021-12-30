@@ -33,9 +33,7 @@ class OzBySearchService(GameSearchService):
     """Search service for oz.by"""
 
     async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
-        response = await self._client.search(
-            query, {"category": self._game_category_id, **kwargs}
-        )
+        response = await self._client.search(query, {"category": self._game_category_id, **kwargs})
         products = self.filter_results(response.response["data"])
         return self.build_results(products)
 

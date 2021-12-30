@@ -30,9 +30,7 @@ class OnlinerSearchService(GameSearchService):
 
     async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         response = await self._client.search(query, **kwargs)
-        products = self.filter_results(
-            response.response["products"], self._is_available_game
-        )
+        products = self.filter_results(response.response["products"], self._is_available_game)
         return self.build_results(products)
 
     def _is_available_game(self, product: dict) -> bool:

@@ -45,9 +45,7 @@ class KufarSearchService(GameSearchService):
 
     async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         """Search ads by game name"""
-        search_response = await self._client.search(
-            query, {"category": self._game_category_id}
-        )
+        search_response = await self._client.search(query, {"category": self._game_category_id})
         products = self.filter_results(search_response.response["ads"])
         return self.build_results(products)
 
@@ -122,6 +120,4 @@ class GameSearchResultKufarBuilder(GameSearchResultBuilder):
             if k == "v"
         ]
         user_id = ad_item.get("account_id")
-        return GameOwner(
-            id=user_id, name=" ".join(name), url=cls.USER_URL.format(user_id)
-        )
+        return GameOwner(id=user_id, name=" ".join(name), url=cls.USER_URL.format(user_id))

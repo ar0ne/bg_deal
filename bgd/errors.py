@@ -39,9 +39,7 @@ class PageNotFoundError(ApiClientError):
 
 
 # pylint: disable=unused-argument
-async def service_exception_handler(
-    request: Request, exc: ServiceException
-) -> JSONResponse:
+async def service_exception_handler(request: Request, exc: ServiceException) -> JSONResponse:
     """Handler for service exceptions"""
     return JSONResponse(
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

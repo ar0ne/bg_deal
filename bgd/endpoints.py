@@ -26,9 +26,7 @@ router = APIRouter()
 @inject
 async def search_game(
     game: str,
-    data_sources: List[GameSearchService] = Depends(
-        Provide[ApplicationContainer.data_sources]
-    ),
+    data_sources: List[GameSearchService] = Depends(Provide[ApplicationContainer.data_sources]),
 ) -> List[GameSearchResult]:
     """Search game endpoint"""
     results = [await source.search(game) for source in data_sources]
@@ -41,9 +39,7 @@ async def search_game(
 @inject
 async def game_details(
     game: str,
-    board_game_geek: GameInfoService = Depends(
-        Provide[ApplicationContainer.bgg_service]
-    ),
+    board_game_geek: GameInfoService = Depends(Provide[ApplicationContainer.bgg_service]),
     tesera: GameInfoService = Depends(Provide[ApplicationContainer.tesera_service]),
 ):
     """Fetches board game info from provider"""
@@ -86,9 +82,7 @@ async def search_page(
     """Render Search page"""
     results = await search_game(name)
     game_info = await asyncio.gather(game_details(name), return_exceptions=True)
-    game_info_extracted = (
-        game_info[0] if isinstance(game_info[0], GameDetailsResult) else None
-    )
+    game_info_extracted = game_info[0] if isinstance(game_info[0], GameDetailsResult) else None
     return templates.TemplateResponse(
         SEARCH_PAGE,
         {
@@ -115,9 +109,7 @@ async def sse_page(
 async def find_game(
     game: str,
     request: Request,
-    data_sources: List[GameSearchService] = Depends(
-        Provide[ApplicationContainer.data_sources]
-    ),
+    data_sources: List[GameSearchService] = Depends(Provide[ApplicationContainer.data_sources]),
 ):
     """Find game deals"""
     game_deals = game_deals_finder(request, game, data_sources)

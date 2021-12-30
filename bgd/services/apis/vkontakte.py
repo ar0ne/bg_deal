@@ -56,9 +56,7 @@ class VkontakteSearchService(GameSearchService):
     ) -> None:
         """Init 5th element Search Service"""
         # there are more than one category that we should check
-        super().__init__(
-            client, result_builder, currency_exchange_rate_converter, game_category_id
-        )
+        super().__init__(client, result_builder, currency_exchange_rate_converter, game_category_id)
         self.api_version = api_version
         self.api_token = api_token
         self.group_id = group_id
@@ -120,15 +118,11 @@ class GameSearchResultVkontakteBuilder(GameSearchResultBuilder):
     @classmethod
     def _extract_images(cls, post: dict) -> list:
         """Extract images"""
-        photo_attachments = filter(
-            lambda it: it["type"] == "photo", post["attachments"]
-        )
+        photo_attachments = filter(lambda it: it["type"] == "photo", post["attachments"])
         all_photos = map(lambda a: a["photo"]["sizes"], photo_attachments)
         photos = itertools.chain.from_iterable(all_photos)
         highest_resolution_photos = filter(lambda s: s["type"] == "z", photos)
-        return list(
-            map(lambda ph: remove_backslashes(ph["url"]), highest_resolution_photos)
-        )
+        return list(map(lambda ph: remove_backslashes(ph["url"]), highest_resolution_photos))
 
     @classmethod
     def _extract_owner(cls, post: dict) -> GameOwner:

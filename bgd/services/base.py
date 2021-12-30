@@ -29,9 +29,7 @@ class GameInfoService(ABC):
         self._client = client
         self._game_result_builder = builder
 
-    async def get_board_game_info(
-        self, game: str, exact: bool = True
-    ) -> GameDetailsResult:
+    async def get_board_game_info(self, game: str, exact: bool = True) -> GameDetailsResult:
         """Get board game info from API"""
         search_resp = await self._client.search_game_info(game, {"exact": exact})
         game_alias = self.get_game_alias(search_resp.response)
@@ -77,9 +75,7 @@ class GameSearchService(ABC):
     async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
         """search query"""
 
-    def filter_results(
-        self, products: list, filter_func: Optional[Callable] = None
-    ) -> list:
+    def filter_results(self, products: list, filter_func: Optional[Callable] = None) -> list:
         """Filter valid results"""
         if not products:
             return []

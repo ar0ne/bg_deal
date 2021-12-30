@@ -98,9 +98,7 @@ class BGGGameDetailsResultBuilder(GameDetailsResultBuilder):
     def _get_game_name(cls, game_info: InfoDict) -> str:
         """Get game name"""
         if isinstance(game_info["name"], list):
-            return next(
-                filter(lambda n: n.get("type") == "primary", game_info["name"])
-            )["value"]
+            return next(filter(lambda n: n.get("type") == "primary", game_info["name"]))["value"]
         return game_info["name"]["value"]
 
     @classmethod
@@ -150,11 +148,7 @@ class BGGGameDetailsResultBuilder(GameDetailsResultBuilder):
         """Yields Tuple of num_players and value of 'best' votes"""
         for vote in votes:
             best_vote_num = next(
-                (
-                    value["numvotes"]
-                    for value in vote["result"]
-                    if value["value"] == "Best"
-                ),
+                (value["numvotes"] for value in vote["result"] if value["value"] == "Best"),
                 False,
             )
             yield vote["numplayers"], best_vote_num  # type: ignore

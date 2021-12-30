@@ -45,9 +45,7 @@ class OzonSearchService(GameSearchService):
     """Search Service for ozon api"""
 
     async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
-        response = await self._client.search(
-            query, {"category": self._game_category_id, **kwargs}
-        )
+        response = await self._client.search(query, {"category": self._game_category_id, **kwargs})
         results = self._extract_search_results(response.response)
         if not results:
             return []

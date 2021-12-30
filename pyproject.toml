@@ -1,0 +1,11 @@
+[tool.black]
+line-length = 100
+target-version = ["py38"]
+
+# https://github.com/pypa/setuptools/issues/1694
+[build-system]
+requires = [
+  "setuptools >= 40.9.0",
+  "wheel",
+]
+build-backend = "setuptools.build_meta"

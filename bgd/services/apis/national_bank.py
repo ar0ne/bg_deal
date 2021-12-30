@@ -43,9 +43,7 @@ class NationalBankCurrencyExchangeRateBuilder(CurrencyExchangeRateBuilder):
         if not (response and hasattr(response, "DailyExRates")):
             return None
         currencies = response.DailyExRates.Currency
-        return {
-            currency.CharCode.TEXT: float(currency.Rate.TEXT) for currency in currencies
-        }
+        return {currency.CharCode.TEXT: float(currency.Rate.TEXT) for currency in currencies}
 
 
 class NBCurrencyExchangeRateService:
