@@ -20,7 +20,7 @@ def game_search_result_price(game: GameSearchResult) -> int:
     return game.price.amount
 
 
-stream_retry_timeout = 30000  # milliseconds
+STREAM_RETRY_TIMEOUT = 30000  # milliseconds
 
 
 async def game_deals_finder(
@@ -39,7 +39,7 @@ async def game_deals_finder(
             if deals:
                 yield {
                     "event": "update",
-                    "retry": stream_retry_timeout,
+                    "retry": STREAM_RETRY_TIMEOUT,
                     "data": json.dumps([d.dict() for d in deals]),
                 }
 

@@ -9,7 +9,7 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from sse_starlette import EventSourceResponse
+from sse_starlette import EventSourceResponse  # pylint: disable=E0401
 
 from bgd.containers import ApplicationContainer
 from bgd.responses import GameDetailsResult, GameSearchResult
@@ -106,6 +106,7 @@ async def sse_page(
     request: Request,
     templates: Jinja2Templates = Depends(Provide[ApplicationContainer.templates]),
 ):
+    """Server sent events demo page"""
     return templates.TemplateResponse("sse.html", {"request": request})
 
 
