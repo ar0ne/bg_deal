@@ -42,7 +42,7 @@
     var game_name = event.name.value;
     var result_container = document.getElementById("search-results");
     result_container.innerHTML = '';
-    const evtSource = new EventSource("http://localhost:8000/api/v1/stream/games?game=" + game_name);
+    const evtSource = new EventSource("/api/v1/stream/games?game=" + game_name);
     evtSource.addEventListener("update", function(event) {
       console.log(event);
       append_deal(JSON.parse(event["data"]), result_container);
