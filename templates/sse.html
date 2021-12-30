@@ -1,59 +1,184 @@
 {% extends "base.html" %}
 {% block title %}Welcome to BGG!{% endblock %}
+{% block head_extra %}
+<script src="https://unpkg.com/vue"></script>
+{% endblock %}
 
 {% block content %}
 
-<div id="default-search-form" class="container">
-    <section class="jumbotron text-center">
-        <h1>Find best deals to buy favoric board game!</h1>
+{% raw %}
+<section class="app-container">
+    <section id="default-search-form" class="container">
+        <section class="jumbotron text-center">
+            <h1>Find best deals to buy favoric board game!</h1>
 
-        <form onsubmit="searchGame(this); return false;">
-            <div class="mb-3">
-                <label for="name" class="form-label">Search game</label>
-                <input type="text" class="form-control" id="name" name="name" value="{{ suggested_game }}">
+            <section class="search-container">
+                <div class="mb-3">
+                    <label class="form-label">Search game</label>
+                    <input
+                        autofocus
+                        autocomplete="off"
+                        type="text"
+                        class="form-control"
+                        value="{% endraw %}{{ suggested_game }}{% raw %}"
+                        v-model="game"
+                    />
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                        v-on:click="searchGame"
+                    >Find</button>
+                </div>
+            </section>
+        </section>
+    </section>
+
+
+    <section id="search-results" class="container">
+        <div v-if="filteredDeals">
+            <div
+                v-for="result in filteredDeals"
+                class="deal card container-fluid"
+                :key="result.id"
+                >
+                <div class="card-header">
+                    <h5 class="card-title>">
+                        <a class="card-title" v-bind:href="result.url">{{ result.subject }}</a>
+                        <img
+                            class="card-logo"
+                            v-bind:class="result.source + '-logo'"
+                        />
+                    </h5>
+                </div>
+                <div class="card-block">
+                    <div class="row">
+                        <div class="col-md-11">
+                            <div class="card-body">
+                                <p v-if="result.description" class="card-text">Description: {{ result.description }}</p>
+                                <p v-else class="card-text">Description: N/A</p>
+                                <p v-if="result.price" class="card-text">Price: {{ result.price.amount/100 }}
+                                    {{ result.price.currency }} / {{ result.price_converted.amount/100 }}
+                                    {{ result.price_converted.currency }}
+                                <p v-else class="card-text">N/A</p>
+                                </p>
+                                <p
+                                    v-if="result.location"
+                                    class="card-text"
+                                >
+                                    Location: {{ result.location.country }} / {{ result.location.city }} / {{ result.location.area }}
+                                </p>
+                                <p v-if="result.owner">
+                                    <p v-if="result.owner" class="card-text">Owner: {{ result.owner.name }}
+                                        (ID:
+                                        <a v-if="result.owner.url" v-bind:href="result.owner.url">{{ result.owner.id }}</a>
+                                        <a v-else>{{ result.owner.id }}</a>
+                                        )
+                                    </p>
+                                </p>
+                            </div>
+                        </div>
+                        <div v-if="result.images" class="col-md-1">
+                            <img v-bind:src="result.images[0]" alt="Search result image" class="rounded img-thumbnail float-left">
+                        </div>
+                    </div>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
+        </div>
     </section>
 </div>
 
-<div id="search-results" class="container"></div>
-
 <script>
-  function append_deal(deals, container) {
-    var list = document.createElement("ul");
-    var source = deals[0]["source"];
-    deals.forEach(function(deal) {
-        var a = document.createElement("a");
-        var item = document.createElement("li");
-        var name = deal["subject"];
-        var link = deal["url"];
-        var price = (deal["price"] ? deal["price"]["amount"] : "N/A");
-        var text = name + " | " + price;
-        a.title = name
-        a.href = link;
-        a.appendChild(document.createTextNode(text));
-        item.appendChild(a);
-        list.appendChild(item);
-    });
-    container.appendChild(document.createTextNode(source));
-    container.appendChild(list);
-  }
 
-  function searchGame(event) {
-    var game_name = event.name.value;
-    var result_container = document.getElementById("search-results");
-    result_container.innerHTML = '';
-    const evtSource = new EventSource("/api/v1/stream/games?game=" + game_name);
-    evtSource.addEventListener("update", function(event) {
-      console.log(event);
-      append_deal(JSON.parse(event["data"]), result_container);
-    });
-    evtSource.addEventListener("end", function(event) {
-      console.log('Handling end....')
-      evtSource.close();
-    });
-  }
+var STORAGE_KEY = "board-game-deals";
+// cleanup localstorage
+localStorage.setItem(STORAGE_KEY, "[]");
+
+var dealsStorage = {
+    fetch: function() {
+        var deals = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+        deals.forEach(function(deal, index) {
+            deals.id = index;
+        });
+        dealsStorage.uid = deals.length;
+        return deals;
+    },
+    save: function(deals) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(deals));
+    }
+};
+
+
+var app = new Vue({
+    data: {
+        game: "",
+        deals: dealsStorage.fetch(),
+    },
+    watch: {
+        deals: {
+            handler: function(games) {
+                dealsStorage.save(games);
+            },
+            deep: true
+        }
+    },
+    computed: {
+        // filter by price
+        filteredDeals: function() {
+            sorted_deals = [...this.deals];
+            sorted_deals.sort(function(a, b) {
+                if (!a.price) {
+                    return false;
+                }
+                if (!b.price) {
+                    return True;
+                }
+                return a.price.amount - b.price.amount
+            });
+            return sorted_deals;
+        },
+    },
+    methods: {
+        searchGame: function() {
+            var value = this.game && this.game.trim();
+            if (!value) {
+                return;
+            }
+            const evtSource = new EventSource("/api/v1/stream/games?game=" + value);
+            var that = this;
+            evtSource.addEventListener("update", function(event) {
+                console.log(event);
+                var new_deals = JSON.parse(event["data"]);
+                new_deals.forEach(deal => {
+                    that.deals.push({
+                        id: dealsStorage.uid++,
+                        title: deal["subject"],
+                        description: deal["description"],
+                        images: deal["images"],
+                        location: deal["location"],
+                        owner: deal["owner"],
+                        price: deal["price"],
+                        source: deal["source"],
+                        url: deal["url"],
+                        price_converted: deal["price_converted"],
+                    });
+                });
+                this.game = "";
+            });
+            evtSource.addEventListener("end", function(event) {
+                console.log('Handling end....')
+                evtSource.close();
+            });
+
+            // todo: clean up previous results
+        },
+        add_deals: function(deals, container) {
+            console.log("add new deals");
+        }
+    }
+});
+app.$mount(".app-container");
+
 </script>
 
+{% endraw %}
 {% endblock %}
