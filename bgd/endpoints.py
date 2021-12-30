@@ -9,11 +9,12 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from sse_starlette import EventSourceResponse
 
 from bgd.containers import ApplicationContainer
 from bgd.responses import GameDetailsResult, GameSearchResult
 from bgd.services.base import GameInfoService, GameSearchService, SuggestGameService
-from bgd.utils import game_search_result_price
+from bgd.utils import game_deals_finder, game_search_result_price
 
 INDEX_PAGE = "index.html"
 SEARCH_PAGE = "search.html"
@@ -97,3 +98,26 @@ async def search_page(
             "game_info": game_info_extracted,
         },
     )
+
+
+@router.get("/sse", response_class=HTMLResponse)
+@inject
+async def sse_page(
+    request: Request,
+    templates: Jinja2Templates = Depends(Provide[ApplicationContainer.templates]),
+):
+    return templates.TemplateResponse("sse.html", {"request": request})
+
+
+@router.get("/api/v1/stream/games")
+@inject
+async def find_game(
+    game: str,
+    request: Request,
+    data_sources: List[GameSearchService] = Depends(
+        Provide[ApplicationContainer.data_sources]
+    ),
+):
+    """Find game deals"""
+    game_deals = game_deals_finder(request, game, data_sources)
+    return EventSourceResponse(game_deals)

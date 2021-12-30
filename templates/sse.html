@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Welcome to BGG!{% endblock %}
+
+{% block content %}
+
+<div id="default-search-form" class="container">
+    <section class="jumbotron text-center">
+        <h1>Find best deals to buy favoric board game!</h1>
+
+        <form onsubmit="searchGame(this); return false;">
+            <div class="mb-3">
+                <label for="name" class="form-label">Search game</label>
+                <input type="text" class="form-control" id="name" name="name" value="{{ suggested_game }}">
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </section>
+</div>
+
+<div id="search-results" class="container"></div>
+
+<script>
+  function append_deal(deals, container) {
+    var list = document.createElement("ul");
+    var source = deals[0]["source"];
+    deals.forEach(function(deal) {
+        var item = document.createElement("li");
+        var name = deal["subject"];
+
+        var price = deal["price"]["amount"];
+
+        item.appendChild(document.createTextNode(name + " | "));
+        item.appendChild(document.createTextNode(price));
+
+        list.appendChild(item);
+    });
+    container.appendChild(document.createTextNode(source));
+    container.appendChild(list);
+  }
+
+  function searchGame(event) {
+    var game_name = event.name.value;
+    var result_container = document.getElementById("search-results");
+    result_container.innerHTML = '';
+    const evtSource = new EventSource("http://localhost:8000/api/v1/stream/games?game=" + game_name);
+    evtSource.addEventListener("update", function(event) {
+      console.log(event);
+      append_deal(JSON.parse(event["data"]), result_container);
+    });
+    evtSource.addEventListener("end", function(event) {
+      console.log('Handling end....')
+      evtSource.close();
+    });
+  }
+</script>
+
+{% endblock %}
