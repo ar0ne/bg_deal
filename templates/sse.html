@@ -1,186 +1,109 @@
-{% extends "base.html" %}
-{% block title %}Welcome to BGG!{% endblock %}
-{% block head_extra %}
-<script src="https://unpkg.com/vue"></script>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://unpkg.com/vue"></script>
+    <title>Find best deals to buy tabletop games!</title>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-dark bg-dark justify-content-between">
+            <a class="navbar-brand text-white" href="/">BoardGameDeals</a>
+            <form class="form-inline mt-2 mt-md-0" action="/search">
+                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" id="name" name="name">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </nav>
+    </header>
 
-{% block content %}
+    {% raw %}
 
-{% raw %}
-<section class="app-container">
-    <section id="default-search-form" class="container">
-        <section class="jumbotron text-center">
-            <h1>Find best deals to buy favoric board game!</h1>
+    <main role="main">
+        <div id="content">
+            <section class="app-container">
+                <section id="default-search-form" class="container">
+                    <section class="jumbotron text-center">
+                        <h1>Find best deals to buy favoric board game!</h1>
 
-            <section class="search-container">
-                <div class="mb-3">
-                    <input
-                        autofocus
-                        autocomplete="off"
-                        type="text"
-                        class="form-control"
-                        v-model="game"
-                        v-on:keyup.enter="searchGame"
-                    />
-                </div>
-                <button
-                    type="submit"
-                    class="btn btn-primary"
-                    v-on:click="searchGame"
-                >Find</button>
-            </section>
-        </section>
-    </section>
-
-
-    <section id="search-results" class="container">
-        <div v-if="filteredDeals">
-            <div
-                v-for="result in filteredDeals"
-                class="deal card container-fluid"
-                :key="result.id"
-                >
-                <div class="card-header">
-                    <h5 class="card-title>">
-                        <a class="card-title" v-bind:href="result.url">{{ result.subject }}</a>
-                        <img
-                            class="card-logo"
-                            v-bind:class="result.source + '-logo'"
-                        />
-                    </h5>
-                </div>
-                <div class="card-block">
-                    <div class="row">
-                        <div class="col-md-11">
-                            <div class="card-body">
-                                <p v-if="result.description" class="card-text">Description: {{ result.description }}</p>
-                                <p v-else class="card-text">Description: N/A</p>
-                                <p v-if="result.price" class="card-text">Price: {{ result.price.amount/100 }}
-                                    {{ result.price.currency }} / {{ result.price_converted.amount/100 }}
-                                    {{ result.price_converted.currency }}
-                                <p v-else class="card-text">Price: N/A</p>
-                                </p>
-                                <p
-                                    v-if="result.location"
-                                    class="card-text"
-                                >
-                                    Location: {{ result.location.country }} / {{ result.location.city }} / {{ result.location.area }}
-                                </p>
-                                <p v-if="result.owner">
-                                    <p v-if="result.owner" class="card-text">Owner: {{ result.owner.name }}
-                                        (ID:
-                                        <a v-if="result.owner.url" v-bind:href="result.owner.url">{{ result.owner.id }}</a>
-                                        <a v-else>{{ result.owner.id }}</a>
-                                        )
-                                    </p>
-                                </p>
+                        <section class="search-container">
+                            <div class="mb-3">
+                                <input
+                                        autofocus
+                                        autocomplete="off"
+                                        type="text"
+                                        class="form-control"
+                                        v-model="game"
+                                        v-on:keyup.enter="searchGame"
+                                />
+                            </div>
+                            <button
+                                    type="submit"
+                                    class="btn btn-primary"
+                                    v-on:click="searchGame"
+                            >Find</button>
+                        </section>
+                    </section>
+                </section>
+                <section id="search-results" class="container">
+                    <div v-if="filteredDeals">
+                        <div
+                            v-for="result in filteredDeals"
+                            class="deal card container-fluid"
+                            :key="result.id"
+                        >
+                            <div class="card-header">
+                                <h5 class="card-title>">
+                                    <a class="card-title" v-bind:href="result.url">{{ result.subject }}</a>
+                                    <img
+                                        class="card-logo"
+                                        v-bind:class="result.source + '-logo'"
+                                    />
+                                </h5>
+                            </div>
+                            <div class="card-block">
+                                <div class="row">
+                                    <div class="col-md-11">
+                                        <div class="card-body">
+                                            <p v-if="result.description" class="card-text">Description: {{ result.description }}</p>
+                                            <p v-else class="card-text">Description: N/A</p>
+                                            <p v-if="result.price" class="card-text">Price: {{ result.price.amount/100 }}
+                                                {{ result.price.currency }} / {{ result.price_converted.amount/100 }}
+                                                {{ result.price_converted.currency }} </p>
+                                            <p v-else class="card-text">Price: N/A</p>
+                                            <p v-if="result.location" class="card-text">
+                                                Location: {{ result.location.country }} / {{ result.location.city }} / {{ result.location.area }}
+                                            </p>
+                                            <p v-if="result.owner" class="card-text">Owner: {{ result.owner.name }}
+                                                (ID:
+                                                <a v-if="result.owner.url" v-bind:href="result.owner.url">{{ result.owner.id }}</a>
+                                                <a v-else>{{ result.owner.id }}</a>
+                                                )
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div v-if="result.images" class="col-md-1">
+                                        <img v-bind:src="result.images[0]" alt="Search result image" class="rounded img-thumbnail float-left">
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div v-if="result.images" class="col-md-1">
-                            <img v-bind:src="result.images[0]" alt="Search result image" class="rounded img-thumbnail float-left">
-                        </div>
                     </div>
-                </div>
-            </div>
+                </section>
+            </section>
         </div>
-    </section>
-</div>
+    </main>
 
-<script>
+    <footer class="footer">
+        <div class="container text-center">
+            <p class="text-muted"><a href="https://github.com/ar0ne/bg_deal">Github</a></p>
+        </div>
+    </footer>
 
-var STORAGE_KEY = "board-game-deals";
-// cleanup localstorage
-localStorage.setItem(STORAGE_KEY, "[]");
+    {% endraw %}
 
-var dealsStorage = {
-    fetch: function() {
-        var deals = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-        deals.forEach(function(deal, index) {
-            deals.id = index;
-        });
-        dealsStorage.uid = deals.length;
-        return deals;
-    },
-    save: function(deals) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(deals));
-    }
-};
-
-
-var app = new Vue({
-    data: {
-        game: "{% endraw %}{{ suggested_game }}{% raw %}",
-        deals: dealsStorage.fetch(),
-    },
-    watch: {
-        deals: {
-            handler: function(games) {
-                dealsStorage.save(games);
-            },
-            deep: true
-        }
-    },
-    computed: {
-        // filter by price
-        filteredDeals: function() {
-            sorted_deals = [...this.deals];
-            sorted_deals.sort(function(a, b) {
-                if (!a.price) {
-                    return false;
-                }
-                if (!b.price) {
-                    return True;
-                }
-                return a.price.amount - b.price.amount
-            });
-            return sorted_deals;
-        },
-    },
-    methods: {
-        searchGame: function() {
-            this.cleanupGames();
-            var value = this.game && this.game.trim();
-            if (!value) {
-                return;
-            }
-            const evtSource = new EventSource("/api/v1/stream/games?game=" + value);
-            var that = this;
-            evtSource.addEventListener("update", function(event) {
-                console.log(event);
-                var new_deals = JSON.parse(event["data"]);
-                new_deals.forEach(deal => {
-                    that.deals.push({
-                        id: dealsStorage.uid++,
-                        subject: deal["subject"],
-                        description: deal["description"],
-                        images: deal["images"],
-                        location: deal["location"],
-                        owner: deal["owner"],
-                        price: deal["price"],
-                        source: deal["source"],
-                        url: deal["url"],
-                        price_converted: deal["price_converted"],
-                    });
-                });
-                this.game = "";
-            });
-            evtSource.addEventListener("end", function(event) {
-                console.log('Handling end....')
-                evtSource.close();
-            });
-
-            // todo: clean up previous results
-        },
-        cleanupGames: function() {
-            if (this.deals) {
-                this.deals.splice(0, this.deals.length);
-            }
-        }
-    }
-});
-app.$mount(".app-container");
-
-</script>
-
-{% endraw %}
-{% endblock %}
+    <script type="module" src="{{ url_for('static', path='/main.js') }}"></script>
+</body>
+</html>
