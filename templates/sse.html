@@ -14,21 +14,20 @@
 
             <section class="search-container">
                 <div class="mb-3">
-                    <label class="form-label">Search game</label>
                     <input
                         autofocus
                         autocomplete="off"
                         type="text"
                         class="form-control"
-                        value="{% endraw %}{{ suggested_game }}{% raw %}"
                         v-model="game"
+                        v-on:keyup.enter="searchGame"
                     />
-                    <button
-                        type="submit"
-                        class="btn btn-primary"
-                        v-on:click="searchGame"
-                    >Find</button>
                 </div>
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                    v-on:click="searchGame"
+                >Find</button>
             </section>
         </section>
     </section>
@@ -59,7 +58,7 @@
                                 <p v-if="result.price" class="card-text">Price: {{ result.price.amount/100 }}
                                     {{ result.price.currency }} / {{ result.price_converted.amount/100 }}
                                     {{ result.price_converted.currency }}
-                                <p v-else class="card-text">N/A</p>
+                                <p v-else class="card-text">Price: N/A</p>
                                 </p>
                                 <p
                                     v-if="result.location"
@@ -110,7 +109,7 @@ var dealsStorage = {
 
 var app = new Vue({
     data: {
-        game: "",
+        game: "{% endraw %}{{ suggested_game }}{% raw %}",
         deals: dealsStorage.fetch(),
     },
     watch: {
@@ -139,6 +138,7 @@ var app = new Vue({
     },
     methods: {
         searchGame: function() {
+            this.cleanupGames();
             var value = this.game && this.game.trim();
             if (!value) {
                 return;
@@ -151,7 +151,7 @@ var app = new Vue({
                 new_deals.forEach(deal => {
                     that.deals.push({
                         id: dealsStorage.uid++,
-                        title: deal["subject"],
+                        subject: deal["subject"],
                         description: deal["description"],
                         images: deal["images"],
                         location: deal["location"],
@@ -171,8 +171,10 @@ var app = new Vue({
 
             // todo: clean up previous results
         },
-        add_deals: function(deals, container) {
-            console.log("add new deals");
+        cleanupGames: function() {
+            if (this.deals) {
+                this.deals.splice(0, this.deals.length);
+            }
         }
     }
 });

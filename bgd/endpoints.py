@@ -98,10 +98,16 @@ async def search_page(
 @inject
 async def sse_page(
     request: Request,
+    suggest_game_service: SuggestGameService = Depends(
+        Provide[ApplicationContainer.suggest_game_service]
+    ),
     templates: Jinja2Templates = Depends(Provide[ApplicationContainer.templates]),
 ):
     """Server sent events demo page"""
-    return templates.TemplateResponse("sse.html", {"request": request})
+    suggested_game = await suggest_game_service.suggest()
+    return templates.TemplateResponse(
+        "sse.html", {"request": request, "suggested_game": suggested_game}
+    )
 
 
 @router.get("/api/v1/stream/games")
