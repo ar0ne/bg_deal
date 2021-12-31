@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sse_starlette import EventSourceResponse  # pylint: disable=E0401
+from starlette.responses import JSONResponse
 
 from bgd.containers import ApplicationContainer
 from bgd.responses import GameDetailsResult, GameSearchResult
@@ -98,16 +99,10 @@ async def search_page(
 @inject
 async def sse_page(
     request: Request,
-    suggest_game_service: SuggestGameService = Depends(
-        Provide[ApplicationContainer.suggest_game_service]
-    ),
     templates: Jinja2Templates = Depends(Provide[ApplicationContainer.templates]),
 ):
     """Server sent events demo page"""
-    suggested_game = await suggest_game_service.suggest()
-    return templates.TemplateResponse(
-        "sse.html", {"request": request, "suggested_game": suggested_game}
-    )
+    return templates.TemplateResponse("sse.html", {"request": request})
 
 
 @router.get("/api/v1/stream/games")
@@ -120,3 +115,15 @@ async def find_game(
     """Find game deals"""
     game_deals = game_deals_finder(request, game, data_sources)
     return EventSourceResponse(game_deals)
+
+
+@router.get("/api/v1/games-suggests", response_class=JSONResponse)
+@inject
+async def suggest_game(
+    _: Request,
+    suggest_game_service: SuggestGameService = Depends(
+        Provide[ApplicationContainer.suggest_game_service]
+    ),
+):
+    suggested_game = await suggest_game_service.suggest()
+    return JSONResponse({"game": suggested_game})

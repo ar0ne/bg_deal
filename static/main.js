@@ -3,7 +3,7 @@
 
 **/
 var STORAGE_KEY = "board-game-deals";
-// cleanup localstorage
+// cleanup local storage
 localStorage.setItem(STORAGE_KEY, "[]");
 
 var dealsStorage = {
@@ -33,6 +33,11 @@ var app = new Vue({
             },
             deep: true
         }
+    },
+    mounted () {
+        axios
+          .get("/api/v1/games-suggests")
+          .then(response => (this.game = response.data.game))
     },
     computed: {
         // filter by price
@@ -82,8 +87,6 @@ var app = new Vue({
                 console.log('Handling end....')
                 evtSource.close();
             });
-
-            // todo: clean up previous results
         },
         cleanupGames: function() {
             if (this.deals) {
