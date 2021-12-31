@@ -19,6 +19,10 @@ main {
 #game-name {
    background-color: rgba(0, 0, 0, 0.6);
 }
+.game-search-container {
+   padding: 2rem 2rem !important;
+   margin-bottom: 1rem !important;
+}
 .card-logo {
     float: right;
     height: 2em;

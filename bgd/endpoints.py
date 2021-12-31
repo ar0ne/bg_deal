@@ -19,26 +19,24 @@ from bgd.utils import game_deals_finder, game_search_result_price
 
 INDEX_PAGE = "index.html"
 SEARCH_PAGE = "search.html"
+API_VERSION = "/api/v1"
 
 router = APIRouter()
 
 
-@router.get("/api/v1/search/{game}", response_model=List[GameSearchResult])
+@router.get("/", response_class=HTMLResponse)
 @inject
-async def search_game(
-    game: str,
-    data_sources: List[GameSearchService] = Depends(Provide[ApplicationContainer.data_sources]),
-) -> List[GameSearchResult]:
-    """Search game endpoint"""
-    results = [await source.search(game) for source in data_sources]
-    combined_results = list(itertools.chain.from_iterable(results))
-    combined_results.sort(key=game_search_result_price)
-    return combined_results
+async def sse_page(
+    request: Request,
+    templates: Jinja2Templates = Depends(Provide[ApplicationContainer.templates]),
+):
+    """Server sent events demo page"""
+    return templates.TemplateResponse("sse.html", {"request": request})
 
 
-@router.get("/api/v1/games/{game}", response_model=GameDetailsResult)
+@router.get(API_VERSION + "/game-info/{game}", response_model=GameDetailsResult)
 @inject
-async def game_details(
+async def game_info(
     game: str,
     board_game_geek: GameInfoService = Depends(Provide[ApplicationContainer.bgg_service]),
     tesera: GameInfoService = Depends(Provide[ApplicationContainer.tesera_service]),
@@ -53,61 +51,44 @@ async def game_details(
     return await tesera.get_board_game_info(game)
 
 
-@router.get("/", response_class=HTMLResponse)
-@inject
-async def main_page(
-    request: Request,
-    templates: Jinja2Templates = Depends(Provide[ApplicationContainer.templates]),
-    suggest_game_service: SuggestGameService = Depends(
-        Provide[ApplicationContainer.suggest_game_service]
-    ),
-):
-    """Render main page"""
-    suggested_game = await suggest_game_service.suggest()
-    return templates.TemplateResponse(
-        INDEX_PAGE,
-        {
-            "request": request,
-            "suggested_game": suggested_game,
-        },
-    )
-
-
 @router.get("/search", response_class=HTMLResponse)
 @inject
-async def search_page(
+async def find_page(
+    game: str,
     request: Request,
-    name: str,
     templates: Jinja2Templates = Depends(Provide[ApplicationContainer.templates]),
 ):
     """Render Search page"""
-    results = await search_game(name)
-    game_info = await asyncio.gather(game_details(name), return_exceptions=True)
-    game_info_extracted = game_info[0] if isinstance(game_info[0], GameDetailsResult) else None
+    results = await search_game(game)
+    game_infos = await asyncio.gather(game_info(game), return_exceptions=True)
+    game_info_extracted = game_infos[0] if isinstance(game_infos[0], GameDetailsResult) else None
     return templates.TemplateResponse(
         SEARCH_PAGE,
         {
             "request": request,
-            "name": name,
+            "name": game,
             "results": results,
             "game_info": game_info_extracted,
         },
     )
 
 
-@router.get("/sse", response_class=HTMLResponse)
+@router.get(API_VERSION + "/search", response_model=List[GameSearchResult])
 @inject
-async def sse_page(
-    request: Request,
-    templates: Jinja2Templates = Depends(Provide[ApplicationContainer.templates]),
-):
-    """Server sent events demo page"""
-    return templates.TemplateResponse("sse.html", {"request": request})
+async def search_game(
+    game: str,
+    data_sources: List[GameSearchService] = Depends(Provide[ApplicationContainer.data_sources]),
+) -> List[GameSearchResult]:
+    """Search game endpoint"""
+    results = [await source.search(game) for source in data_sources]
+    combined_results = list(itertools.chain.from_iterable(results))
+    combined_results.sort(key=game_search_result_price)
+    return combined_results
 
 
-@router.get("/api/v1/stream/games")
+@router.get(API_VERSION + "/stream-search")
 @inject
-async def find_game(
+async def search_game_streamed(
     game: str,
     request: Request,
     data_sources: List[GameSearchService] = Depends(Provide[ApplicationContainer.data_sources]),
@@ -117,7 +98,7 @@ async def find_game(
     return EventSourceResponse(game_deals)
 
 
-@router.get("/api/v1/games-suggests", response_class=JSONResponse)
+@router.get(API_VERSION + "/game-suggests", response_class=JSONResponse)
 @inject
 async def suggest_game(
     _: Request,

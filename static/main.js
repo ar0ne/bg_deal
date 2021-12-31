@@ -24,6 +24,7 @@ var dealsStorage = {
 var app = new Vue({
     data: {
         game: "",
+        game_info: null,
         deals: dealsStorage.fetch(),
         isLoading: false,
         isEmptyResult: false,
@@ -37,9 +38,8 @@ var app = new Vue({
         }
     },
     mounted () {
-        axios
-          .get("/api/v1/games-suggests")
-          .then(response => (this.game = response.data.game))
+        this.suggestGame()
+            .then(res => this.fetchGameInfo());
     },
     computed: {
         // filter by price
@@ -56,9 +56,16 @@ var app = new Vue({
             });
             return sorted_deals;
         },
+        imageUrl: function() {
+            if (!this.game_info) {
+                return 'none';
+            }
+            return 'url(' + '"' + this.game_info.image + '"' + ')';
+        }
     },
     methods: {
         searchGame: function() {
+            var that = this;
             this.cleanupGames();
             var value = this.game && this.game.trim();
             if (!value) {
@@ -66,8 +73,11 @@ var app = new Vue({
             }
             this.isLoading = true;
             this.isEmptyResult = false;
-            const evtSource = new EventSource("/api/v1/stream/games?game=" + value);
-            var that = this;
+            if (this.game_info.name != this.game) {
+                this.game_info = null;
+                this.fetchGameInfo();
+            }
+            const evtSource = new EventSource("/api/v1/stream-search/?game=" + value);
             evtSource.addEventListener("update", function(event) {
                 console.log(event);
                 var new_deals = JSON.parse(event["data"]);
@@ -85,7 +95,7 @@ var app = new Vue({
                         price_converted: deal["price_converted"],
                     });
                 });
-                this.game = "";
+                that.game = "";
             });
             evtSource.addEventListener("end", function(event) {
                 console.log('Handling end....')
@@ -98,7 +108,26 @@ var app = new Vue({
             if (this.deals) {
                 this.deals.splice(0, this.deals.length);
             }
+        },
+        fetchGameInfo: function() {
+            var that = this;
+            this.game_info = null;
+            return axios
+                .get("/api/v1/game-info/" + that.game)
+                .then(function(response) {
+                    that.game_info = response.data;
+                    return that.game_info;
+                });
+        },
+        suggestGame: function() {
+            var that = this;
+            return axios
+              .get("/api/v1/game-suggests")
+              .then(function(response) {
+                    that.game = response.data.game;
+                    return that.game;
+              });
         }
     }
 });
-app.$mount(".app-container");
+app.$mount("#app-container");
