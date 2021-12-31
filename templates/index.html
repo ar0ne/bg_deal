@@ -37,9 +37,12 @@
             <div id="content">
                 <section>
                     <section>
-                        <section v-if="game_info" class="bg-image shadow-1-strong rounded mb-5"
+                        <section class="bg-image shadow-1-strong rounded mb-5"
                              v-bind:style="{ backgroundImage: imageUrl }">
-                            <h1 v-if="game_info" id="game-name" class="mb-3 text-center text-white">{{ game_info.name }}</h1>
+                            <h1 id="game-name" class="mb-3 text-center text-white">
+                                <span v-if="game_info" >{{ game_info.name }}</span>
+                                <span v-else>&nbsp;</span>
+                            </h1>
 
                             <section id="default-search-form" class="container">
                                 <section class="jumbotron text-center game-search-container">

@@ -17,12 +17,12 @@ from bgd.services.responses import APIResponse
 class ZnaemIgraemApiClient(HtmlHttpApiClient):
     """Api client for 5element.by"""
 
-    BASE_SEARCH_URL = "https://znaemigraem.by"
+    BASE_SEARCH_URL = "https://znaemigraem.by/catalog/"
 
     async def search(self, query: str, _: Optional[dict] = None) -> APIResponse:
         """Search query string"""
         query = "+".join(query.split(" "))
-        url = f"/catalog/?q={query}"
+        url = f"?q={query}"
         return await self.connect(GET, self.BASE_SEARCH_URL, url)
 
 
