@@ -25,6 +25,8 @@ var app = new Vue({
     data: {
         game: "",
         deals: dealsStorage.fetch(),
+        isLoading: false,
+        isEmptyResult: false,
     },
     watch: {
         deals: {
@@ -48,7 +50,7 @@ var app = new Vue({
                     return false;
                 }
                 if (!b.price) {
-                    return True;
+                    return true;
                 }
                 return a.price.amount - b.price.amount
             });
@@ -62,6 +64,8 @@ var app = new Vue({
             if (!value) {
                 return;
             }
+            this.isLoading = true;
+            this.isEmptyResult = false;
             const evtSource = new EventSource("/api/v1/stream/games?game=" + value);
             var that = this;
             evtSource.addEventListener("update", function(event) {
@@ -86,6 +90,8 @@ var app = new Vue({
             evtSource.addEventListener("end", function(event) {
                 console.log('Handling end....')
                 evtSource.close();
+                that.isLoading = false;
+                that.isEmptyResult = that.deals.length === 0;
             });
         },
         cleanupGames: function() {

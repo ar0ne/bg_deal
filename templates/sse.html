@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://unpkg.com/vue"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
@@ -28,26 +28,35 @@
                 <section id="default-search-form" class="container">
                     <section class="jumbotron text-center">
                         <h1>Find best deals to buy favoric board game!</h1>
-
                         <section class="search-container">
                             <div class="mb-3">
                                 <input
-                                        autofocus
-                                        autocomplete="off"
-                                        type="text"
-                                        class="form-control"
-                                        v-model="game"
-                                        v-on:keyup.enter="searchGame"
+                                    autofocus
+                                    autocomplete="off"
+                                    type="text"
+                                    class="form-control"
+                                    v-model="game"
+                                    v-on:keyup.enter="searchGame"
                                 />
                             </div>
                             <button
-                                    type="submit"
-                                    class="btn btn-primary"
-                                    v-on:click="searchGame"
-                            >Find</button>
+                                type="submit"
+                                class="btn btn-primary"
+                                v-on:click="searchGame"
+                            >
+                                <span v-if="isLoading" class="spinner-border spinner-border-sm"></span>
+                                Search
+                            </button>
                         </section>
                     </section>
                 </section>
+
+                <section v-if="isEmptyResult" class="container">
+                    <div class="alert alert-info" role="alert">
+                        No available deals! Try to find another game!
+                    </div>
+                </section>
+
                 <section id="search-results" class="container">
                     <div v-if="filteredDeals">
                         <div
