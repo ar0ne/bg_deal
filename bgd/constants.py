@@ -14,5 +14,6 @@ TWENTYFIRSTVEK = "twentyfirstvek"
 VK = "vk"
 WILDBERRIES = "wb"
 ZNAEMIGRAEM = "znaemigraem"
+HOBBYGAMES = "hobbygames"
 
 BYN = "BYN"

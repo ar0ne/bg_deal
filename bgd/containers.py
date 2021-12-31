@@ -16,11 +16,12 @@ from bgd.services.apis.fifth_element import (
     FifthElementSearchService,
     GameSearchResultFifthElementBuilder,
 )
-from bgd.services.apis.kufar import (
-    GameSearchResultKufarBuilder,
-    KufarApiClient,
-    KufarSearchService,
+from bgd.services.apis.hobbygames import (
+    HobbyGamesApiClient,
+    HobbyGamesGameSearchResultBuilder,
+    HobbyGamesSearchService,
 )
+from bgd.services.apis.kufar import GameSearchResultKufarBuilder, KufarApiClient, KufarSearchService
 from bgd.services.apis.national_bank import (
     NationalBankApiClient,
     NationalBankCurrencyExchangeRateBuilder,
@@ -31,16 +32,8 @@ from bgd.services.apis.onliner import (
     OnlinerApiClient,
     OnlinerSearchService,
 )
-from bgd.services.apis.ozby import (
-    GameSearchResultOzByBuilder,
-    OzByApiClient,
-    OzBySearchService,
-)
-from bgd.services.apis.ozon import (
-    GameSearchResultOzonBuilder,
-    OzonApiClient,
-    OzonSearchService,
-)
+from bgd.services.apis.ozby import GameSearchResultOzByBuilder, OzByApiClient, OzBySearchService
+from bgd.services.apis.ozon import GameSearchResultOzonBuilder, OzonApiClient, OzonSearchService
 from bgd.services.apis.tesera import (
     TeseraApiClient,
     TeseraGameDetailsResultBuilder,
@@ -162,8 +155,15 @@ class ApplicationContainer(containers.DeclarativeContainer):
         result_builder=GameSearchResultZnaemIgraemBuilder,
         currency_exchange_rate_converter=nb_exchange_rate_service,
     )
+    hobbygames = providers.Singleton(
+        HobbyGamesSearchService,
+        client=providers.Singleton(HobbyGamesApiClient),
+        result_builder=HobbyGamesGameSearchResultBuilder,
+        currency_exchange_rate_converter=nb_exchange_rate_service,
+    )
     data_sources = providers.List(
         fifth_element_service,
+        hobbygames,
         kufar_search_service,
         onliner_search_service,
         ozby_search_service,

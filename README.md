@@ -15,6 +15,7 @@
  - 21vek.by
  - 5element.by
  - znaemigraem.by
+ - hobbygames.by
 
 
 ## How to run
