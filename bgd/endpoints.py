@@ -41,11 +41,11 @@ async def game_info(
     tesera: GameInfoService = Depends(Provide[ApplicationContainer.tesera_service]),
 ):
     """Fetches board game info from provider"""
-    game_info = await asyncio.gather(
+    board_game_info = await asyncio.gather(
         board_game_geek.get_board_game_info(game), return_exceptions=True
     )
-    if isinstance(game_info[0], GameDetailsResult):
-        return game_info[0]
+    if isinstance(board_game_info[0], GameDetailsResult):
+        return board_game_info[0]
     # if not found, will try to fall back to result from Tesera
     return await tesera.get_board_game_info(game)
 
@@ -83,5 +83,6 @@ async def suggest_game(
         Provide[ApplicationContainer.suggest_game_service]
     ),
 ):
+    """Suggest good game"""
     suggested_game = await suggest_game_service.suggest()
     return JSONResponse({"game": suggested_game})
