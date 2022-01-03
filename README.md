@@ -24,4 +24,4 @@ $ uvicorn bgd.application:app --reload
 
 ## Demo app
 
-https://board-game-deals.herokuapp.com/
+https://bgd-by.herokuapp.com/
