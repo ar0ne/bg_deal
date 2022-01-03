@@ -12,6 +12,7 @@ from bgd.services.base import GameSearchService
 from bgd.services.builders import GameSearchResultBuilder
 from bgd.services.constants import GET
 from bgd.services.responses import APIResponse
+from bgd.services.utils import text_contains
 
 
 class ZnaemIgraemApiClient(HtmlHttpApiClient):
@@ -48,7 +49,7 @@ class ZnaemIgraemSearchService(GameSearchService):
                 continue
             name = item.find(class_="name").get_text()
             # filter not relevant products
-            if not self._relevant_result(name, query):
+            if not text_contains(name, query):
                 continue
             product = {
                 "image": item.find("img")["src"],
@@ -59,14 +60,6 @@ class ZnaemIgraemSearchService(GameSearchService):
             products.append(product)
 
         return self.build_results(products)
-
-    def _relevant_result(self, product_name, query) -> bool:
-        """True if search result is relevant to query"""
-        words = query.split(" ")
-        for word in words:
-            if word in product_name:
-                return True
-        return False
 
 
 class GameSearchResultZnaemIgraemBuilder(GameSearchResultBuilder):

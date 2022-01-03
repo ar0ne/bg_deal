@@ -12,6 +12,7 @@ from bgd.services.base import GameSearchService
 from bgd.services.builders import GameSearchResultBuilder
 from bgd.services.constants import GET
 from bgd.services.responses import APIResponse
+from bgd.services.utils import text_contains
 
 
 class HobbyGamesApiClient(HtmlHttpApiClient):
@@ -43,9 +44,9 @@ class HobbyGamesSearchService(GameSearchService):
             if not item.find(class_="product-cart").find(class_="price"):
                 continue
             name = item.find(class_="name").get_text().strip()
-            # # filter not relevant products
-            # if not self._relevant_result(name, query):
-            #     continue
+            # filter not relevant products
+            if not text_contains(name, query):
+                continue
             product = {
                 "image": item.find(class_="image").find("img")["src"],
                 "name": name,
