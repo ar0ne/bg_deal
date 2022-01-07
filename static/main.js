@@ -26,6 +26,7 @@ var app = new Vue({
         deals: dealsStorage.fetch(),
         isLoading: false,
         isEmptyResult: false,
+        searchTime: null,
     },
     watch: {
         deals: {
@@ -64,13 +65,11 @@ var app = new Vue({
     methods: {
         searchGame: function() {
             var that = this;
-            this.cleanupGames();
+            this.reset();
             var value = this.game && this.game.trim();
             if (!value) {
                 return;
             }
-            this.isLoading = true;
-            this.isEmptyResult = false;
             if (this.game_info.name != this.game) {
                 this.game_info = null;
                 this.fetchGameInfo();
@@ -97,15 +96,20 @@ var app = new Vue({
             });
             evtSource.addEventListener("end", function(event) {
                 console.log('Handling end....')
+                var data = JSON.parse(event["data"]);
                 evtSource.close();
                 that.isLoading = false;
                 that.isEmptyResult = that.deals.length === 0;
+                that.searchTime = data["time"];
             });
         },
-        cleanupGames: function() {
+        reset: function() {
             if (this.deals) {
                 this.deals.splice(0, this.deals.length);
             }
+            this.searchTime = null;
+            this.isLoading = true;
+            this.isEmptyResult = false;
         },
         fetchGameInfo: function() {
             var that = this;

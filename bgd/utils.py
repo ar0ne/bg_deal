@@ -2,6 +2,7 @@
 App utilities.
 """
 import logging
+import time
 from typing import Any, List
 
 import orjson
@@ -26,6 +27,7 @@ async def game_deals_finder(
     data_sources: List[GameSearchService],
 ):
     """Game finder generator"""
+    start = time.time()
     while True:
         if await request.is_disconnected():
             logger.debug("Request disconnected.")
@@ -41,7 +43,12 @@ async def game_deals_finder(
                 }
 
         logger.debug("We processed all data sources. Close connection.")
+        elapsed_time = "%.2f" % (time.time() - start)
         yield {
             "event": "end",
-            "data": "",
+            "data": serialize_event_data(
+                {
+                    "time": elapsed_time,
+                }
+            ),
         }

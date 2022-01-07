@@ -91,19 +91,22 @@
                                     </div>
                                     <div class="row">
                                         <div class="col-3">
-                                            <p>BGG: <a v-bind:href="game_info.bgg_url">{{ game_info.bgg_id }}</a>
-                                                <span v-if="game_info.bgg_id != game_info.id">/ Tesera: <a v-bind:href="game_info.url">{{ game_info.id }}</a></span>
+                                            <p>BGG: <a target="_blank" v-bind:href="game_info.bgg_url">{{ game_info.bgg_id }}</a>
+                                                <span v-if="game_info.bgg_id != game_info.id">/ Tesera: <a target="_blank" v-bind:href="game_info.url">{{ game_info.id }}</a></span>
                                             </p>
                                         </div>
                                         <div class="col-3"><p>Min/max play time: {{ game_info.min_play_time }}-{{ game_info.max_play_time }}</p></div>
                                         <div class="col-3"><p>Average rate: {{ game_info.statistics.avg_rate }}</p></div>
                                         <div class="col-3"><p>Best for number of players: {{ game_info.best_num_players }}</p></div>
                                     </div>
-                                    <div v-if="game_info.statistics.ranks" class="row">
+                                    <div v-if="game_info.statistics.ranks && game_info.statistics.ranks.length" class="row">
                                         <div class="col-6">
                                             <p>Ranks:</p>
                                             <li v-for="rank in game_info.statistics.ranks">{{ rank.name }}: {{ rank.value }}</li>
                                         </div>
+                                    </div>
+                                    <div v-if="searchTime" class="elapsed-search-time">
+                                        <span>{{ searchTime }}s</span>
                                     </div>
                                 </div>
                             </section>
@@ -125,7 +128,7 @@
                             >
                                 <div class="card-header">
                                     <h5 class="card-title>">
-                                        <a class="card-title" v-bind:href="result.url">{{ result.subject }}</a>
+                                        <a class="card-title" target="_blank" v-bind:href="result.url">{{ result.subject }}</a>
                                         <img
                                             class="card-logo"
                                             v-bind:class="result.source + '-logo'"
