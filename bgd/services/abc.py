@@ -2,20 +2,19 @@
 App builders
 """
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any, Optional, Protocol
 
 from bgd.responses import GameDetailsResult, GameSearchResult
 
 from .types import ExchangeRates
 
 
-class GameDetailsResultBuilder(ABC):
+class GameDetailsResultFactory(Protocol):
     """Abstract GameDetailsResultBuilder class"""
 
-    @classmethod
-    @abstractmethod
-    def build(cls, game_info: Any) -> GameDetailsResult:
-        """Build game details result"""
+    def create(self, game_info: Any) -> GameDetailsResult:
+        """Create game details result"""
+        ...
 
 
 class GameSearchResultBuilder(ABC):

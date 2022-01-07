@@ -6,10 +6,10 @@ from typing import Any, Optional, Union
 
 from bgd.constants import NOT_AVAILABLE, TESERA
 from bgd.responses import GameDetailsResult, GameStatistic
+from bgd.services.abc import GameDetailsResultFactory
 from bgd.services.api_clients import JsonHttpApiClient
 from bgd.services.apis.bgg import BGG_GAME_URL
 from bgd.services.base import GameInfoService
-from bgd.services.builders import GameDetailsResultBuilder
 from bgd.services.constants import GET
 from bgd.services.responses import APIResponse
 from bgd.services.types import GameAlias, JsonResponse
@@ -44,18 +44,22 @@ class TeseraGameInfoService(GameInfoService):
             return search_results[0]["alias"]
         return None
 
+    @property
+    def result_factory(self) -> GameDetailsResultFactory:
+        """Create result factory"""
+        return TeseraGameDetailsResultFactory()
 
-class TeseraGameDetailsResultBuilder(GameDetailsResultBuilder):
-    """Result builder for game details from Tesera service"""
 
-    @classmethod
-    def build(cls, game_info: Any) -> GameDetailsResult:
+class TeseraGameDetailsResultFactory:
+    """Factory for result for game details from Tesera service"""
+
+    def create(self, game_info: Any) -> GameDetailsResult:
         game = game_info["game"]
         return GameDetailsResult(
-            best_num_players=cls._extract_best_num_players(game),
+            best_num_players=self._extract_best_num_players(game),
             bgg_id=game["bggId"],
             bgg_url=f"{BGG_GAME_URL}/{game['bggId']}",
-            description=cls._extract_description(game),
+            description=self._extract_description(game),
             id=game["id"],
             image=game["photoUrl"],
             max_play_time=game["playtimeMax"],
@@ -65,7 +69,7 @@ class TeseraGameDetailsResultBuilder(GameDetailsResultBuilder):
             name=game["title"],
             playing_time=game["playtimeMax"],
             source=TESERA,
-            statistics=cls._build_game_statistics(game_info),
+            statistics=self._build_game_statistics(game_info),
             url=game["teseraUrl"],
             year_published=game["year"],
         )

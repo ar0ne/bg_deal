@@ -8,8 +8,8 @@ from typing import Optional
 from libbgg.infodict import InfoDict
 
 from bgd.responses import Price
+from bgd.services.abc import CurrencyExchangeRateBuilder
 from bgd.services.api_clients import CurrencyExchangeRateSearcher, XmlHttpApiClient
-from bgd.services.builders import CurrencyExchangeRateBuilder
 from bgd.services.constants import GET
 from bgd.services.responses import APIResponse
 from bgd.services.types import ExchangeRates

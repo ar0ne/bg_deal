@@ -7,9 +7,9 @@ from bs4 import BeautifulSoup
 
 from bgd.constants import ZNAEMIGRAEM
 from bgd.responses import GameSearchResult, Price
+from bgd.services.abc import GameSearchResultBuilder
 from bgd.services.api_clients import HtmlHttpApiClient
 from bgd.services.base import GameSearchService
-from bgd.services.builders import GameSearchResultBuilder
 from bgd.services.constants import GET
 from bgd.services.responses import APIResponse
 from bgd.services.utils import text_contains

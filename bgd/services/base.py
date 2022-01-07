@@ -11,10 +11,9 @@ from fastapi_cache.decorator import cache
 
 from bgd.errors import GameNotFoundError
 from bgd.responses import GameDetailsResult, GameSearchResult, Price
-
-from .api_clients import GameInfoSearcher, GameSearcher
-from .builders import GameDetailsResultBuilder, GameSearchResultBuilder
-from .types import ExchangeRates, GameAlias
+from bgd.services.abc import GameDetailsResultFactory, GameSearchResultBuilder
+from bgd.services.api_clients import GameInfoSearcher, GameSearcher
+from bgd.services.types import ExchangeRates, GameAlias
 
 log = logging.getLogger(__name__)
 
@@ -22,14 +21,9 @@ log = logging.getLogger(__name__)
 class GameInfoService(ABC):
     """Abstract game info service"""
 
-    def __init__(
-        self,
-        client: GameInfoSearcher,
-        builder: GameDetailsResultBuilder,
-    ) -> None:
+    def __init__(self, client: GameInfoSearcher) -> None:
         """Init Search Service"""
         self._client = client
-        self._game_result_builder = builder
 
     async def get_board_game_info(self, game: str, exact: bool = True) -> GameDetailsResult:
         """Get board game info from API"""
@@ -38,11 +32,16 @@ class GameInfoService(ABC):
         if not game_alias:
             raise GameNotFoundError(game)
         game_info_resp = await self._client.get_game_details(game_alias)
-        return self._game_result_builder.build(game_info_resp.response)
+        return self.result_factory.create(game_info_resp.response)
 
     @abstractmethod
     def get_game_alias(self, search_results: Any) -> Optional[GameAlias]:
         """Choose the best option from search results"""
+
+    @property
+    @abstractmethod
+    def result_factory(self) -> GameDetailsResultFactory:
+        """Get game details result factory"""
 
 
 class CurrencyExchangeRateService(Protocol):

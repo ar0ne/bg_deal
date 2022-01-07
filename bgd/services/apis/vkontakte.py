@@ -7,9 +7,9 @@ from typing import List, Optional
 
 from bgd.constants import VK
 from bgd.responses import GameOwner, GameSearchResult
+from bgd.services.abc import GameSearchResultBuilder
 from bgd.services.api_clients import GameSearcher, JsonHttpApiClient
 from bgd.services.base import CurrencyExchangeRateService, GameSearchService
-from bgd.services.builders import GameSearchResultBuilder
 from bgd.services.constants import GET
 from bgd.services.responses import APIResponse
 from bgd.services.utils import remove_backslashes

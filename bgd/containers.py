@@ -9,11 +9,7 @@ from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.backends.redis import RedisBackend
 from starlette.templating import Jinja2Templates
 
-from bgd.services.apis.bgg import (
-    BGGGameDetailsResultBuilder,
-    BoardGameGeekApiClient,
-    BoardGameGeekGameInfoService,
-)
+from bgd.services.apis.bgg import BoardGameGeekApiClient, BoardGameGeekGameInfoService
 from bgd.services.apis.fifth_element import (
     FifthElementApiClient,
     FifthElementSearchService,
@@ -37,11 +33,7 @@ from bgd.services.apis.onliner import (
 )
 from bgd.services.apis.ozby import GameSearchResultOzByBuilder, OzByApiClient, OzBySearchService
 from bgd.services.apis.ozon import GameSearchResultOzonBuilder, OzonApiClient, OzonSearchService
-from bgd.services.apis.tesera import (
-    TeseraApiClient,
-    TeseraGameDetailsResultBuilder,
-    TeseraGameInfoService,
-)
+from bgd.services.apis.tesera import TeseraApiClient, TeseraGameInfoService
 from bgd.services.apis.twenty_first_vek import (
     GameSearchResultTwentyFirstVekBuilder,
     TwentyFirstVekApiClient,
@@ -79,12 +71,10 @@ class ApplicationContainer(containers.DeclarativeContainer):
     bgg_service = providers.Singleton(
         BoardGameGeekGameInfoService,
         client=providers.Singleton(BoardGameGeekApiClient),
-        builder=BGGGameDetailsResultBuilder,
     )
     tesera_service = providers.Singleton(
         TeseraGameInfoService,
         client=providers.Singleton(TeseraApiClient),
-        builder=TeseraGameDetailsResultBuilder,
     )
     nb_exchange_rate_service = providers.Singleton(
         NBCurrencyExchangeRateService,
