@@ -4,11 +4,12 @@ Application entrypoint
 import logging
 import os
 
+from dependency_injector.wiring import Provide, inject, required
 from environ import Env
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi_cache import FastAPICache
-from fastapi_cache.backends.inmemory import InMemoryBackend
+from fastapi_cache.backends import Backend
 
 from bgd import endpoints, errors
 from bgd.containers import ApplicationContainer
@@ -24,7 +25,7 @@ def create_app() -> FastAPI:
 
     container = ApplicationContainer()
     container.config.from_yaml(f"{BASE_DIR}/config.yml", envs_required=True)
-    container.wire(modules=[endpoints])
+    container.wire(modules=[".application", ".endpoints"])
 
     fast_api_app = FastAPI()
     fast_api_app.container = container  # type: ignore
@@ -40,12 +41,15 @@ def create_app() -> FastAPI:
     return fast_api_app
 
 
-app = create_app()
-
-
-@app.on_event("startup")
-def startup_event() -> None:
+@inject
+def startup_event(
+    cache_backend: Backend = Provide[ApplicationContainer.cache_backend],
+    cache_prefix: str = Provide["config.cache.prefix", required()],
+    cache_ttl: int = Provide["config.cache.ttl", required().as_int()],
+) -> None:
     """On startup callback"""
-    # redis = aioredis.from_url("redis://localhost", encoding="utf8", decode_responses=True)
-    # FastAPICache.init(RedisBackend(redis), prefix="cache")
-    FastAPICache.init(InMemoryBackend(), prefix="cache", expire=60)
+    FastAPICache.init(cache_backend, prefix=cache_prefix, expire=cache_ttl)
+
+
+app = create_app()
+app.add_event_handler("startup", startup_event)

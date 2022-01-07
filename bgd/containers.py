@@ -3,7 +3,10 @@ App containers
 """
 import os
 
+import aioredis as aioredis
 from dependency_injector import containers, providers
+from fastapi_cache.backends.inmemory import InMemoryBackend
+from fastapi_cache.backends.redis import RedisBackend
 from starlette.templating import Jinja2Templates
 
 from bgd.services.apis.bgg import (
@@ -176,4 +179,14 @@ class ApplicationContainer(containers.DeclarativeContainer):
     suggest_game_service = providers.Singleton(
         SimpleSuggestGameService,
         games=config.app.suggested_games,
+    )
+    redis = providers.Singleton(
+        providers.Callable(
+            aioredis.from_url, config.cache.url, encoding="utf8", decode_responses=True
+        )
+    )
+    cache_backend = providers.Selector(
+        config.cache.backend,
+        in_memory=providers.Singleton(InMemoryBackend),
+        redis=providers.Singleton(RedisBackend, redis),
     )
