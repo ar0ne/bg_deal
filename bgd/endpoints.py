@@ -29,7 +29,7 @@ async def index_page(
     request: Request,
     templates: Jinja2Templates = Depends(Provide[ApplicationContainer.templates]),
 ):
-    """Server sent events demo page"""
+    """Render index page"""
     return templates.TemplateResponse(INDEX_PAGE, {"request": request})
 
 
@@ -41,7 +41,7 @@ async def game_info(
     board_game_geek: GameInfoService = Depends(Provide[ApplicationContainer.bgg_service]),
     tesera: GameInfoService = Depends(Provide[ApplicationContainer.tesera_service]),
 ):
-    """Fetches board game info from provider"""
+    """Fetches board game info from data providers (bgg and tesera)"""
     board_game_info = await asyncio.gather(
         board_game_geek.get_board_game_info(game), return_exceptions=True
     )
@@ -58,7 +58,7 @@ async def search_game_streamed(
     request: Request,
     data_sources: List[GameSearchService] = Depends(Provide[ApplicationContainer.data_sources]),
 ):
-    """Find game deals"""
+    """Finds game deals"""
     game_deals = game_deals_finder(request, game, data_sources)
     return EventSourceResponse(game_deals)
 
@@ -71,6 +71,6 @@ async def suggest_game(
         Provide[ApplicationContainer.suggest_game_service]
     ),
 ):
-    """Suggest good game"""
+    """Suggests good game"""
     suggested_game = await suggest_game_service.suggest()
     return ORJsonResponse({"game": suggested_game})

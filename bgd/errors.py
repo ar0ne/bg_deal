@@ -3,13 +3,13 @@ App Errors
 """
 from starlette import status
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import Response
+from starlette_json import ORJsonResponse
 
 # pylint: disable=super-init-not-called, fixme
 
+
 # TODO: refactor exceptions
-
-
 class ServiceException(Exception):
     """Generic Service Exception class"""
 
@@ -39,10 +39,10 @@ class PageNotFoundError(ApiClientError):
 
 
 # pylint: disable=unused-argument
-async def service_exception_handler(request: Request, exc: ServiceException) -> JSONResponse:
+async def service_exception_handler(_: Request, exc: ServiceException) -> Response:
     """Handler for service exceptions"""
-    return JSONResponse(
-        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+    return ORJsonResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
         content={"error": exc.error, "message": exc.message},
     )
 
