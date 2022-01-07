@@ -29,6 +29,7 @@
                     <button
                         class="btn btn-outline-success my-2 my-sm-0"
                         v-on:click="searchGame"
+                        :disabled="!game.length"
                     >Search</button>
                 </section>
             </nav>
@@ -63,6 +64,7 @@
                                                 type="submit"
                                                 class="btn btn-primary"
                                                 v-on:click="searchGame"
+                                                :disabled="!game.length"
                                         >
                                             <span v-if="isLoading" class="spinner-border spinner-border-sm"></span>
                                             Search
