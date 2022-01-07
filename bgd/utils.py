@@ -52,3 +52,4 @@ async def game_deals_finder(
                 }
             ),
         }
+        break
