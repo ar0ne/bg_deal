@@ -1,7 +1,5 @@
-/**
+'use strict';
 
-
-**/
 var STORAGE_KEY = "board-game-deals";
 // cleanup local storage
 localStorage.setItem(STORAGE_KEY, "[]");
