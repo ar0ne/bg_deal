@@ -8,10 +8,12 @@ dependency-injector==4.37.0
 fastapi==0.68.1
 fastapi-cache2==0.1.8
 Jinja2==3.0.1
+orjson==3.6.5
 py-bgg==0.3.1
 pydantic==1.8.2
 python-environ==0.4.54
 PyYAML==5.4.1
 sse-starlette==0.10.0
 starlette==0.14.2
+starlette-json==20.9.18
 uvicorn[standard]===0.15.0

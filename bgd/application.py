@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends import Backend
+from starlette_json import ORJsonMiddleware
 
 from bgd import endpoints, errors
 from bgd.containers import ApplicationContainer
@@ -53,3 +54,4 @@ def startup_event(
 
 app = create_app()
 app.add_event_handler("startup", startup_event)
+app.add_middleware(ORJsonMiddleware)

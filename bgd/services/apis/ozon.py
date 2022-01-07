@@ -2,8 +2,9 @@
 Ozon.ru API Client
 """
 import html
-import json
 from typing import List, Optional
+
+import orjson
 
 from bgd.constants import OZON
 from bgd.responses import GameSearchResult, Price
@@ -58,7 +59,7 @@ class OzonSearchService(GameSearchService):
         key = self._find_search_v2_key(widget_states)
         if not key:
             return None
-        return json.loads(widget_states[key])
+        return orjson.loads(widget_states[key])
 
     @staticmethod
     def _find_search_v2_key(states: dict) -> Optional[str]:

@@ -2,11 +2,11 @@
 Api client interfaces
 """
 import datetime
-import json
 import logging
 from typing import Optional, Protocol, Union
 
 import aiohttp
+import orjson
 from aiohttp import ClientResponse
 from libbgg.infodict import InfoDict
 
@@ -84,7 +84,7 @@ class JSONResource:
         """Prepare request to work with JSON resources"""
         kwargs_copy: dict = kwargs.copy()
         body = kwargs_copy.pop("body", None)
-        kwargs_copy["json"] = None if not body else json.dumps(body)
+        kwargs_copy["json"] = None if not body else orjson.dumps(body)
         return APIRequest(**kwargs_copy)
 
     @staticmethod

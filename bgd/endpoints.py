@@ -10,7 +10,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi_cache.decorator import cache
 from sse_starlette import EventSourceResponse  # pylint: disable=E0401
-from starlette.responses import JSONResponse
+from starlette_json import ORJsonResponse
 
 from bgd.containers import ApplicationContainer
 from bgd.responses import GameDetailsResult
@@ -63,7 +63,7 @@ async def search_game_streamed(
     return EventSourceResponse(game_deals)
 
 
-@router.get(API_VERSION + "/game-suggests", response_class=JSONResponse)
+@router.get(API_VERSION + "/game-suggests", response_class=ORJsonResponse)
 @inject
 async def suggest_game(
     _: Request,
@@ -73,4 +73,4 @@ async def suggest_game(
 ):
     """Suggest good game"""
     suggested_game = await suggest_game_service.suggest()
-    return JSONResponse({"game": suggested_game})
+    return ORJsonResponse({"game": suggested_game})

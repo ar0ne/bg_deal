@@ -1,10 +1,10 @@
 """
 App utilities.
 """
-import json
 import logging
-from typing import List
+from typing import Any, List
 
+import orjson
 from fastapi import Request
 
 from bgd.services.base import GameSearchService
@@ -13,6 +13,11 @@ logger = logging.getLogger(__name__)
 
 
 STREAM_RETRY_TIMEOUT = 30000  # milliseconds
+
+
+def serialize_event_data(data: Any) -> str:
+    """Convert event data to JSON-string"""
+    return orjson.dumps(data).decode("utf-8")
 
 
 async def game_deals_finder(
@@ -32,7 +37,7 @@ async def game_deals_finder(
                 yield {
                     "event": "update",
                     "retry": STREAM_RETRY_TIMEOUT,
-                    "data": json.dumps(deals),  # convert to json-string
+                    "data": serialize_event_data(deals),  # convert to json-string for frontend
                 }
 
         logger.debug("We processed all data sources. Close connection.")
