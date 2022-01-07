@@ -7,6 +7,8 @@ import os
 from environ import Env
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.inmemory import InMemoryBackend
 
 from bgd import endpoints, errors
 from bgd.containers import ApplicationContainer
@@ -39,3 +41,11 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
+
+@app.on_event("startup")
+def startup_event() -> None:
+    """On startup callback"""
+    # redis = aioredis.from_url("redis://localhost", encoding="utf8", decode_responses=True)
+    # FastAPICache.init(RedisBackend(redis), prefix="cache")
+    FastAPICache.init(InMemoryBackend(), prefix="cache", expire=60)

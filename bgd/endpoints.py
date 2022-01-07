@@ -2,20 +2,20 @@
 App endpoints
 """
 import asyncio
-import itertools
 from typing import List
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi_cache.decorator import cache
 from sse_starlette import EventSourceResponse  # pylint: disable=E0401
 from starlette.responses import JSONResponse
 
 from bgd.containers import ApplicationContainer
-from bgd.responses import GameDetailsResult, GameSearchResult
+from bgd.responses import GameDetailsResult
 from bgd.services.base import GameInfoService, GameSearchService, SuggestGameService
-from bgd.utils import game_deals_finder, game_search_result_price
+from bgd.utils import game_deals_finder
 
 INDEX_PAGE = "index.html"
 API_VERSION = "/api/v1"
@@ -33,6 +33,7 @@ async def index_page(
     return templates.TemplateResponse(INDEX_PAGE, {"request": request})
 
 
+@cache()
 @router.get(API_VERSION + "/game-info/{game}", response_model=GameDetailsResult)
 @inject
 async def game_info(
@@ -50,20 +51,7 @@ async def game_info(
     return await tesera.get_board_game_info(game)
 
 
-@router.get(API_VERSION + "/search", response_model=List[GameSearchResult])
-@inject
-async def search_game(
-    game: str,
-    data_sources: List[GameSearchService] = Depends(Provide[ApplicationContainer.data_sources]),
-) -> List[GameSearchResult]:
-    """Search game endpoint"""
-    results = [await source.search(game) for source in data_sources]
-    combined_results = list(itertools.chain.from_iterable(results))
-    combined_results.sort(key=game_search_result_price)
-    return combined_results
-
-
-@router.get(API_VERSION + "/stream-search")
+@router.get(API_VERSION + "/stream-search/")
 @inject
 async def search_game_streamed(
     game: str,

@@ -58,7 +58,7 @@ class HobbyGamesSearchService(GameSearchService):
         return self.build_results(products)
 
 
-class HobbyGamesGameSearchResultBuilder(GameSearchResultBuilder):
+class GameSearchResultHobbyGamesBuilder(GameSearchResultBuilder):
     """Game search result builder for hobby games"""
 
     @classmethod

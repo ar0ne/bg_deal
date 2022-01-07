@@ -7,6 +7,8 @@ import random
 from abc import ABC, abstractmethod
 from typing import Any, Callable, List, Optional, Protocol, Tuple, Union
 
+from fastapi_cache.decorator import cache
+
 from bgd.errors import GameNotFoundError
 from bgd.responses import GameDetailsResult, GameSearchResult, Price
 
@@ -83,7 +85,8 @@ class GameSearchService(ABC):
             return products
         return list(filter(filter_func, products))
 
-    async def search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+    @cache()
+    async def search(self, query: str, *args, **kwargs) -> List[dict]:
         """Searching games"""
         log.info("Search data by: %s", self._client.__class__.__name__)
         responses = await asyncio.gather(
@@ -98,7 +101,8 @@ class GameSearchService(ABC):
         for result in search_results:  # type: ignore
             target_price = await self._currency_converter.convert(result.price)  # type: ignore
             result.price_converted = target_price  # type: ignore
-        return search_results  # type: ignore
+        # convert from dto to dicts, to make possible to cache it
+        return list(map(lambda s: s.dict(), search_results))  # type: ignore
 
     def build_results(self, items: Optional[list]) -> List[GameSearchResult]:
         """prepare search results for end user"""

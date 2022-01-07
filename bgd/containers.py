@@ -17,8 +17,8 @@ from bgd.services.apis.fifth_element import (
     GameSearchResultFifthElementBuilder,
 )
 from bgd.services.apis.hobbygames import (
+    GameSearchResultHobbyGamesBuilder,
     HobbyGamesApiClient,
-    HobbyGamesGameSearchResultBuilder,
     HobbyGamesSearchService,
 )
 from bgd.services.apis.kufar import GameSearchResultKufarBuilder, KufarApiClient, KufarSearchService
@@ -158,7 +158,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
     hobbygames = providers.Singleton(
         HobbyGamesSearchService,
         client=providers.Singleton(HobbyGamesApiClient),
-        result_builder=HobbyGamesGameSearchResultBuilder,
+        result_builder=GameSearchResultHobbyGamesBuilder,
         currency_exchange_rate_converter=nb_exchange_rate_service,
     )
     data_sources = providers.List(

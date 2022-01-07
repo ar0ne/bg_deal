@@ -40,7 +40,7 @@ async def game_deals_finder(
                 yield {
                     "event": "update",
                     "retry": STREAM_RETRY_TIMEOUT,
-                    "data": json.dumps([d.dict() for d in deals]),
+                    "data": json.dumps(deals),  # convert to json-string
                 }
 
         logger.debug("We processed all data sources. Close connection.")
