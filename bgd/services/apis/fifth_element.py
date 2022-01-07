@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from bgd.constants import FIFTHELEMENT
 from bgd.responses import GameSearchResult, Price
-from bgd.services.abc import GameSearchResultBuilder
+from bgd.services.abc import GameSearchResultFactory
 from bgd.services.api_clients import GameSearcher, JsonHttpApiClient
 from bgd.services.base import CurrencyExchangeRateService, GameSearchService
 from bgd.services.constants import GET
@@ -30,7 +30,6 @@ class FifthElementSearchService(GameSearchService):
     def __init__(
         self,
         client: GameSearcher,
-        result_builder: GameSearchResultBuilder,
         currency_exchange_rate_converter: CurrencyExchangeRateService,
         game_category_id: str,
         search_app_id: str,
@@ -38,7 +37,7 @@ class FifthElementSearchService(GameSearchService):
         """Init 5th element Search Service"""
         # there are more than one category that we should check
         self._game_category_ids = game_category_id.split(",")
-        super().__init__(client, result_builder, currency_exchange_rate_converter)
+        super().__init__(client, currency_exchange_rate_converter)
         self._search_app_id = search_app_id
 
     async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
@@ -55,24 +54,27 @@ class FifthElementSearchService(GameSearchService):
             and product["params_data"]["category_id"] in self._game_category_ids
         )
 
+    @property
+    def result_factory(self) -> GameSearchResultFactory:
+        return FifthElementGameSearchResultFactory()
 
-class GameSearchResultFifthElementBuilder(GameSearchResultBuilder):
+
+class FifthElementGameSearchResultFactory:
     """Builder for GameSearch results from 5element"""
 
     BASE_URL = "https://5element.by"
 
-    @classmethod
-    def from_search_result(cls, search_result: dict) -> GameSearchResult:
+    def create(self, search_result: dict) -> GameSearchResult:
         """Build search result"""
         return GameSearchResult(
             description="",
-            images=cls._extract_images(search_result),
+            images=self._extract_images(search_result),
             location=None,
             owner=None,
-            price=cls._extract_price(search_result),
+            price=self._extract_price(search_result),
             source=FIFTHELEMENT,
             subject=search_result["name"],
-            url=cls._extract_url(search_result),
+            url=self._extract_url(search_result),
         )
 
     @staticmethod
@@ -86,7 +88,6 @@ class GameSearchResultFifthElementBuilder(GameSearchResultBuilder):
         price = product["price"] * 100
         return Price(amount=price)
 
-    @classmethod
-    def _extract_url(cls, product: dict) -> str:
+    def _extract_url(self, product: dict) -> str:
         """Extract product url"""
-        return f"{cls.BASE_URL}{product['url']}"
+        return f"{self.BASE_URL}{product['url']}"

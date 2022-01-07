@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from bgd.constants import TWENTYFIRSTVEK
 from bgd.responses import GameSearchResult, Price
-from bgd.services.abc import GameSearchResultBuilder
+from bgd.services.abc import GameSearchResultFactory
 from bgd.services.api_clients import JsonHttpApiClient
 from bgd.services.base import GameSearchService
 from bgd.services.constants import GET
@@ -41,23 +41,28 @@ class TwentyFirstVekSearchService(GameSearchService):
         products = self.filter_results(response.response["items"], self._is_available_game)
         return self.build_results(products)
 
+    @property
+    def result_factory(self) -> GameSearchResultFactory:
+        """creates result factory"""
+        return TwentyFirstVekGameSearchResultFactory()
 
-class GameSearchResultTwentyFirstVekBuilder(GameSearchResultBuilder):
-    """Builder for 21vek"""
+
+class TwentyFirstVekGameSearchResultFactory:
+    """Factory for search results from 21vek"""
 
     BASE_URL = "https://21vek.by"
 
-    @classmethod
-    def from_search_result(cls, search_result: dict) -> GameSearchResult:
+    def create(self, search_result: dict) -> GameSearchResult:
+        """Creates search result"""
         return GameSearchResult(
             description=search_result["highlighted"],
-            images=cls._extract_images(search_result),
+            images=self._extract_images(search_result),
             location=None,
             owner=None,
-            price=cls._extract_price(search_result),
+            price=self._extract_price(search_result),
             source=TWENTYFIRSTVEK,
             subject=search_result["name"],
-            url=cls._extract_url(search_result),
+            url=self._extract_url(search_result),
         )
 
     @staticmethod
@@ -69,10 +74,9 @@ class GameSearchResultTwentyFirstVekBuilder(GameSearchResultBuilder):
         price = int(price.replace(",", ""))
         return Price(amount=price)
 
-    @classmethod
-    def _extract_url(cls, product: dict) -> str:
+    def _extract_url(self, product: dict) -> str:
         """Extract product url"""
-        return f"{cls.BASE_URL}{product['url']}"
+        return f"{self.BASE_URL}{product['url']}"
 
     @staticmethod
     def _extract_images(product: dict) -> list[str]:

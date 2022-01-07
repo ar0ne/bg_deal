@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 
 from bgd.constants import HOBBYGAMES
 from bgd.responses import GameSearchResult, Price
-from bgd.services.abc import GameSearchResultBuilder
+from bgd.services.abc import GameSearchResultFactory
 from bgd.services.api_clients import HtmlHttpApiClient
 from bgd.services.base import GameSearchService
 from bgd.services.constants import GET
@@ -57,22 +57,26 @@ class HobbyGamesSearchService(GameSearchService):
 
         return self.build_results(products)
 
+    @property
+    def result_factory(self) -> GameSearchResultFactory:
+        """Creates result factory"""
+        return HobbyGamesGameSearchResultFactory()
 
-class GameSearchResultHobbyGamesBuilder(GameSearchResultBuilder):
-    """Game search result builder for hobby games"""
 
-    @classmethod
-    def from_search_result(cls, search_result: dict) -> GameSearchResult:
-        """Build game search result"""
+class HobbyGamesGameSearchResultFactory:
+    """Game search result factory for hobby games"""
+
+    def create(self, search_result: dict) -> GameSearchResult:
+        """Creates game search result"""
         return GameSearchResult(
             description="",
-            images=cls._extract_images(search_result),
+            images=self._extract_images(search_result),
             location=None,
             owner=None,
-            price=cls._extract_price(search_result),
+            price=self._extract_price(search_result),
             source=HOBBYGAMES,
             subject=search_result["name"],
-            url=cls._extract_url(search_result),
+            url=self._extract_url(search_result),
         )
 
     @classmethod

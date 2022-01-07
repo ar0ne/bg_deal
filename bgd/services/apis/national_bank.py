@@ -8,7 +8,7 @@ from typing import Optional
 from libbgg.infodict import InfoDict
 
 from bgd.responses import Price
-from bgd.services.abc import CurrencyExchangeRateBuilder
+from bgd.services.abc import CurrencyExchangeRateFactory
 from bgd.services.api_clients import CurrencyExchangeRateSearcher, XmlHttpApiClient
 from bgd.services.constants import GET
 from bgd.services.responses import APIResponse
@@ -34,11 +34,11 @@ class NationalBankApiClient(XmlHttpApiClient):
         return await self.connect(GET, self.BASE_URL, url)
 
 
-class NationalBankCurrencyExchangeRateBuilder(CurrencyExchangeRateBuilder):
+class NationalBankCurrencyExchangeRateFactory:
     """Builder for ExchangeRates"""
 
     @staticmethod
-    def from_response(response: InfoDict) -> Optional[ExchangeRates]:
+    def create(response: InfoDict) -> Optional[ExchangeRates]:
         """Converts response to list of exchange rates"""
         if not (response and hasattr(response, "DailyExRates")):
             return None
@@ -46,25 +46,22 @@ class NationalBankCurrencyExchangeRateBuilder(CurrencyExchangeRateBuilder):
         return {currency.CharCode.TEXT: float(currency.Rate.TEXT) for currency in currencies}
 
 
-class NBCurrencyExchangeRateService:
+class NationalBankCurrencyExchangeRateService:
     """National bank currency exchange rate service"""
 
     def __init__(
         self,
         client: CurrencyExchangeRateSearcher,
-        rate_builder: CurrencyExchangeRateBuilder,
         base_currency: str,
         target_currency: str,
     ) -> None:
         """
         Init exchange rate service
         :param CurrencyExchangeRateSearcher client: A searcher of currency exchange rates.
-        :param CurrencyExchangeRateBuilder rate_builder: Builder for ExchangeRates model.
         :param str base_currency: 3-letters currency code from which service does conversion.
         :param str target_currency: 3-letters currency code for conversion.
         """
         self._client = client
-        self._builder = rate_builder
         self._target_currency = target_currency
         self._base_currency = base_currency
         self._rates: Optional[ExchangeRates] = None
@@ -93,6 +90,11 @@ class NBCurrencyExchangeRateService:
             # for safety let's use yesterday rates
             yesterday = today - datetime.timedelta(days=1)
             resp = await self._client.get_currency_exchange_rates(yesterday)
-            self._rates = self._builder.from_response(resp.response)
+            self._rates = self.result_factory.create(resp.response)
             self._expiration_date = today + datetime.timedelta(days=1)
         return self._rates
+
+    @property
+    def result_factory(self) -> CurrencyExchangeRateFactory:
+        """Create result factory"""
+        return NationalBankCurrencyExchangeRateFactory()

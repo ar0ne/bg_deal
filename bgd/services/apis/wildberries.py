@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from bgd.constants import WILDBERRIES
 from bgd.responses import GameSearchResult, Price
-from bgd.services.abc import GameSearchResultBuilder
+from bgd.services.abc import GameSearchResultFactory
 from bgd.services.api_clients import JsonHttpApiClient
 from bgd.services.base import GameSearchService
 from bgd.services.constants import GET
@@ -78,25 +78,29 @@ class WildberriesSearchService(GameSearchService):
         """True if it's available board game"""
         return product.get("subjectId") == self._game_category_id
 
+    @property
+    def result_factory(self) -> GameSearchResultFactory:
+        """Creates result factory"""
+        return WildberriesGameSearchResultFactory()
 
-class GameSearchResultWildberriesBuilder(GameSearchResultBuilder):
+
+class WildberriesGameSearchResultFactory:
     """Build GameSearchResult for Wildberrries datasource"""
 
     ITEM_URL = "https://by.wildberries.ru/catalog/{}/detail.aspx"
     IMAGE_URL = "https://images.wbstatic.net/big/new/{}0000/{}-1.jpg"
 
-    @classmethod
-    def from_search_result(cls, search_result: dict) -> GameSearchResult:
-        """Build game search result"""
+    def create(self, search_result: dict) -> GameSearchResult:
+        """Creates game search result"""
         return GameSearchResult(
             description="",
-            images=cls._extract_images(search_result),
+            images=self._extract_images(search_result),
             location=None,
             owner=None,
-            price=cls._extract_price(search_result),
+            price=self._extract_price(search_result),
             source=WILDBERRIES,
-            subject=cls._extract_subject(search_result),
-            url=cls._extract_url(search_result),
+            subject=self._extract_subject(search_result),
+            url=self._extract_url(search_result),
         )
 
     @staticmethod
@@ -105,16 +109,14 @@ class GameSearchResultWildberriesBuilder(GameSearchResultBuilder):
         price_in_byn: int = product["salePriceU"]
         return Price(amount=price_in_byn)
 
-    @classmethod
-    def _extract_url(cls, product: dict) -> str:
+    def _extract_url(self, product: dict) -> str:
         """Extract url to product"""
-        return cls.ITEM_URL.format(product.get("id"))
+        return self.ITEM_URL.format(product.get("id"))
 
-    @classmethod
-    def _extract_images(cls, product: dict) -> list:
+    def _extract_images(self, product: dict) -> list:
         """Extract product images"""
         product_id = str(product.get("id"))
-        return [cls.IMAGE_URL.format(product_id[:4], product_id)]
+        return [self.IMAGE_URL.format(product_id[:4], product_id)]
 
     @staticmethod
     def _extract_subject(product: dict) -> str:

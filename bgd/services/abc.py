@@ -1,12 +1,10 @@
 """
 App builders
 """
-from abc import ABC, abstractmethod
 from typing import Any, Optional, Protocol
 
 from bgd.responses import GameDetailsResult, GameSearchResult
-
-from .types import ExchangeRates
+from bgd.services.types import ExchangeRates
 
 
 class GameDetailsResultFactory(Protocol):
@@ -17,20 +15,17 @@ class GameDetailsResultFactory(Protocol):
         ...
 
 
-class GameSearchResultBuilder(ABC):
-    """Base builder class for game search result"""
+class GameSearchResultFactory(Protocol):
+    """Game search result factory"""
 
-    @classmethod
-    @abstractmethod
-    def from_search_result(cls, search_result: dict) -> GameSearchResult:
+    def create(self, search_result: dict) -> GameSearchResult:
         """Build game search result from search result"""
+        ...
 
 
-class CurrencyExchangeRateBuilder(ABC):
-    """Interface for builders of currency exchange rates"""
+class CurrencyExchangeRateFactory(Protocol):
+    """Interface for currency exchange rates"""
 
-    @staticmethod
-    @abstractmethod
-    def from_response(response: Any) -> Optional[ExchangeRates]:
-        """Build exchange rates from response"""
+    def create(self, response: Any) -> Optional[ExchangeRates]:
+        """Creates exchange rates from response"""
         ...

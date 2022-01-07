@@ -10,50 +10,21 @@ from fastapi_cache.backends.redis import RedisBackend
 from starlette.templating import Jinja2Templates
 
 from bgd.services.apis.bgg import BoardGameGeekApiClient, BoardGameGeekGameInfoService
-from bgd.services.apis.fifth_element import (
-    FifthElementApiClient,
-    FifthElementSearchService,
-    GameSearchResultFifthElementBuilder,
-)
-from bgd.services.apis.hobbygames import (
-    GameSearchResultHobbyGamesBuilder,
-    HobbyGamesApiClient,
-    HobbyGamesSearchService,
-)
-from bgd.services.apis.kufar import GameSearchResultKufarBuilder, KufarApiClient, KufarSearchService
+from bgd.services.apis.fifth_element import FifthElementApiClient, FifthElementSearchService
+from bgd.services.apis.hobbygames import HobbyGamesApiClient, HobbyGamesSearchService
+from bgd.services.apis.kufar import KufarApiClient, KufarSearchService
 from bgd.services.apis.national_bank import (
     NationalBankApiClient,
-    NationalBankCurrencyExchangeRateBuilder,
-    NBCurrencyExchangeRateService,
+    NationalBankCurrencyExchangeRateService,
 )
-from bgd.services.apis.onliner import (
-    GameSearchResultOnlinerBuilder,
-    OnlinerApiClient,
-    OnlinerSearchService,
-)
-from bgd.services.apis.ozby import GameSearchResultOzByBuilder, OzByApiClient, OzBySearchService
-from bgd.services.apis.ozon import GameSearchResultOzonBuilder, OzonApiClient, OzonSearchService
+from bgd.services.apis.onliner import OnlinerApiClient, OnlinerSearchService
+from bgd.services.apis.ozby import OzByApiClient, OzBySearchService
+from bgd.services.apis.ozon import OzonApiClient, OzonSearchService
 from bgd.services.apis.tesera import TeseraApiClient, TeseraGameInfoService
-from bgd.services.apis.twenty_first_vek import (
-    GameSearchResultTwentyFirstVekBuilder,
-    TwentyFirstVekApiClient,
-    TwentyFirstVekSearchService,
-)
-from bgd.services.apis.vkontakte import (
-    GameSearchResultVkontakteBuilder,
-    VkontakteApiClient,
-    VkontakteSearchService,
-)
-from bgd.services.apis.wildberries import (
-    GameSearchResultWildberriesBuilder,
-    WildberriesApiClient,
-    WildberriesSearchService,
-)
-from bgd.services.apis.znaemigraem import (
-    GameSearchResultZnaemIgraemBuilder,
-    ZnaemIgraemApiClient,
-    ZnaemIgraemSearchService,
-)
+from bgd.services.apis.twenty_first_vek import TwentyFirstVekApiClient, TwentyFirstVekSearchService
+from bgd.services.apis.vkontakte import VkontakteApiClient, VkontakteSearchService
+from bgd.services.apis.wildberries import WildberriesApiClient, WildberriesSearchService
+from bgd.services.apis.znaemigraem import ZnaemIgraemApiClient, ZnaemIgraemSearchService
 from bgd.services.base import SimpleSuggestGameService
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -77,56 +48,48 @@ class ApplicationContainer(containers.DeclarativeContainer):
         client=providers.Singleton(TeseraApiClient),
     )
     nb_exchange_rate_service = providers.Singleton(
-        NBCurrencyExchangeRateService,
+        NationalBankCurrencyExchangeRateService,
         client=providers.Singleton(NationalBankApiClient),
-        rate_builder=NationalBankCurrencyExchangeRateBuilder,
         base_currency=config.exchange_rate.base,
         target_currency=config.exchange_rate.target,
     )
     kufar_search_service = providers.Singleton(
         KufarSearchService,
         client=providers.Singleton(KufarApiClient),
-        result_builder=GameSearchResultKufarBuilder,
         currency_exchange_rate_converter=nb_exchange_rate_service,
         game_category_id=config.kufar.game_category_id,
     )
     wildberreis_search_service = providers.Singleton(
         WildberriesSearchService,
         client=providers.Singleton(WildberriesApiClient),
-        result_builder=GameSearchResultWildberriesBuilder,
         currency_exchange_rate_converter=nb_exchange_rate_service,
         game_category_id=config.wildberries.game_category_id,
     )
     ozon_search_service = providers.Singleton(
         OzonSearchService,
         client=providers.Singleton(OzonApiClient),
-        result_builder=GameSearchResultOzonBuilder,
         currency_exchange_rate_converter=nb_exchange_rate_service,
         game_category_id=config.ozon.game_category_id,
     )
     ozby_search_service = providers.Singleton(
         OzBySearchService,
         client=providers.Singleton(OzByApiClient),
-        result_builder=GameSearchResultOzByBuilder,
         currency_exchange_rate_converter=nb_exchange_rate_service,
         game_category_id=config.ozby.game_category_id,
     )
     onliner_search_service = providers.Singleton(
         OnlinerSearchService,
         client=providers.Singleton(OnlinerApiClient),
-        result_builder=GameSearchResultOnlinerBuilder,
         currency_exchange_rate_converter=nb_exchange_rate_service,
     )
     twenty_first_vek_service = providers.Singleton(
         TwentyFirstVekSearchService,
         client=providers.Singleton(TwentyFirstVekApiClient),
-        result_builder=GameSearchResultTwentyFirstVekBuilder,
         currency_exchange_rate_converter=nb_exchange_rate_service,
     )
     fifth_element_service = providers.Singleton(
         FifthElementSearchService,
         client=providers.Singleton(FifthElementApiClient),
-        result_builder=GameSearchResultFifthElementBuilder,
         currency_exchange_rate_converter=nb_exchange_rate_service,
         game_category_id=config.fifthelement.game_category_id,
         search_app_id=config.fifthelement.search_app_id,
@@ -134,7 +97,6 @@ class ApplicationContainer(containers.DeclarativeContainer):
     vk_service = providers.Singleton(
         VkontakteSearchService,
         client=providers.Singleton(VkontakteApiClient),
-        result_builder=GameSearchResultVkontakteBuilder,
         currency_exchange_rate_converter=nb_exchange_rate_service,
         group_id=config.vk.group_id,
         group_name=config.vk.group_name,
@@ -145,13 +107,11 @@ class ApplicationContainer(containers.DeclarativeContainer):
     znaem_igraem_service = providers.Singleton(
         ZnaemIgraemSearchService,
         client=providers.Singleton(ZnaemIgraemApiClient),
-        result_builder=GameSearchResultZnaemIgraemBuilder,
         currency_exchange_rate_converter=nb_exchange_rate_service,
     )
     hobbygames = providers.Singleton(
         HobbyGamesSearchService,
         client=providers.Singleton(HobbyGamesApiClient),
-        result_builder=GameSearchResultHobbyGamesBuilder,
         currency_exchange_rate_converter=nb_exchange_rate_service,
     )
     data_sources = providers.List(

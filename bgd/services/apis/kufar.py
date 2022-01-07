@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from bgd.constants import BELARUS, KUFAR
 from bgd.responses import GameLocation, GameOwner, GameSearchResult, Price
-from bgd.services.abc import GameSearchResultBuilder
+from bgd.services.abc import GameSearchResultFactory
 from bgd.services.api_clients import JsonHttpApiClient
 from bgd.services.base import GameSearchService
 from bgd.services.constants import GET
@@ -49,22 +49,26 @@ class KufarSearchService(GameSearchService):
         products = self.filter_results(search_response.response["ads"])
         return self.build_results(products)
 
+    @property
+    def result_factory(self) -> GameSearchResultFactory:
+        """Creates result factory"""
+        return KufarGameSearchResultFactory()
 
-class GameSearchResultKufarBuilder(GameSearchResultBuilder):
+
+class KufarGameSearchResultFactory:
     """builder for GameSearchResult from Kufar data source"""
 
     IMAGE_URL = "https://yams.kufar.by/api/v1/kufar-ads/images/{}/{}.jpg?rule=gallery"
     USER_URL = "https://www.kufar.by/user/{}"
 
-    @classmethod
-    def from_search_result(cls, search_result: dict) -> GameSearchResult:
+    def create(self, search_result: dict) -> GameSearchResult:
         """Builds GameSearchResult from search result"""
         return GameSearchResult(
             description="",  # @TODO: how to get it?
-            images=cls._extract_images(search_result),
-            location=cls._extract_product_location(search_result),
-            owner=cls._extract_owner_info(search_result),
-            price=cls._extract_price(search_result),
+            images=self._extract_images(search_result),
+            location=self._extract_product_location(search_result),
+            owner=self._extract_owner_info(search_result),
+            price=self._extract_price(search_result),
             source=KUFAR,
             subject=search_result.get("subject"),
             url=search_result.get("ad_link"),
@@ -75,22 +79,20 @@ class GameSearchResultKufarBuilder(GameSearchResultBuilder):
         """Extract ad price"""
         return Price(amount=int(ad_item["price_byn"]))
 
-    @classmethod
-    def _extract_images(cls, ad_item: dict) -> list:
+    def _extract_images(self, ad_item: dict) -> list:
         """Extracts ad images"""
         return [
-            cls.IMAGE_URL.format(img.get("id")[:2], img.get("id"))
+            self.IMAGE_URL.format(img.get("id")[:2], img.get("id"))
             for img in ad_item["images"]
             if img.get("yams_storage")
         ]
 
-    @classmethod
-    def _extract_product_location(cls, ad_item: dict) -> GameLocation:
+    def _extract_product_location(self, ad_item: dict) -> GameLocation:
         """Extract location of item"""
         params: list = ad_item["ad_parameters"]
         return GameLocation(
-            area=cls._extract_ad_area(params) or "",
-            city=cls._extract_ad_city(params) or "",
+            area=self._extract_ad_area(params) or "",
+            city=self._extract_ad_city(params) or "",
             country=BELARUS,
         )
 

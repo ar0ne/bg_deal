@@ -8,7 +8,7 @@ import orjson
 
 from bgd.constants import OZON
 from bgd.responses import GameSearchResult, Price
-from bgd.services.abc import GameSearchResultBuilder
+from bgd.services.abc import GameSearchResultFactory
 from bgd.services.api_clients import JsonHttpApiClient
 from bgd.services.base import GameSearchService
 from bgd.services.constants import GET
@@ -69,33 +69,36 @@ class OzonSearchService(GameSearchService):
                 return key
         return None
 
+    @property
+    def result_factory(self) -> GameSearchResultFactory:
+        """Creates result factory"""
+        return OzonGameSearchResultFactory()
 
-class GameSearchResultOzonBuilder(GameSearchResultBuilder):
+
+class OzonGameSearchResultFactory:
     """Builder for game search results from Ozon"""
 
     ITEM_URL = "https://ozon.ru"
 
-    @classmethod
-    def from_search_result(cls, search_result: dict) -> GameSearchResult:
+    def create(self, search_result: dict) -> GameSearchResult:
         """Builds game search result from ozon data source search result"""
         return GameSearchResult(
             description="",  # @TODO: how to get it?
-            images=cls._extract_images(search_result),
+            images=self._extract_images(search_result),
             location=None,
             owner=None,
-            price=cls._extract_price(search_result),
+            price=self._extract_price(search_result),
             source=OZON,
-            subject=cls._extract_subject(search_result),
-            url=cls._extract_url(search_result),
+            subject=self._extract_subject(search_result),
+            url=self._extract_url(search_result),
         )
 
-    @classmethod
-    def _extract_url(cls, item: dict) -> Optional[str]:
+    def _extract_url(self, item: dict) -> Optional[str]:
         """Extract url"""
         url = item["action"]["link"]
         if not url:
             return None
-        return cls.ITEM_URL + url
+        return self.ITEM_URL + url
 
     @staticmethod
     def _extract_price(item: dict) -> Optional[Price]:

@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from bgd.constants import OZBY
 from bgd.responses import GameSearchResult, Price
-from bgd.services.abc import GameSearchResultBuilder
+from bgd.services.abc import GameSearchResultFactory
 from bgd.services.api_clients import JsonHttpApiClient
 from bgd.services.base import GameSearchService
 from bgd.services.constants import GET
@@ -37,24 +37,28 @@ class OzBySearchService(GameSearchService):
         products = self.filter_results(response.response["data"])
         return self.build_results(products)
 
+    @property
+    def result_factory(self) -> GameSearchResultFactory:
+        """Creates result factory"""
+        return OzByGameSearchResultFactory()
 
-class GameSearchResultOzByBuilder(GameSearchResultBuilder):
-    """GameSearchResult Builder for oz.by"""
+
+class OzByGameSearchResultFactory:
+    """GameSearchResult factory for oz.by"""
 
     GAME_URL = "https://oz.by/boardgames/more{}.html"
 
-    @classmethod
-    def from_search_result(cls, search_result: dict) -> GameSearchResult:
+    def create(self, search_result: dict) -> GameSearchResult:
         """Builds game search result from ozon data source search result"""
         return GameSearchResult(
-            description=cls._extract_description(search_result),
-            images=cls._extract_images(search_result),
+            description=self._extract_description(search_result),
+            images=self._extract_images(search_result),
             location=None,
             owner=None,
-            price=cls._extract_price(search_result),
+            price=self._extract_price(search_result),
             source=OZBY,
-            subject=cls._extract_subject(search_result),
-            url=cls._extract_url(search_result),
+            subject=self._extract_subject(search_result),
+            url=self._extract_url(search_result),
         )
 
     @staticmethod
@@ -75,10 +79,9 @@ class GameSearchResultOzByBuilder(GameSearchResultBuilder):
         """Extracts subject"""
         return item["attributes"]["title"]
 
-    @classmethod
-    def _extract_url(cls, item: dict) -> str:
+    def _extract_url(self, item: dict) -> str:
         """Extracts item url"""
-        return cls.GAME_URL.format(item["id"])
+        return self.GAME_URL.format(item["id"])
 
     @staticmethod
     def _extract_description(item: dict) -> str:

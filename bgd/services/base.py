@@ -11,7 +11,7 @@ from fastapi_cache.decorator import cache
 
 from bgd.errors import GameNotFoundError
 from bgd.responses import GameDetailsResult, GameSearchResult, Price
-from bgd.services.abc import GameDetailsResultFactory, GameSearchResultBuilder
+from bgd.services.abc import GameDetailsResultFactory, GameSearchResultFactory
 from bgd.services.api_clients import GameInfoSearcher, GameSearcher
 from bgd.services.types import ExchangeRates, GameAlias
 
@@ -62,14 +62,12 @@ class GameSearchService(ABC):
     def __init__(
         self,
         client: GameSearcher,
-        result_builder: GameSearchResultBuilder,
         currency_exchange_rate_converter: CurrencyExchangeRateService,
         game_category_id: Optional[Union[str, int]] = None,
     ) -> None:
         """Init Search Service"""
         self._client = client
         self._game_category_id = game_category_id
-        self._result_builder = result_builder
         self._currency_converter = currency_exchange_rate_converter
 
     @abstractmethod
@@ -107,7 +105,7 @@ class GameSearchService(ABC):
         """prepare search results for end user"""
         if not (items and len(items)):
             return []
-        return list(map(self._result_builder.from_search_result, items))
+        return list(map(self.result_factory.create, items))
 
     def _log_errors(self, all_responses: Tuple[Union[Any, Exception]]) -> None:
         """Log errors if any occur"""
@@ -119,6 +117,11 @@ class GameSearchService(ABC):
                     self._client.__class__.__name__,
                     exc_info=True,
                 )
+
+    @property
+    @abstractmethod
+    def result_factory(self) -> GameSearchResultFactory:
+        """Get game search result factory"""
 
 
 class SuggestGameService(ABC):
