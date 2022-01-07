@@ -5,6 +5,7 @@ import datetime
 import logging
 from typing import Optional
 
+from fastapi_cache.decorator import cache
 from libbgg.infodict import InfoDict
 
 from bgd.responses import Price
@@ -80,6 +81,7 @@ class NationalBankCurrencyExchangeRateService:
             currency=self._target_currency,
         )
 
+    @cache()
     async def get_rates(self) -> Optional[ExchangeRates]:
         """Get actual currency exchange rates"""
         today = datetime.date.today()
