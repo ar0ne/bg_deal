@@ -7,6 +7,8 @@ from typing import Any, List
 
 import orjson
 from fastapi import Request
+from fastapi.encoders import jsonable_encoder
+from fastapi_cache import Coder
 
 from bgd.services.base import GameSearchService
 
@@ -16,9 +18,23 @@ logger = logging.getLogger(__name__)
 STREAM_RETRY_TIMEOUT = 30000  # milliseconds
 
 
+class ORJsonCoder(Coder):
+    """orjson coder"""
+
+    @classmethod
+    def encode(cls, value: Any) -> bytes:
+        """serialize python object to json-bytes"""
+        return orjson.dumps(value, default=jsonable_encoder)  # pylint: disable=no-member
+
+    @classmethod
+    def decode(cls, value: Any) -> Any:
+        """deserializes JSON to Python objects"""
+        return orjson.loads(value)  # pylint: disable=no-member
+
+
 def serialize_event_data(data: Any) -> str:
     """Convert event data to JSON-string"""
-    return orjson.dumps(data).decode("utf-8")
+    return orjson.dumps(data).decode("utf-8")  # pylint: disable=no-member
 
 
 async def game_deals_finder(
@@ -43,7 +59,7 @@ async def game_deals_finder(
                 }
 
         logger.debug("We processed all data sources. Close connection.")
-        elapsed_time = "%.2f" % (time.time() - start)
+        elapsed_time = f"{time.time() - start:.2f}"
         yield {
             "event": "end",
             "data": serialize_event_data(

@@ -59,7 +59,7 @@ class OzonSearchService(GameSearchService):
         key = self._find_search_v2_key(widget_states)
         if not key:
             return None
-        return orjson.loads(widget_states[key])
+        return orjson.loads(widget_states[key])  # pylint: disable=no-member
 
     @staticmethod
     def _find_search_v2_key(states: dict) -> Optional[str]:

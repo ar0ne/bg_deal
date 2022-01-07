@@ -15,6 +15,7 @@ from starlette_json import ORJsonMiddleware
 from bgd import endpoints, errors
 from bgd.containers import ApplicationContainer
 from bgd.errors import ServiceException
+from bgd.utils import ORJsonCoder
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -49,7 +50,7 @@ def startup_event(
     cache_ttl: int = Provide["config.cache.ttl", required().as_int()],
 ) -> None:
     """On startup callback"""
-    FastAPICache.init(cache_backend, prefix=cache_prefix, expire=cache_ttl)
+    FastAPICache.init(cache_backend, prefix=cache_prefix, expire=cache_ttl, coder=ORJsonCoder)
 
 
 app = create_app()

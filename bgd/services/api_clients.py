@@ -84,7 +84,7 @@ class JSONResource:
         """Prepare request to work with JSON resources"""
         kwargs_copy: dict = kwargs.copy()
         body = kwargs_copy.pop("body", None)
-        kwargs_copy["json"] = None if not body else orjson.dumps(body)
+        kwargs_copy["json"] = None if not body else orjson.dumps(body)  # pylint: disable=no-member
         return APIRequest(**kwargs_copy)
 
     @staticmethod

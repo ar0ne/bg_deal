@@ -3,7 +3,7 @@ App containers
 """
 import os
 
-import aioredis as aioredis
+import aioredis
 from dependency_injector import containers, providers
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.backends.redis import RedisBackend
