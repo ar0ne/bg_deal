@@ -18,7 +18,7 @@ vk:
   api_token: ${VK_API_TOKEN:}
   limit: 100
 app:
-  suggested_games: Gloomhaven, Иниш, Немезида, Too Many Bones, Twilight Struggle, Особняки безумия, Сумерки Империи, Война Кольца, Terraforming Mars, Сквозь века, Остров духов, Terra Mystica, Крылья, Виноделие, Root, Imperial Assault, Azul, Patchwork, Серп
+  suggested_games: Gloomhaven, Иниш, Немезида, Too Many Bones, Twilight Struggle, Особняки безумия, Сумерки Империи, Война Кольца, Покорение Марса, Сквозь века, Остров духов, Terra Mystica, Крылья, Виноделие, Root, Imperial Assault, Azul, Patchwork, Серп
 exchange_rate:
   base: BYN
   target: USD

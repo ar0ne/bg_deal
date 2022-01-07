@@ -120,4 +120,6 @@ class GameSearchResultKufarBuilder(GameSearchResultBuilder):
             if k == "v"
         ]
         user_id = ad_item.get("account_id")
+        if not user_id:
+            user_id = ""
         return GameOwner(id=user_id, name=" ".join(name), url=cls.USER_URL.format(user_id))

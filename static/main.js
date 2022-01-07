@@ -76,8 +76,8 @@ var app = new Vue({
             }
             const evtSource = new EventSource("/api/v1/stream-search/?game=" + value);
             evtSource.addEventListener("update", function(event) {
-                console.log(event);
                 var new_deals = JSON.parse(event["data"]);
+                console.log(new_deals);
                 new_deals.forEach(deal => {
                     that.deals.push({
                         id: dealsStorage.uid++,

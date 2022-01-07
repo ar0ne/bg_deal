@@ -140,7 +140,6 @@
                                         <div class="col-md-11">
                                             <div class="card-body">
                                                 <p v-if="result.description" class="card-text">Description: {{ result.description }}</p>
-                                                <p v-else class="card-text">Description: N/A</p>
                                                 <p v-if="result.price" class="card-text">Price: {{ result.price.amount/100 }}
                                                     {{ result.price.currency }} / {{ result.price_converted.amount/100 }}
                                                     {{ result.price_converted.currency }} </p>
@@ -149,10 +148,7 @@
                                                     Location: {{ result.location.country }} / {{ result.location.city }} / {{ result.location.area }}
                                                 </p>
                                                 <p v-if="result.owner" class="card-text">Owner: {{ result.owner.name }}
-                                                    (ID:
-                                                    <a v-if="result.owner.url" v-bind:href="result.owner.url">{{ result.owner.id }}</a>
-                                                    <a v-else>{{ result.owner.id }}</a>
-                                                    )
+                                                    <span v-if="result.owner.id">(ID: <a v-bind:href="result.owner.url">{{ result.owner.id }}</a>)</span>
                                                 </p>
                                             </div>
                                         </div>
