@@ -99,6 +99,7 @@ class VKontakteGameSearchResultFactory:
     GROUP_POST_PATH = "/{}?w=wall{}_{}"
 
     def create(self, search_result: dict) -> GameSearchResult:
+        """Create game search result"""
         return GameSearchResult(
             description=search_result["text"],
             images=self._extract_images(search_result),

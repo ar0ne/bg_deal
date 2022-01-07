@@ -54,6 +54,7 @@ class TeseraGameDetailsResultFactory:
     """Factory for result for game details from Tesera service"""
 
     def create(self, game_info: Any) -> GameDetailsResult:
+        """Create game details result"""
         game = game_info["game"]
         return GameDetailsResult(
             best_num_players=self._extract_best_num_players(game),
