@@ -8,6 +8,7 @@ fastapi==0.68.1
 Jinja2==3.0.1
 py-bgg==0.3.1
 pydantic==1.8.2
+python-environ==0.4.54
 PyYAML==5.4.1
 sse-starlette==0.10.0
 starlette==0.14.2

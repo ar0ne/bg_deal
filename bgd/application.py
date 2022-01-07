@@ -4,6 +4,7 @@ Application entrypoint
 import logging
 import os
 
+from environ import Env
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
@@ -16,6 +17,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def create_app() -> FastAPI:
     """Create application"""
+    env = Env()
+    env.read_env(f"{BASE_DIR}/.env")
 
     container = ApplicationContainer()
     container.config.from_yaml(f"{BASE_DIR}/config.yml", envs_required=True)

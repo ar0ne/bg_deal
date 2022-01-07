@@ -1,0 +1,15 @@
+*.cfg
+*.ini
+.github
+.gitignore
+.mypy_cache
+.pre-commit-config.yaml
+.tox
+Dockerfile
+Procfile
+debug.py
+pylintrc
+pyproject.toml
+setup.py
+test_requirements.txt
+venv
