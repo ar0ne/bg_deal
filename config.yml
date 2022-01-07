@@ -24,6 +24,6 @@ exchange_rate:
   target: USD
 cache:
   prefix: bgd
-  ttl: 60
+  ttl: 900
   backend: ${CACHE_BACKEND:in_memory}
   url: ${CACHE_URL:}

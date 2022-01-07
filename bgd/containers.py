@@ -181,9 +181,10 @@ class ApplicationContainer(containers.DeclarativeContainer):
         games=config.app.suggested_games,
     )
     redis = providers.Singleton(
-        providers.Callable(
-            aioredis.from_url, config.cache.url, encoding="utf8", decode_responses=True
-        )
+        aioredis.from_url,
+        config.cache.url,
+        encoding="utf8",
+        decode_responses=True,
     )
     cache_backend = providers.Selector(
         config.cache.backend,

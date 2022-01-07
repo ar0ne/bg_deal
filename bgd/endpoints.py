@@ -33,9 +33,9 @@ async def index_page(
     return templates.TemplateResponse(INDEX_PAGE, {"request": request})
 
 
-@cache()
 @router.get(API_VERSION + "/game-info/{game}", response_model=GameDetailsResult)
 @inject
+@cache()
 async def game_info(
     game: str,
     board_game_geek: GameInfoService = Depends(Provide[ApplicationContainer.bgg_service]),
