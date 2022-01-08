@@ -48,7 +48,7 @@ class CurrencyExchangeRateService(Protocol):
     """Currency exchange rate service interface"""
 
     async def convert(self, price: Optional[Price]) -> Optional[Price]:
-        """Convert amount to another currency"""
+        """Convert price to another currency"""
         ...
 
     async def get_rates(self) -> Optional[ExchangeRates]:
@@ -94,10 +94,8 @@ class GameSearchService(ABC):
         results = list(filter(lambda r: r and isinstance(r, list), responses))
         # extract results if results is not empty
         search_results = results[0] if results else results
-        # provide converted prices
-        for result in search_results:  # type: ignore
-            target_price = await self._currency_converter.convert(result.price)  # type: ignore
-            result.price_converted = target_price  # type: ignore
+        # add converted prices
+        await self.prepare_prices(search_results)
         # convert from dto to dicts, to make possible to cache it
         return list(map(lambda s: s.dict(), search_results))  # type: ignore
 
@@ -117,6 +115,17 @@ class GameSearchService(ABC):
                     self._client.__class__.__name__,
                     exc_info=True,
                 )
+
+    async def prepare_prices(self, search_results: List[GameSearchResult]) -> None:
+        """prepare prices for rendering"""
+        # provide converted prices
+        for result in search_results:  # type: ignore
+            if not result.price:
+                continue
+            target_price = await self._currency_converter.convert(result.price)  # type: ignore
+            result.price_converted = target_price  # type: ignore
+            result.price.amount /= 100
+            result.price_converted.amount /= 100
 
     @property
     @abstractmethod

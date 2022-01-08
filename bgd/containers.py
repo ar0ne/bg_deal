@@ -13,6 +13,7 @@ from bgd.services.apis.bgg import BoardGameGeekApiClient, BoardGameGeekGameInfoS
 from bgd.services.apis.fifth_element import FifthElementApiClient, FifthElementSearchService
 from bgd.services.apis.hobbygames import HobbyGamesApiClient, HobbyGamesSearchService
 from bgd.services.apis.kufar import KufarApiClient, KufarSearchService
+from bgd.services.apis.lavkaigr import LavkaIgrApiClient, LavkaIgrSearchService
 from bgd.services.apis.national_bank import (
     NationalBankApiClient,
     NationalBankCurrencyExchangeRateService,
@@ -50,8 +51,6 @@ class ApplicationContainer(containers.DeclarativeContainer):
     nb_exchange_rate_service = providers.Singleton(
         NationalBankCurrencyExchangeRateService,
         client=providers.Singleton(NationalBankApiClient),
-        base_currency=config.exchange_rate.base,
-        target_currency=config.exchange_rate.target,
     )
     kufar_search_service = providers.Singleton(
         KufarSearchService,
@@ -114,10 +113,16 @@ class ApplicationContainer(containers.DeclarativeContainer):
         client=providers.Singleton(HobbyGamesApiClient),
         currency_exchange_rate_converter=nb_exchange_rate_service,
     )
+    lavkaigr = providers.Singleton(
+        LavkaIgrSearchService,
+        client=providers.Singleton(LavkaIgrApiClient),
+        currency_exchange_rate_converter=nb_exchange_rate_service,
+    )
     data_sources = providers.List(
         fifth_element_service,
         hobbygames,
         kufar_search_service,
+        lavkaigr,
         onliner_search_service,
         ozby_search_service,
         ozon_search_service,

@@ -8,6 +8,7 @@ from typing import Optional
 from fastapi_cache.decorator import cache
 from libbgg.infodict import InfoDict
 
+from bgd.constants import BYN, RUB, USD
 from bgd.responses import Price
 from bgd.services.abc import CurrencyExchangeRateFactory
 from bgd.services.api_clients import CurrencyExchangeRateSearcher, XmlHttpApiClient
@@ -50,21 +51,12 @@ class NationalBankCurrencyExchangeRateFactory:
 class NationalBankCurrencyExchangeRateService:
     """National bank currency exchange rate service"""
 
-    def __init__(
-        self,
-        client: CurrencyExchangeRateSearcher,
-        base_currency: str,
-        target_currency: str,
-    ) -> None:
+    def __init__(self, client: CurrencyExchangeRateSearcher) -> None:
         """
         Init exchange rate service
         :param CurrencyExchangeRateSearcher client: A searcher of currency exchange rates.
-        :param str base_currency: 3-letters currency code from which service does conversion.
-        :param str target_currency: 3-letters currency code for conversion.
         """
         self._client = client
-        self._target_currency = target_currency
-        self._base_currency = base_currency
         self._rates: Optional[ExchangeRates] = None
         self._expiration_date: Optional[datetime.date] = None
 
@@ -72,14 +64,32 @@ class NationalBankCurrencyExchangeRateService:
         """Convert amount to another currency"""
         if not price:
             return None
+        target_currency = USD if price.currency == BYN else BYN
+        if price.currency == target_currency:
+            return price
         rates = await self.get_rates()
-        if not (rates and self._target_currency in rates):
+        if not rates:
             return None
-        exchange_rate = rates[self._target_currency]
+        if price.currency == BYN and target_currency not in rates:
+            return None
+        target = target_currency
+        if price.currency != BYN:
+            # nb providers rates only for BYN, reverse conversion otherwise
+            target = price.currency
+        exchange_rate = rates[target]
         return Price(
-            amount=round(price.amount / exchange_rate),
-            currency=self._target_currency,
+            amount=self._calculate_amount(price, target_currency, exchange_rate),
+            currency=target_currency,
         )
+
+    def _calculate_amount(self, price: Price, target_currency: str, exchange_rate: float) -> int:
+        """calculate amount"""
+        if target_currency == BYN:
+            if price.currency == RUB:
+                return round(price.amount / 100 * exchange_rate)
+            else:
+                return round(price.amount * exchange_rate)
+        return round(price.amount / exchange_rate)
 
     @cache()
     async def get_rates(self) -> Optional[ExchangeRates]:

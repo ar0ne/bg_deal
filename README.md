@@ -16,6 +16,7 @@
  - 5element.by
  - znaemigraem.by
  - hobbygames.by
+ - lavkaigr.ru
 
 
 ## How to run

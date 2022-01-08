@@ -140,9 +140,9 @@
                                         <div class="col-md-11">
                                             <div class="card-body">
                                                 <p v-if="result.description" class="card-text">Description: {{ result.description }}</p>
-                                                <p v-if="result.price" class="card-text">Price: {{ result.price.amount/100 }}
-                                                    {{ result.price.currency }} / {{ result.price_converted.amount/100 }}
-                                                    {{ result.price_converted.currency }} </p>
+                                                <p v-if="result.price" class="card-text">Price: {{ result.price.amount }} {{ result.price.currency }}
+                                                    <span v-if="result.price_converted"> / {{ result.price_converted.amount }} {{ result.price_converted.currency }}</span>
+                                                </p>
                                                 <p v-else class="card-text">Price: N/A</p>
                                                 <p v-if="result.location" class="card-text">
                                                     Location: {{ result.location.country }} / {{ result.location.city }} / {{ result.location.area }}

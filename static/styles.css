@@ -80,6 +80,9 @@ main {
 .hobbygames-logo {
     content: url("https://hobbygames.by/assets/img/svg/logo.svg");
 }
+.lavkaigr-logo {
+    content: url("https://www.lavkaigr.ru/media/static/images/logo_main.png");
+}
 .elapsed-search-time {
     font-size: x-small;
     text-align: right;
