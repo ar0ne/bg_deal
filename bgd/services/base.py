@@ -92,12 +92,12 @@ class GameSearchService(ABC):
         )
         self._log_errors(responses)
         # filter exceptions
-        results = list(filter(lambda r: r and isinstance(r, list), responses))
+        results = tuple(filter(lambda r: r and isinstance(r, list), responses))
         # extract results if results is not empty
         search_results = results[0] if results else results
         # add prices in different currencies
         search_results_priced = tuple(
-            await self.prepare_prices(result) for result in search_results  # type: ignore
+            [await self.prepare_prices(result) for result in search_results]  # type: ignore
         )
         # convert from dto to dicts, to make possible to cache it
         return tuple(map(lambda s: s.dict(), search_results_priced))  # type: ignore
@@ -119,24 +119,25 @@ class GameSearchService(ABC):
                     exc_info=True,
                 )
 
-    async def prepare_prices(self, result: GameSearchResult) -> None:
+    async def prepare_prices(self, result: GameSearchResult) -> GameSearchResult:
         """add prices in different currencies"""
         if not result.prices:
-            return
+            return result
         base_price = result.prices[0]
         if base_price.currency == BYN:
             price_in_usd = await self._currency_converter.convert(base_price, USD)
             if not price_in_usd:
-                return
+                return result
             result.prices.append(price_in_usd)
         elif base_price.currency == RUB:
             price_in_byn = await self._currency_converter.convert(base_price, BYN)
             if not price_in_byn:
-                return
+                return result
             result.prices.append(price_in_byn)
             price_in_usd = await self._currency_converter.convert(price_in_byn, USD)
             if price_in_usd:
                 result.prices.append(price_in_usd)
+        return result
 
     @property
     @abstractmethod

@@ -140,14 +140,12 @@
                                         <div class="col-md-11">
                                             <div class="card-body">
                                                 <p v-if="result.description" class="card-text">Description: {{ result.description }}</p>
-                                                <section>
-                                                    <div v-if="result.prices && result.prices.length" class="card-text">
-                                                        <span v-for="(price, index) in result.prices">
-                                                            {{ price | price_and_currency }} <span v-if="index + 1 != result.prices.length">/</span>
-                                                        </span>
-                                                    </div>
-                                                    <div v-else class="card-text">Price: N/A</div>
-                                                </section>
+                                                <p v-if="result.prices && result.prices.length" class="card-text">
+                                                    <span v-for="(price, index) in result.prices">
+                                                        {{ price | price_and_currency }} <span v-if="index + 1 != result.prices.length">/</span>
+                                                    </span>
+                                                </p>
+                                                <p v-else class="card-text">Price: N/A</p>
 
                                                 <p v-if="result.location" class="card-text">
                                                     Location: {{ result.location.country }} / {{ result.location.city }} / {{ result.location.area }}
