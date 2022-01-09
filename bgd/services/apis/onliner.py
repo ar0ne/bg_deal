@@ -1,7 +1,7 @@
 """
 Onliner (catalog) API Client
 """
-from typing import List, Optional
+from typing import Optional, Tuple
 
 from bgd.constants import ONLINER
 from bgd.responses import GameSearchResult, Price
@@ -28,7 +28,7 @@ class OnlinerApiClient(JsonHttpApiClient):
 class OnlinerSearchService(GameSearchService):
     """Search service for onliner.by"""
 
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> Tuple[GameSearchResult]:
         response = await self._client.search(query, **kwargs)
         products = self.filter_results(response.response["products"], self._is_available_game)
         return self.build_results(products)

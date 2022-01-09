@@ -1,7 +1,7 @@
 """
 5 element API Client
 """
-from typing import List, Optional
+from typing import Optional, Tuple
 
 from bgd.constants import FIFTHELEMENT
 from bgd.responses import GameSearchResult, Price
@@ -40,7 +40,7 @@ class FifthElementSearchService(GameSearchService):
         super().__init__(client, currency_exchange_rate_converter)
         self._search_app_id = search_app_id
 
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> Tuple[GameSearchResult]:
         response = await self._client.search(query, {"search_app_id": self._search_app_id})
         products = self.filter_results(
             response.response["results"]["items"], self._is_available_game

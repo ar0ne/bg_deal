@@ -3,7 +3,7 @@ VKontakte (vk.com) API Client
 """
 import itertools
 import re
-from typing import List, Optional
+from typing import Optional, Tuple
 
 from bgd.constants import VK
 from bgd.responses import GameOwner, GameSearchResult
@@ -63,7 +63,7 @@ class VkontakteSearchService(GameSearchService):
         self.limit = limit
         self._query = ""
 
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> Tuple[GameSearchResult]:
         self._query = query
         search_response = await self._client.search(
             query,

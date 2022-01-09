@@ -1,7 +1,7 @@
 """
 Kufar.by API Client
 """
-from typing import List, Optional
+from typing import Optional, Tuple
 
 from bgd.constants import BELARUS, KUFAR
 from bgd.responses import GameLocation, GameOwner, GameSearchResult, Price
@@ -43,7 +43,7 @@ class KufarApiClient(JsonHttpApiClient):
 class KufarSearchService(GameSearchService):
     """Service for work with Kufar api"""
 
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> Tuple[GameSearchResult]:
         """Search ads by game name"""
         search_response = await self._client.search(query, {"category": self._game_category_id})
         products = self.filter_results(search_response.response["ads"])

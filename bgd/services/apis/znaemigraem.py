@@ -1,7 +1,7 @@
 """
 Api Client for znaemigraem.by
 """
-from typing import List, Optional
+from typing import Optional, Tuple
 
 from bs4 import BeautifulSoup
 
@@ -34,7 +34,7 @@ class ZnaemIgraemSearchService(GameSearchService):
         """True if game is available for purchase"""
         return product["available"]
 
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> Tuple[GameSearchResult]:
         """Search query"""
         html_page = await self._client.search(query)
         # find products on search page

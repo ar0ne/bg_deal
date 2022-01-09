@@ -1,7 +1,7 @@
 """
 21.vek API Client
 """
-from typing import List, Optional
+from typing import Optional, Tuple
 
 from bgd.constants import TWENTYFIRSTVEK
 from bgd.responses import GameSearchResult, Price
@@ -35,7 +35,7 @@ class TwentyFirstVekSearchService(GameSearchService):
             and "board_games" in product["url"]
         )
 
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> Tuple[GameSearchResult]:
         """Search on api and build response"""
         response = await self._client.search(query, **kwargs)
         products = self.filter_results(response.response["items"], self._is_available_game)

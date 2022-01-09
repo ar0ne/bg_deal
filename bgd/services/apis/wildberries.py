@@ -1,7 +1,7 @@
 """
 Wildberries API Client
 """
-from typing import List, Optional
+from typing import Optional, Tuple
 
 from bgd.constants import WILDBERRIES
 from bgd.responses import GameSearchResult, Price
@@ -67,7 +67,7 @@ class WildberriesApiClient(JsonHttpApiClient):
 class WildberriesSearchService(GameSearchService):
     """Service for work with Wildberries api"""
 
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> Tuple[GameSearchResult]:
         search_results = await self._client.search(query)
         products = self.filter_results(
             search_results.response["data"]["products"], self._is_available_game

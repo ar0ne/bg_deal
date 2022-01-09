@@ -1,7 +1,7 @@
 """
 Hobbygames.by API Client
 """
-from typing import List, Optional
+from typing import Optional, Tuple
 
 from bs4 import BeautifulSoup
 
@@ -30,7 +30,7 @@ class HobbyGamesApiClient(HtmlHttpApiClient):
 class HobbyGamesSearchService(GameSearchService):
     """Search service for hobby games"""
 
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> Tuple[GameSearchResult]:
         """Search query"""
         html_page = await self._client.search(query)
         # find products on search page

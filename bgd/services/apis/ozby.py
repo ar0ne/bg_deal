@@ -1,7 +1,7 @@
 """
 Oz.by API Client
 """
-from typing import List, Optional
+from typing import Optional, Tuple
 
 from bgd.constants import OZBY
 from bgd.responses import GameSearchResult, Price
@@ -32,7 +32,7 @@ class OzByApiClient(JsonHttpApiClient):
 class OzBySearchService(GameSearchService):
     """Search service for oz.by"""
 
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> Tuple[GameSearchResult]:
         response = await self._client.search(query, {"category": self._game_category_id, **kwargs})
         products = self.filter_results(response.response["data"])
         return self.build_results(products)

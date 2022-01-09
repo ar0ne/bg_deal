@@ -2,10 +2,11 @@
 App Services
 """
 import asyncio
+import collections
 import logging
 import random
 from abc import ABC, abstractmethod
-from typing import Any, Callable, List, Optional, Protocol, Sequence, Tuple, Union
+from typing import Any, Callable, Optional, Protocol, Sequence, Tuple, Union
 
 from fastapi_cache.decorator import cache
 
@@ -72,7 +73,7 @@ class GameSearchService(ABC):
         self._currency_converter = currency_exchange_rate_converter
 
     @abstractmethod
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> Tuple[GameSearchResult]:
         """search query"""
 
     def filter_results(self, products: list, filter_func: Optional[Callable] = None) -> list:
@@ -92,26 +93,26 @@ class GameSearchService(ABC):
         )
         self._log_errors(responses)
         # filter exceptions
-        results = tuple(filter(lambda r: r and isinstance(r, list), responses))
+        results = tuple(filter(lambda r: r and isinstance(r, collections.abc.Sequence), responses))
         # extract results if results is not empty
         search_results = results[0] if results else results
         # add prices in different currencies
-        search_results_priced = tuple(
-            [await self.prepare_prices(result) for result in search_results]  # type: ignore
-        )
+        search_results_priced = [
+            await self.prepare_prices(result) for result in search_results  # type: ignore
+        ]
         # convert from dto to dicts, to make possible to cache it
-        return tuple(map(lambda s: s.dict(), search_results_priced))
+        return tuple(res.dict() for res in search_results_priced)
 
-    def build_results(self, items: Optional[list]) -> List[GameSearchResult]:
+    def build_results(self, items: Optional[list]) -> Tuple[GameSearchResult]:
         """prepare search results for end user"""
-        if not (items and len(items)):
-            return []
-        return list(map(self.result_factory.create, items))
+        if not items:
+            return ()  # type: ignore
+        return tuple(map(self.result_factory.create, items))  # type: ignore
 
     def _log_errors(self, all_responses: Tuple[Union[Any, Exception]]) -> None:
         """Log errors if any occur"""
         for resp in all_responses:
-            if not isinstance(resp, list):
+            if not isinstance(resp, tuple):
                 log.warning(
                     "Error appeared during searching: %s in %s",
                     resp,

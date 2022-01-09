@@ -2,7 +2,7 @@
 Ozon.ru API Client
 """
 import html
-from typing import List, Optional
+from typing import Optional, Tuple
 
 import orjson
 
@@ -45,11 +45,11 @@ class OzonApiClient(JsonHttpApiClient):
 class OzonSearchService(GameSearchService):
     """Search Service for ozon api"""
 
-    async def do_search(self, query: str, *args, **kwargs) -> List[GameSearchResult]:
+    async def do_search(self, query: str, *args, **kwargs) -> Tuple[GameSearchResult]:
         response = await self._client.search(query, {"category": self._game_category_id, **kwargs})
         results = self._extract_search_results(response.response)
         if not results:
-            return []
+            return ()  # type: ignore
         products = self.filter_results(results["items"])
         return self.build_results(products)
 
