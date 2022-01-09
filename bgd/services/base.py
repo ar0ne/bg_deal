@@ -100,7 +100,7 @@ class GameSearchService(ABC):
             [await self.prepare_prices(result) for result in search_results]  # type: ignore
         )
         # convert from dto to dicts, to make possible to cache it
-        return tuple(map(lambda s: s.dict(), search_results_priced))  # type: ignore
+        return tuple(map(lambda s: s.dict(), search_results_priced))
 
     def build_results(self, items: Optional[list]) -> List[GameSearchResult]:
         """prepare search results for end user"""
