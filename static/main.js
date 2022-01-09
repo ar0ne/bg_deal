@@ -45,13 +45,16 @@ var app = new Vue({
         filteredDeals: function() {
             var sorted_deals = [...this.deals];
             sorted_deals.sort(function(a, b) {
-                if (!a.price) {
+                if (!a.prices) {
                     return false;
                 }
-                if (!b.price) {
+                if (!b.prices) {
                     return true;
                 }
-                return a.price.amount - b.price.amount
+                // always sort by price in BYN
+                var price_a_in_byn = a.prices.filter(price => price.currency == "BYN")[0];
+                var price_b_in_byn = b.prices.filter(price => price.currency == "BYN")[0];
+                return price_a_in_byn.amount - price_b_in_byn.amount
             });
             return sorted_deals;
         },
@@ -86,10 +89,9 @@ var app = new Vue({
                         images: deal["images"],
                         location: deal["location"],
                         owner: deal["owner"],
-                        price: deal["price"],
+                        prices: deal["prices"],
                         source: deal["source"],
                         url: deal["url"],
-                        price_converted: deal["price_converted"],
                     });
                 });
                 that.game = "";
@@ -129,6 +131,11 @@ var app = new Vue({
                     that.game = response.data.game;
                     return that.game;
               });
+        }
+    },
+    filters: {
+        price_and_currency: function(price) {
+            return price.amount / 100 + " " + price.currency;
         }
     }
 });

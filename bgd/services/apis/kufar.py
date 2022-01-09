@@ -68,7 +68,7 @@ class KufarGameSearchResultFactory:
             images=self._extract_images(search_result),
             location=self._extract_product_location(search_result),
             owner=self._extract_owner_info(search_result),
-            price=self._extract_price(search_result),
+            prices=[self._extract_price(search_result)],
             source=KUFAR,
             subject=search_result.get("subject"),
             url=search_result.get("ad_link"),

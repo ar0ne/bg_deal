@@ -5,10 +5,11 @@ import asyncio
 import logging
 import random
 from abc import ABC, abstractmethod
-from typing import Any, Callable, List, Optional, Protocol, Tuple, Union
+from typing import Any, Callable, List, Optional, Protocol, Sequence, Tuple, Union
 
 from fastapi_cache.decorator import cache
 
+from bgd.constants import BYN, RUB, USD
 from bgd.errors import GameNotFoundError
 from bgd.responses import GameDetailsResult, GameSearchResult, Price
 from bgd.services.abc import GameDetailsResultFactory, GameSearchResultFactory
@@ -47,7 +48,7 @@ class GameInfoService(ABC):
 class CurrencyExchangeRateService(Protocol):
     """Currency exchange rate service interface"""
 
-    async def convert(self, price: Optional[Price]) -> Optional[Price]:
+    async def convert(self, price: Optional[Price], target_currency: str = USD) -> Optional[Price]:
         """Convert price to another currency"""
         ...
 
@@ -83,7 +84,7 @@ class GameSearchService(ABC):
         return list(filter(filter_func, products))
 
     @cache()
-    async def search(self, query: str, *args, **kwargs) -> List[dict]:
+    async def search(self, query: str, *args, **kwargs) -> Sequence[dict]:
         """Searching games"""
         log.info("Search data by: %s", self._client.__class__.__name__)
         responses = await asyncio.gather(
@@ -94,10 +95,12 @@ class GameSearchService(ABC):
         results = list(filter(lambda r: r and isinstance(r, list), responses))
         # extract results if results is not empty
         search_results = results[0] if results else results
-        # add converted prices
-        await self.prepare_prices(search_results)  # type: ignore
+        # add prices in different currencies
+        search_results_priced = tuple(
+            await self.prepare_prices(result) for result in search_results  # type: ignore
+        )
         # convert from dto to dicts, to make possible to cache it
-        return list(map(lambda s: s.dict(), search_results))  # type: ignore
+        return tuple(map(lambda s: s.dict(), search_results_priced))  # type: ignore
 
     def build_results(self, items: Optional[list]) -> List[GameSearchResult]:
         """prepare search results for end user"""
@@ -116,18 +119,24 @@ class GameSearchService(ABC):
                     exc_info=True,
                 )
 
-    async def prepare_prices(self, search_results: List[GameSearchResult]) -> None:
-        """prepare prices for rendering"""
-        # provide converted prices
-        for result in search_results:
-            if not result.price:
-                continue
-            target_price = await self._currency_converter.convert(result.price)
-            result.price_converted = target_price
-            if result.price and result.price.amount:
-                result.price.amount = round(result.price.amount / 100)
-            if result.price_converted and result.price_converted.amount:
-                result.price_converted.amount = round(result.price_converted.amount / 100)
+    async def prepare_prices(self, result: GameSearchResult) -> None:
+        """add prices in different currencies"""
+        if not result.prices:
+            return
+        base_price = result.prices[0]
+        if base_price.currency == BYN:
+            price_in_usd = await self._currency_converter.convert(base_price, USD)
+            if not price_in_usd:
+                return
+            result.prices.append(price_in_usd)
+        elif base_price.currency == RUB:
+            price_in_byn = await self._currency_converter.convert(base_price, BYN)
+            if not price_in_byn:
+                return
+            result.prices.append(price_in_byn)
+            price_in_usd = await self._currency_converter.convert(price_in_byn, USD)
+            if price_in_usd:
+                result.prices.append(price_in_usd)
 
     @property
     @abstractmethod

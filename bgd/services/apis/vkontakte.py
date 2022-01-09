@@ -105,7 +105,7 @@ class VKontakteGameSearchResultFactory:
             images=self._extract_images(search_result),
             location=None,
             owner=self._extract_owner(search_result),
-            price=None,
+            prices=None,
             source=VK,
             subject="VK post",
             url=self._extract_url(search_result),

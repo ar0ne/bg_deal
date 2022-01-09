@@ -53,7 +53,7 @@ class OnlinerGameSearchResultFactory:
             images=self._extract_images(search_result),
             location=None,
             owner=None,
-            price=self._extract_price(search_result),
+            prices=[self._extract_price(search_result)],
             source=ONLINER,
             subject=search_result["name"],
             url=self._extract_url(search_result),

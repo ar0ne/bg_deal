@@ -87,7 +87,7 @@ class OzonGameSearchResultFactory:
             images=self._extract_images(search_result),
             location=None,
             owner=None,
-            price=self._extract_price(search_result),
+            prices=[self._extract_price(search_result)],
             source=OZON,
             subject=self._extract_subject(search_result),
             url=self._extract_url(search_result),

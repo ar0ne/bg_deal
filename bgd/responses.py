@@ -38,11 +38,10 @@ class GameSearchResult(BaseModel):
     images: list
     location: Optional[GameLocation]
     owner: Optional[GameOwner]
-    price: Optional[Price]
+    prices: Optional[List[Price]]
     source: str
     subject: str
     url: str
-    price_converted: Optional[Price] = None
 
 
 class GameRank(BaseModel):

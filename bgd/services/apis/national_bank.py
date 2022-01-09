@@ -60,13 +60,12 @@ class NationalBankCurrencyExchangeRateService:
         self._rates: Optional[ExchangeRates] = None
         self._expiration_date: Optional[datetime.date] = None
 
-    async def convert(self, price: Optional[Price]) -> Optional[Price]:
+    async def convert(self, price: Optional[Price], target_currency: str = USD) -> Optional[Price]:
         """Convert amount to another currency"""
         if not price:
             return None
-        target_currency = USD if price.currency == BYN else BYN
         if price.currency == target_currency:
-            return price
+            return None
         rates = await self.get_rates()
         if not rates:
             return None
