@@ -6,16 +6,20 @@ import collections
 import logging
 import random
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Optional, Protocol, Sequence, Tuple, Union
+from typing import Any, Callable, Optional, Sequence, Tuple, Union
 
 from fastapi_cache.decorator import cache
 
 from bgd.constants import BYN, RUB, USD
 from bgd.errors import GameNotFoundError
-from bgd.responses import GameDetailsResult, GameSearchResult, Price
-from bgd.services.abc import GameDetailsResultFactory, GameSearchResultFactory
+from bgd.responses import GameDetailsResult, GameSearchResult
+from bgd.services.abc import (
+    CurrencyExchangeRateService,
+    GameDetailsResultFactory,
+    GameSearchResultFactory,
+)
 from bgd.services.api_clients import GameInfoSearcher, GameSearcher
-from bgd.services.types import ExchangeRates, GameAlias
+from bgd.services.types import GameAlias
 
 log = logging.getLogger(__name__)
 
@@ -44,18 +48,6 @@ class GameInfoService(ABC):
     @abstractmethod
     def result_factory(self) -> GameDetailsResultFactory:
         """Get game details result factory"""
-
-
-class CurrencyExchangeRateService(Protocol):
-    """Currency exchange rate service interface"""
-
-    async def convert(self, price: Optional[Price], target_currency: str = USD) -> Optional[Price]:
-        """Convert price to another currency"""
-        ...
-
-    async def get_rates(self) -> Optional[ExchangeRates]:
-        """Get actual currency exchange rates"""
-        ...
 
 
 class GameSearchService(ABC):
@@ -150,15 +142,7 @@ class GameSearchService(ABC):
         """Get game search result factory"""
 
 
-class SuggestGameService(ABC):
-    """Suggest game service interface"""
-
-    @abstractmethod
-    async def suggest(self) -> str:
-        """Suggest a game"""
-
-
-class SimpleSuggestGameService(SuggestGameService):
+class SimpleSuggestGameService:
     """Suggest game service"""
 
     def __init__(self, games: str) -> None:

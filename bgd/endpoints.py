@@ -14,7 +14,8 @@ from starlette_json import ORJsonResponse
 
 from bgd.containers import ApplicationContainer
 from bgd.responses import GameDetailsResult
-from bgd.services.base import GameInfoService, GameSearchService, SuggestGameService
+from bgd.services.abc import SuggestGameService
+from bgd.services.base import GameInfoService, GameSearchService
 from bgd.utils import game_deals_finder
 
 INDEX_PAGE = "index.html"
