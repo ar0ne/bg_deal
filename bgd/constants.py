@@ -5,6 +5,7 @@ App Constants
 BELARUS = "Беларусь"
 BGG = "bgg"
 BYN = "BYN"
+CROWDGAMES = "crowdgames"
 FIFTHELEMENT = "fifthelement"
 HOBBYGAMES = "hobbygames"
 KUFAR = "kufar"

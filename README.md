@@ -17,6 +17,7 @@
  - znaemigraem.by
  - hobbygames.by
  - lavkaigr.ru
+ - crowdgames.ru
 
 
 ## How to run

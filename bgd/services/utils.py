@@ -22,6 +22,6 @@ def text_contains(text: str, query: str) -> bool:
     # filter short words (e.g. 'and', 'or')
     words = list(filter(lambda x: len(x) > 3, words))
     for word in words:
-        if word in text:
+        if re.search(word, text, re.IGNORECASE):
             return True
     return False

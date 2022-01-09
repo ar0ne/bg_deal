@@ -83,6 +83,9 @@ main {
 .lavkaigr-logo {
     content: url("https://www.lavkaigr.ru/media/static/images/logo_main.png");
 }
+.crowdgames-logo {
+    content: url("https://assets3.insales.ru/assets/1/5723/1570395/1638791236/logo.png");
+}
 .elapsed-search-time {
     font-size: x-small;
     text-align: right;

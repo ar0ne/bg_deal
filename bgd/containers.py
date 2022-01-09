@@ -10,6 +10,7 @@ from fastapi_cache.backends.redis import RedisBackend
 from starlette.templating import Jinja2Templates
 
 from bgd.services.apis.bgg import BoardGameGeekApiClient, BoardGameGeekGameInfoService
+from bgd.services.apis.crowdgames import CrowdGamesApiClient, CrowdGamesSearchService
 from bgd.services.apis.fifth_element import FifthElementApiClient, FifthElementSearchService
 from bgd.services.apis.hobbygames import HobbyGamesApiClient, HobbyGamesSearchService
 from bgd.services.apis.kufar import KufarApiClient, KufarSearchService
@@ -118,7 +119,13 @@ class ApplicationContainer(containers.DeclarativeContainer):
         client=providers.Singleton(LavkaIgrApiClient),
         currency_exchange_rate_converter=nb_exchange_rate_service,
     )
+    crowdgames = providers.Singleton(
+        CrowdGamesSearchService,
+        client=providers.Singleton(CrowdGamesApiClient),
+        currency_exchange_rate_converter=nb_exchange_rate_service,
+    )
     data_sources = providers.List(
+        crowdgames,
         fifth_element_service,
         hobbygames,
         kufar_search_service,
