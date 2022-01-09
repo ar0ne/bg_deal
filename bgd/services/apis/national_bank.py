@@ -84,12 +84,11 @@ class NationalBankCurrencyExchangeRateService:
 
     def _calculate_amount(self, price: Price, target_currency: str, exchange_rate: float) -> int:
         """calculate amount"""
-        if target_currency == BYN:
-            if price.currency == RUB:
-                return round(price.amount / 100 * exchange_rate)
-            else:
-                return round(price.amount * exchange_rate)
-        return round(price.amount / exchange_rate)
+        if target_currency != BYN:
+            return round(price.amount / exchange_rate)
+        if price.currency == RUB:
+            return round(price.amount / 100 * exchange_rate)
+        return round(price.amount * exchange_rate)
 
     @cache()
     async def get_rates(self) -> Optional[ExchangeRates]:

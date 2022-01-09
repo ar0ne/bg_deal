@@ -95,7 +95,7 @@ class GameSearchService(ABC):
         # extract results if results is not empty
         search_results = results[0] if results else results
         # add converted prices
-        await self.prepare_prices(search_results)
+        await self.prepare_prices(search_results)  # type: ignore
         # convert from dto to dicts, to make possible to cache it
         return list(map(lambda s: s.dict(), search_results))  # type: ignore
 
@@ -119,13 +119,15 @@ class GameSearchService(ABC):
     async def prepare_prices(self, search_results: List[GameSearchResult]) -> None:
         """prepare prices for rendering"""
         # provide converted prices
-        for result in search_results:  # type: ignore
+        for result in search_results:
             if not result.price:
                 continue
-            target_price = await self._currency_converter.convert(result.price)  # type: ignore
-            result.price_converted = target_price  # type: ignore
-            result.price.amount /= 100
-            result.price_converted.amount /= 100
+            target_price = await self._currency_converter.convert(result.price)
+            result.price_converted = target_price
+            if result.price and result.price.amount:
+                result.price.amount = round(result.price.amount / 100)
+            if result.price_converted and result.price_converted.amount:
+                result.price_converted.amount = round(result.price_converted.amount / 100)
 
     @property
     @abstractmethod

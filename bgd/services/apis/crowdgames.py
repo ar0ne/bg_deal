@@ -7,7 +7,7 @@ from typing import List, Optional
 
 from bs4 import BeautifulSoup
 
-from bgd.constants import CROWDGAMES, LAVKAIGR, RUB
+from bgd.constants import CROWDGAMES, RUB
 from bgd.responses import GameSearchResult, Price
 from bgd.services.abc import GameSearchResultFactory
 from bgd.services.api_clients import HtmlHttpApiClient
