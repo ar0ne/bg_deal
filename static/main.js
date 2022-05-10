@@ -73,7 +73,7 @@ var app = new Vue({
             if (!value) {
                 return;
             }
-            if (this.game_info.name != this.game) {
+            if (this.game_info && this.game_info.name != this.game) {
                 this.game_info = null;
                 this.fetchGameInfo();
             }
