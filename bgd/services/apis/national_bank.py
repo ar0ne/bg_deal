@@ -28,7 +28,7 @@ class NationalBankApiClient(XmlHttpApiClient):
     async def get_currency_exchange_rates(self, on_date: datetime.date) -> APIResponse:
         """
         Get currency exchange rates at date.
-        :param date on_date: Date for which we need currency exchange rates.
+        :param: date on_date: Date for which we need currency exchange rates.
         """
         formatted_date = on_date.strftime("%m/%d/%Y")
         log.info("Getting currency exchange rates for %s", formatted_date)
@@ -100,6 +100,8 @@ class NationalBankCurrencyExchangeRateService:
             # for safety let's use yesterday rates
             yesterday = today - datetime.timedelta(days=1)
             resp = await self._client.get_currency_exchange_rates(yesterday)
+            if not (resp and hasattr(resp.response)):
+                return
             self._rates = self.result_factory.create(resp.response)
             self._expiration_date = today + datetime.timedelta(days=1)
         return self._rates
