@@ -70,7 +70,7 @@ class CurrencyExchangeRateService:
             # for safety let's use yesterday rates
             yesterday = today - datetime.timedelta(days=1)
             resp = await self._client.get_currency_exchange_rates(yesterday)
-            if not (resp and hasattr(resp.response)):
+            if not (resp and resp.response):
                 return
             self._rates = self._result_builder.build(resp.response)
             self._expiration_date = today + datetime.timedelta(days=1)

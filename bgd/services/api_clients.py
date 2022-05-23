@@ -63,8 +63,8 @@ class HttpApiClient(Protocol):
 class Connector:
     """Simple async http api connector"""
 
-    TIMEOUT = 10
-    # pylint: disable=no-member
+    TIMEOUT = 15
+
     async def connect(
         self,
         method: str,
@@ -76,16 +76,16 @@ class Connector:
         """Connect Api to resource"""
         url = base_url + path
         try:
-            with async_timeout.timeout(self.TIMEOUT):
+            with async_timeout.timeout(Connector.TIMEOUT):
                 async with aiohttp.ClientSession() as session:
                     request = self.prepare_request(  # type: ignore
                         method=method, url=url, headers=headers, body=body
                     )
-                    async with session.request(**request.to_dict()) as resp:
+                    async with session.request(**request.to_dict(), ssl=False) as resp:
                         handle_response(resp)
                         return await self.prepare_response(resp)  # type: ignore
         except asyncio.TimeoutError as exc:
-            log.error("Timeout Error occured on %s\n%s", url, exc, exc_info=True)
+            log.error("Timeout Error occurred on %s\n%s", url, exc, exc_info=True)
 
 
 class JSONResource:

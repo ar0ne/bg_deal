@@ -36,7 +36,7 @@ class BCSECurrencyExchangeRateResultBuilder:
     @staticmethod
     def build(response: dict) -> Optional[ExchangeRates]:
         """Converts response to list of exchange rates"""
-        if not (response and hasattr(response, "rates")):
+        if not (response and response.get("rates")):
             return None
         rates = response["rates"]
         return {rate["value"]: rate["number"] for rate in rates}
