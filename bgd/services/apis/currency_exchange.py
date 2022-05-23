@@ -39,11 +39,12 @@ class CurrencyExchangeRateService:
         rates = await self.get_rates()
         if not rates:
             return None
+        # rates = {"USD": 2.95, "RUB": 0.039, ...}
         if price.currency == BYN and target_currency not in rates:
             return None
         target = target_currency
         if price.currency != BYN:
-            # nb providers rates only for BYN, reverse conversion otherwise
+            # rates could be only for base BYN, reverse conversion
             target = price.currency
         exchange_rate = rates[target]
         return Price(
@@ -52,11 +53,16 @@ class CurrencyExchangeRateService:
         )
 
     def _calculate_amount(self, price: Price, target_currency: str, exchange_rate: float) -> int:
-        """calculate amount"""
+        """
+        Сalculate amount for targe currency.
+
+        >>> _calculate_amount(Price(amount=1000, currency="RUB"), "BYN", 0.0399)
+        39
+        >>> _calculate_amount(Price(amount=10, currency="BYN"), "USD", 2.5043)
+        4
+        """
         if target_currency != BYN:
             return round(price.amount / exchange_rate)
-        if price.currency == RUB:
-            return round(price.amount / 100 * exchange_rate)
         return round(price.amount * exchange_rate)
 
     @cache()
