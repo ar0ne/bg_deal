@@ -24,10 +24,10 @@ class GameSearchResultFactory(Protocol):
         ...
 
 
-class CurrencyExchangeRateFactory(Protocol):
+class CurrencyExchangeRateResultBuilder(Protocol):
     """Interface for currency exchange rates"""
 
-    def create(self, response: Any) -> Optional[ExchangeRates]:
+    def build(self, response: Any) -> Optional[ExchangeRates]:
         """Creates exchange rates from response"""
         ...
 

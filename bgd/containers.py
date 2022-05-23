@@ -9,16 +9,14 @@ from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.backends.redis import RedisBackend
 from starlette.templating import Jinja2Templates
 
+from bgd.services.apis.bcse import BCSECurrencyExchangeRateResultBuilder, BCSEExchangepiClient
 from bgd.services.apis.bgg import BoardGameGeekApiClient, BoardGameGeekGameInfoService
 from bgd.services.apis.crowdgames import CrowdGamesApiClient, CrowdGamesSearchService
+from bgd.services.apis.currency_exchange import CurrencyExchangeRateService
 from bgd.services.apis.fifth_element import FifthElementApiClient, FifthElementSearchService
 from bgd.services.apis.hobbygames import HobbyGamesApiClient, HobbyGamesSearchService
 from bgd.services.apis.kufar import KufarApiClient, KufarSearchService
 from bgd.services.apis.lavkaigr import LavkaIgrApiClient, LavkaIgrSearchService
-from bgd.services.apis.national_bank import (
-    NationalBankApiClient,
-    NationalBankCurrencyExchangeRateService,
-)
 from bgd.services.apis.onliner import OnlinerApiClient, OnlinerSearchService
 from bgd.services.apis.ozby import OzByApiClient, OzBySearchService
 from bgd.services.apis.ozon import OzonApiClient, OzonSearchService
@@ -50,8 +48,9 @@ class ApplicationContainer(containers.DeclarativeContainer):
         client=providers.Singleton(TeseraApiClient),
     )
     nb_exchange_rate_service = providers.Singleton(
-        NationalBankCurrencyExchangeRateService,
-        client=providers.Singleton(NationalBankApiClient),
+        CurrencyExchangeRateService,
+        client=providers.Singleton(BCSEExchangepiClient),
+        result_builder=providers.Singleton(BCSECurrencyExchangeRateResultBuilder),
     )
     kufar_search_service = providers.Singleton(
         KufarSearchService,

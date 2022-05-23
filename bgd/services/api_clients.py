@@ -74,10 +74,10 @@ class Connector:
         headers: Optional[dict] = None,
     ) -> APIResponse:
         """Connect Api to resource"""
+        url = base_url + path
         try:
             with async_timeout.timeout(self.TIMEOUT):
                 async with aiohttp.ClientSession() as session:
-                    url = base_url + path
                     request = self.prepare_request(  # type: ignore
                         method=method, url=url, headers=headers, body=body
                     )
@@ -85,7 +85,7 @@ class Connector:
                         handle_response(resp)
                         return await self.prepare_response(resp)  # type: ignore
         except asyncio.TimeoutError as exc:
-            log.error("Timeout Error: %s", exc, exc_info=True)
+            log.error("Timeout Error occured on %s\n%s", url, exc, exc_info=True)
 
 
 class JSONResource:
