@@ -14,6 +14,6 @@ pydantic==1.8.2
 python-environ==0.4.54
 PyYAML==6.0
 sse-starlette==0.10.3
-starlette==0.14.2
+starlette==0.20.3
 starlette-json==20.9.18
 uvicorn[standard]==0.17.6
