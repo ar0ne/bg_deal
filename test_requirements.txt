@@ -1,5 +1,5 @@
 mypy==0.812
-pre-commit==2.12.1
+pre-commit==2.19.0
 pycodestyle
 pylint
 safety
