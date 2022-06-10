@@ -8,7 +8,7 @@ dependency-injector==4.39.1
 fastapi==0.68.1
 fastapi-cache2==0.1.8
 Jinja2==3.1.2
-orjson==3.6.5
+orjson==3.7.2
 py-bgg==0.3.3
 pydantic==1.8.2
 python-environ==0.4.54
