@@ -3,7 +3,7 @@ Application entrypoint
 """
 import logging
 import os
-from typing import List, Type
+from typing import List
 
 from dependency_injector.wiring import Provide, inject, required
 from environ import Env

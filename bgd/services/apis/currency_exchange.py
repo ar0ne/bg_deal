@@ -6,7 +6,7 @@ from typing import Optional
 
 from fastapi_cache.decorator import cache
 
-from bgd.constants import BYN, RUB, USD
+from bgd.constants import BYN, USD
 from bgd.responses import Price
 from bgd.services.abc import CurrencyExchangeRateResultBuilder
 from bgd.services.api_clients import CurrencyExchangeRateSearcher

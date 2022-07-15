@@ -78,11 +78,12 @@ class Connector:
         try:
             with async_timeout.timeout(Connector.TIMEOUT):
                 async with aiohttp.ClientSession() as session:
-                    request = self.prepare_request(  # type: ignore
+                    request = self.prepare_request(  # type: ignore  # pylint: disable=no-member
                         method=method, url=url, headers=headers, body=body
                     )
                     async with session.request(**request.to_dict(), ssl=False) as resp:
                         handle_response(resp)
+                        # pylint: disable=no-member
                         return await self.prepare_response(resp)  # type: ignore
         except asyncio.TimeoutError as exc:
             log.error("Timeout Error occurred on %s\n%s", url, exc, exc_info=True)
