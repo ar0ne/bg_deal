@@ -11,7 +11,7 @@ repos:
       - id: isort
         args: ["--profile", "black", "-m3", "-w100"]
   - repo: https://github.com/psf/black
-    rev: 20.8b1
+    rev: 22.6.0
     hooks:
       - id: black
         args: [ --config=./pyproject.toml ]

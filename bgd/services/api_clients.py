@@ -86,6 +86,7 @@ class Connector:
                         return await self.prepare_response(resp)  # type: ignore
         except asyncio.TimeoutError as exc:
             log.error("Timeout Error occurred on %s\n%s", url, exc, exc_info=True)
+        return APIResponse("", status=400)
 
 
 class JSONResource:

@@ -8,6 +8,7 @@ from dependency_injector import containers, providers
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.backends.redis import RedisBackend
 from starlette.templating import Jinja2Templates
+from starlette_json import ORJsonMiddleware, ORJsonResponse
 
 from bgd.services.apis.bcse import BCSECurrencyExchangeRateResultBuilder, BCSEExchangepiClient
 from bgd.services.apis.bgg import BoardGameGeekApiClient, BoardGameGeekGameInfoService
@@ -26,6 +27,7 @@ from bgd.services.apis.vkontakte import VkontakteApiClient, VkontakteSearchServi
 from bgd.services.apis.wildberries import WildberriesApiClient, WildberriesSearchService
 from bgd.services.apis.znaemigraem import ZnaemIgraemApiClient, ZnaemIgraemSearchService
 from bgd.services.base import SimpleSuggestGameService
+from bgd.utils import ORJsonCoder
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -152,3 +154,8 @@ class ApplicationContainer(containers.DeclarativeContainer):
         in_memory=providers.Singleton(InMemoryBackend),
         redis=providers.Singleton(RedisBackend, redis),
     )
+    cache_coder = providers.Singleton(ORJsonCoder)
+    middlewares = providers.List(
+        providers.Factory(lambda: ORJsonMiddleware),
+    )
+    get_response_class = providers.Factory(lambda: ORJsonResponse)
