@@ -26,7 +26,7 @@ from bgd.services.apis.twenty_first_vek import TwentyFirstVekApiClient, TwentyFi
 from bgd.services.apis.vkontakte import VkontakteApiClient, VkontakteSearchService
 from bgd.services.apis.wildberries import WildberriesApiClient, WildberriesSearchService
 from bgd.services.apis.znaemigraem import ZnaemIgraemApiClient, ZnaemIgraemSearchService
-from bgd.services.base import SimpleSuggestGameService
+from bgd.services.base import GameDealsSearchFacade, SimpleSuggestGameService
 from bgd.utils import ORJsonCoder
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -37,6 +37,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
     """App container"""
 
     config = providers.Configuration()
+    coder = providers.Singleton(ORJsonCoder)
     templates = providers.Factory(
         Jinja2Templates,
         directory=config.templates.dir,
@@ -139,6 +140,11 @@ class ApplicationContainer(containers.DeclarativeContainer):
         wildberreis_search_service,
         znaem_igraem_service,
     )
+    game_search_facade = providers.Singleton(
+        GameDealsSearchFacade,
+        data_sources=data_sources,
+        json_coder=coder,
+    )
     suggest_game_service = providers.Singleton(
         SimpleSuggestGameService,
         games=config.app.suggested_games,
@@ -154,7 +160,6 @@ class ApplicationContainer(containers.DeclarativeContainer):
         in_memory=providers.Singleton(InMemoryBackend),
         redis=providers.Singleton(RedisBackend, redis),
     )
-    cache_coder = providers.Singleton(ORJsonCoder)
     middlewares = providers.List(
         providers.Factory(lambda: ORJsonMiddleware),
     )

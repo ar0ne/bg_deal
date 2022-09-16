@@ -37,6 +37,8 @@ class HobbyGamesSearchService(GameSearchService):
         soup = BeautifulSoup(html_page.response, "html.parser")
 
         search_results = soup.find(class_="products-container")
+        if not search_results:
+            return tuple()
         items = search_results.find_all(class_="product-item__content")
         products = []
         for item in items:

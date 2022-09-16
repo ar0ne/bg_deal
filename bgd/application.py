@@ -47,7 +47,7 @@ def startup_event(
     cache_backend: Backend = Provide[ApplicationContainer.cache_backend],
     cache_prefix: str = Provide["config.cache.prefix", required()],
     cache_ttl: int = Provide["config.cache.ttl", required().as_int()],
-    coder: Coder = Provide[ApplicationContainer.cache_coder],
+    coder: Coder = Provide[ApplicationContainer.coder],
 ) -> None:
     """On startup callback"""
     FastAPICache.init(backend=cache_backend, prefix=cache_prefix, expire=cache_ttl, coder=coder)

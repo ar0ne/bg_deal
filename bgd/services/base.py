@@ -5,10 +5,13 @@ import asyncio
 import collections
 import logging
 import random
+import time
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, List, Optional, Sequence, Tuple, Union
 
+from fastapi_cache import Coder
 from fastapi_cache.decorator import cache
+from starlette.requests import Request
 
 from bgd.constants import BYN, RUB, USD
 from bgd.errors import GameNotFoundError
@@ -22,6 +25,8 @@ from bgd.services.api_clients import GameInfoSearcher, GameSearcher
 from bgd.services.types import GameAlias
 
 log = logging.getLogger(__name__)
+
+STREAM_RETRY_TIMEOUT = 30000  # milliseconds
 
 
 class GameInfoService(ABC):
@@ -152,3 +157,46 @@ class SimpleSuggestGameService:
     async def suggest(self) -> str:
         """Suggest random game from the list"""
         return random.choice(self.games)
+
+
+class GameDealsSearchFacade:
+    """Facade for game search logic"""
+
+    def __init__(self, data_sources: List[GameSearchService], json_coder: Coder) -> None:
+        """Init game search facade"""
+        self.data_sources = data_sources
+        self.json_coder = json_coder
+
+    def serialize_event_data(self, data: Any) -> str:
+        """Convert event data to JSON-string"""
+        return self.json_coder.encode(data).decode("utf-8")  # pylint: disable=no-member
+
+    async def find_game_deals(self, request: Request, game: str) -> Sequence[dict]:
+        """Async game deals searching"""
+        start = time.time()
+        while True:
+            if await request.is_disconnected():
+                log.debug("Request disconnected.")
+                break
+
+            for source in self.data_sources:
+                deals = await source.search(game)
+                if deals:
+                    yield {
+                        "event": "update",
+                        "retry": STREAM_RETRY_TIMEOUT,
+                        # convert to json-string for frontend
+                        "data": self.serialize_event_data(deals),
+                    }
+
+            log.debug("We processed all data sources. Close connection.")
+            elapsed_time = f"{time.time() - start:.2f}"
+            yield {
+                "event": "end",
+                "data": self.serialize_event_data(
+                    {
+                        "time": elapsed_time,
+                    }
+                ),
+            }
+            break

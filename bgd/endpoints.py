@@ -2,7 +2,7 @@
 App endpoints
 """
 import asyncio
-from typing import Dict, List
+from typing import Dict
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, Request
@@ -22,8 +22,7 @@ from bgd.routes import (
     SUGGEST_GAME_ROUTE,
 )
 from bgd.services.abc import SuggestGameService
-from bgd.services.base import GameInfoService, GameSearchService
-from bgd.utils import game_deals_finder
+from bgd.services.base import GameDealsSearchFacade, GameInfoService
 
 router = APIRouter()
 
@@ -61,10 +60,12 @@ async def game_info(
 async def search_game_streamed(
     game: str,
     request: Request,
-    data_sources: List[GameSearchService] = Depends(Provide[ApplicationContainer.data_sources]),
+    game_search_facade: GameDealsSearchFacade = Depends(
+        Provide[ApplicationContainer.game_search_facade]
+    ),
 ) -> Response:
     """Finds game deals"""
-    game_deals = game_deals_finder(request, game, data_sources)
+    game_deals = game_search_facade.find_game_deals(request, game)
     return EventSourceResponse(game_deals)
 
 
