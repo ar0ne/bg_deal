@@ -30,6 +30,7 @@ class FifthElementSearchService(GameSearchService):
     def __init__(
         self,
         client: GameSearcher,
+        result_factory: GameSearchResultFactory,
         currency_exchange_rate_converter: CurrencyExchangeRateService,
         game_category_id: str,
         search_app_id: str,
@@ -37,7 +38,7 @@ class FifthElementSearchService(GameSearchService):
         """Init 5th element Search Service"""
         # there are more than one category that we should check
         self._game_category_ids = game_category_id.split(",")
-        super().__init__(client, currency_exchange_rate_converter)
+        super().__init__(client, result_factory, currency_exchange_rate_converter)
         self._search_app_id = search_app_id
 
     async def do_search(self, query: str, *args, **kwargs) -> Tuple[GameSearchResult]:
@@ -53,10 +54,6 @@ class FifthElementSearchService(GameSearchService):
             product["is_presence"]
             and product["params_data"]["category_id"] in self._game_category_ids
         )
-
-    @property
-    def result_factory(self) -> GameSearchResultFactory:
-        return FifthElementGameSearchResultFactory()
 
 
 class FifthElementGameSearchResultFactory:

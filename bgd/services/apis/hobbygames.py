@@ -38,7 +38,7 @@ class HobbyGamesSearchService(GameSearchService):
 
         search_results = soup.find(class_="products-container")
         if not search_results:
-            return tuple()
+            return tuple()  # type: ignore
         items = search_results.find_all(class_="product-item__content")
         products = []
         for item in items:
@@ -58,11 +58,6 @@ class HobbyGamesSearchService(GameSearchService):
             products.append(product)
 
         return self.build_results(products)
-
-    @property
-    def result_factory(self) -> GameSearchResultFactory:
-        """Creates result factory"""
-        return HobbyGamesGameSearchResultFactory()
 
 
 class HobbyGamesGameSearchResultFactory:

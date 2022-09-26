@@ -49,11 +49,6 @@ class KufarSearchService(GameSearchService):
         products = self.filter_results(search_response.response["ads"])
         return self.build_results(products)
 
-    @property
-    def result_factory(self) -> GameSearchResultFactory:
-        """Creates result factory"""
-        return KufarGameSearchResultFactory()
-
 
 class KufarGameSearchResultFactory:
     """builder for GameSearchResult from Kufar data source"""

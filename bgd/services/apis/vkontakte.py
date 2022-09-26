@@ -45,6 +45,7 @@ class VkontakteSearchService(GameSearchService):
     def __init__(
         self,
         client: GameSearcher,
+        result_factory: GameSearchResultFactory,
         currency_exchange_rate_converter: CurrencyExchangeRateService,
         api_version: str,
         api_token: str,
@@ -55,7 +56,7 @@ class VkontakteSearchService(GameSearchService):
     ) -> None:
         """Init 5th element Search Service"""
         # there are more than one category that we should check
-        super().__init__(client, currency_exchange_rate_converter, game_category_id)
+        super().__init__(client, result_factory, currency_exchange_rate_converter, game_category_id)
         self.api_version = api_version
         self.api_token = api_token
         self.group_id = group_id
@@ -85,11 +86,6 @@ class VkontakteSearchService(GameSearchService):
         if not self._query:
             return False
         return re.search(self._query, product["text"], re.IGNORECASE)  # type: ignore
-
-    @property
-    def result_factory(self) -> GameSearchResultFactory:
-        """Creates result factory"""
-        return VKontakteGameSearchResultFactory()
 
 
 class VKontakteGameSearchResultFactory:

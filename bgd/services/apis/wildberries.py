@@ -78,11 +78,6 @@ class WildberriesSearchService(GameSearchService):
         """True if it's available board game"""
         return product.get("subjectId") == self._game_category_id
 
-    @property
-    def result_factory(self) -> GameSearchResultFactory:
-        """Creates result factory"""
-        return WildberriesGameSearchResultFactory()
-
 
 class WildberriesGameSearchResultFactory:
     """Build GameSearchResult for Wildberrries datasource"""

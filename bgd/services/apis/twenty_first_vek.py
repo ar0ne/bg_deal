@@ -41,11 +41,6 @@ class TwentyFirstVekSearchService(GameSearchService):
         products = self.filter_results(response.response["items"], self._is_available_game)
         return self.build_results(products)
 
-    @property
-    def result_factory(self) -> GameSearchResultFactory:
-        """creates result factory"""
-        return TwentyFirstVekGameSearchResultFactory()
-
 
 class TwentyFirstVekGameSearchResultFactory:
     """Factory for search results from 21vek"""

@@ -44,11 +44,6 @@ class TeseraGameInfoService(GameInfoService):
             return search_results[0]["alias"]
         return None
 
-    @property
-    def result_factory(self) -> GameDetailsResultFactory:
-        """Create result factory"""
-        return TeseraGameDetailsResultFactory()
-
 
 class TeseraGameDetailsResultFactory:
     """Factory for result for game details from Tesera service"""

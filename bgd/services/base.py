@@ -7,7 +7,7 @@ import logging
 import random
 import time
 from abc import ABC, abstractmethod
-from typing import Any, Callable, List, Optional, Sequence, Tuple, Union
+from typing import Any, AsyncGenerator, Callable, List, Optional, Sequence, Tuple, Union
 
 from fastapi_cache import Coder
 from fastapi_cache.decorator import cache
@@ -32,9 +32,10 @@ STREAM_RETRY_TIMEOUT = 30000  # milliseconds
 class GameInfoService(ABC):
     """Abstract game info service"""
 
-    def __init__(self, client: GameInfoSearcher) -> None:
+    def __init__(self, client: GameInfoSearcher, result_factory: GameDetailsResultFactory) -> None:
         """Init Search Service"""
         self._client = client
+        self._result_factory = result_factory
 
     async def get_board_game_info(self, game: str, exact: bool = True) -> GameDetailsResult:
         """Get board game info from API"""
@@ -43,16 +44,11 @@ class GameInfoService(ABC):
         if not game_alias:
             raise GameNotFoundError(game)
         game_info_resp = await self._client.get_game_details(game_alias)
-        return self.result_factory.create(game_info_resp.response)
+        return self._result_factory.create(game_info_resp.response)
 
     @abstractmethod
     def get_game_alias(self, search_results: Any) -> Optional[GameAlias]:
         """Choose the best option from search results"""
-
-    @property
-    @abstractmethod
-    def result_factory(self) -> GameDetailsResultFactory:
-        """Get game details result factory"""
 
 
 class GameSearchService(ABC):
@@ -61,11 +57,13 @@ class GameSearchService(ABC):
     def __init__(
         self,
         client: GameSearcher,
+        result_factory: GameSearchResultFactory,
         currency_exchange_rate_converter: CurrencyExchangeRateService,
         game_category_id: Optional[Union[str, int]] = None,
     ) -> None:
         """Init Search Service"""
         self._client = client
+        self._result_factory = result_factory
         self._game_category_id = game_category_id
         self._currency_converter = currency_exchange_rate_converter
 
@@ -101,7 +99,7 @@ class GameSearchService(ABC):
         """prepare search results for end user"""
         if not items:
             return ()  # type: ignore
-        return tuple(map(self.result_factory.create, items))  # type: ignore
+        return tuple(map(self._result_factory.create, items))  # type: ignore
 
     def cleanup_responses(
         self, all_responses: Tuple[Union[Any, Exception]]
@@ -141,11 +139,6 @@ class GameSearchService(ABC):
                 result.prices.append(price_in_usd)
         return result
 
-    @property
-    @abstractmethod
-    def result_factory(self) -> GameSearchResultFactory:
-        """Get game search result factory"""
-
 
 class SimpleSuggestGameService:
     """Suggest game service"""
@@ -171,7 +164,7 @@ class GameDealsSearchFacade:
         """Convert event data to JSON-string"""
         return self.json_coder.encode(data).decode("utf-8")  # pylint: disable=no-member
 
-    async def find_game_deals(self, request: Request, game: str) -> Sequence[dict]:
+    async def find_game_deals(self, request: Request, game: str) -> AsyncGenerator[dict, None]:
         """Async game deals searching"""
         start = time.time()
         while True:

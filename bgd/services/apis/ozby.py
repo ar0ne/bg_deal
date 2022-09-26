@@ -37,11 +37,6 @@ class OzBySearchService(GameSearchService):
         products = self.filter_results(response.response["data"])
         return self.build_results(products)
 
-    @property
-    def result_factory(self) -> GameSearchResultFactory:
-        """Creates result factory"""
-        return OzByGameSearchResultFactory()
-
 
 class OzByGameSearchResultFactory:
     """GameSearchResult factory for oz.by"""

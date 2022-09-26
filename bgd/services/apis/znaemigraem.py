@@ -61,11 +61,6 @@ class ZnaemIgraemSearchService(GameSearchService):
 
         return self.build_results(products)
 
-    @property
-    def result_factory(self) -> GameSearchResultFactory:
-        """Create search result factory"""
-        return ZnaemIgraemGameSearchResultFactory()
-
 
 class ZnaemIgraemGameSearchResultFactory:
     """Game search factory for znaemigraem"""

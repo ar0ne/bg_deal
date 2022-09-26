@@ -69,11 +69,6 @@ class OzonSearchService(GameSearchService):
                 return key
         return None
 
-    @property
-    def result_factory(self) -> GameSearchResultFactory:
-        """Creates result factory"""
-        return OzonGameSearchResultFactory()
-
 
 class OzonGameSearchResultFactory:
     """Builder for game search results from Ozon"""

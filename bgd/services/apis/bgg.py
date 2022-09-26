@@ -67,11 +67,6 @@ class BoardGameGeekGameInfoService(GameInfoService):
         # get the newest game
         return item[-1]["id"]
 
-    @property
-    def result_factory(self) -> GameDetailsResultFactory:
-        """Create result factory"""
-        return BGGGameDetailsResultFactory()
-
 
 class BGGGameDetailsResultFactory:
     """Builder for GameDetailsResult"""

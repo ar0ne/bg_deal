@@ -58,11 +58,6 @@ class CrowdGamesSearchService(GameSearchService):
 
         return self.build_results(products)
 
-    @property
-    def result_factory(self) -> GameSearchResultFactory:
-        """Creates result factory"""
-        return CrowdGamesGameSearchResultFactory()
-
     def _product_available(self, item) -> bool:
         """True if product available for purchase"""
         return bool(item.find(class_="ostatok-prod").select_one("a").get_text().strip())

@@ -37,11 +37,6 @@ class OnlinerSearchService(GameSearchService):
         """True if it's available board game"""
         return product["schema"]["key"] == "boardgame" and product["prices"]
 
-    @property
-    def result_factory(self) -> GameSearchResultFactory:
-        """Creates result factory"""
-        return OnlinerGameSearchResultFactory()
-
 
 class OnlinerGameSearchResultFactory:
     """GameSearchResult factory for search results from onliner.by"""

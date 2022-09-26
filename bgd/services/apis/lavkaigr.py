@@ -59,11 +59,6 @@ class LavkaIgrSearchService(GameSearchService):
 
         return self.build_results(products)
 
-    @property
-    def result_factory(self) -> GameSearchResultFactory:
-        """Creates result factory"""
-        return LavkaIgrGameSearchResultFactory()
-
 
 class LavkaIgrGameSearchResultFactory:
     """Game search result factory for lavka igr"""
