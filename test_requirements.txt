@@ -1,4 +1,4 @@
-mypy==0.961
+mypy==0.991
 pre-commit==2.19.0
 pycodestyle
 pylint
