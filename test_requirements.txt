@@ -3,4 +3,4 @@ pre-commit==2.19.0
 pycodestyle
 pylint
 safety
-tox==3.25.1
+tox==3.28.0
