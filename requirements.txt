@@ -6,7 +6,7 @@ beautifulsoup4==4.11.1
 brotlipy==0.7.0
 dependency-injector==4.39.1
 fastapi==0.99.1
-fastapi-cache2==0.1.8
+fastapi-cache2==0.2.1
 Jinja2==3.1.2
 orjson==3.7.3
 py-bgg==0.3.3
