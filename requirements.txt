@@ -16,4 +16,4 @@ PyYAML==6.0
 sse-starlette==0.10.3
 starlette==0.19.1
 starlette-json==20.9.18
-uvicorn[standard]==0.18.1
+uvicorn[standard]==0.23.2
