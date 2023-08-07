@@ -162,7 +162,7 @@ class GameDealsSearchFacade:
 
     def serialize_event_data(self, data: Any) -> str:
         """Convert event data to JSON-string"""
-        return self.json_coder.encode(data).decode("utf-8")  # pylint: disable=no-member
+        return self.json_coder.encode(data)  # pylint: disable=no-member
 
     async def find_game_deals(self, request: Request, game: str) -> AsyncGenerator[dict, None]:
         """Async game deals searching"""

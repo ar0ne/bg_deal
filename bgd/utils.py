@@ -12,9 +12,9 @@ class ORJsonCoder(Coder):
     """orjson coder"""
 
     @classmethod
-    def encode(cls, value: Any) -> bytes:
+    def encode(cls, value: Any) -> str:
         """serialize python object to json-bytes"""
-        return orjson.dumps(value, default=jsonable_encoder)  # pylint: disable=no-member
+        return str(orjson.dumps(value, default=jsonable_encoder))  # pylint: disable=no-member
 
     @classmethod
     def decode(cls, value: Any) -> Any:

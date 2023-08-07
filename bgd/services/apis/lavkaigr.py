@@ -9,7 +9,6 @@ from bs4 import BeautifulSoup
 
 from bgd.constants import LAVKAIGR, RUB
 from bgd.responses import GameSearchResult, Price
-from bgd.services.abc import GameSearchResultFactory
 from bgd.services.api_clients import HtmlHttpApiClient
 from bgd.services.base import GameSearchService
 from bgd.services.constants import GET

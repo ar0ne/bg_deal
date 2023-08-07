@@ -4,3 +4,4 @@ pycodestyle
 pylint
 safety
 tox==3.25.1
+types-redis

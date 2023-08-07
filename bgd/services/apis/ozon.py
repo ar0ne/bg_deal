@@ -8,7 +8,6 @@ import orjson
 
 from bgd.constants import OZON
 from bgd.responses import GameSearchResult, Price
-from bgd.services.abc import GameSearchResultFactory
 from bgd.services.api_clients import JsonHttpApiClient
 from bgd.services.base import GameSearchService
 from bgd.services.constants import GET

@@ -6,7 +6,6 @@ from typing import Any, Optional, Union
 
 from bgd.constants import NOT_AVAILABLE, TESERA
 from bgd.responses import GameDetailsResult, GameStatistic
-from bgd.services.abc import GameDetailsResultFactory
 from bgd.services.api_clients import JsonHttpApiClient
 from bgd.services.apis.bgg import BGG_GAME_URL
 from bgd.services.base import GameInfoService

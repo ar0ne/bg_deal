@@ -5,7 +5,6 @@ from typing import Optional, Tuple
 
 from bgd.constants import BELARUS, KUFAR
 from bgd.responses import GameLocation, GameOwner, GameSearchResult, Price
-from bgd.services.abc import GameSearchResultFactory
 from bgd.services.api_clients import JsonHttpApiClient
 from bgd.services.base import GameSearchService
 from bgd.services.constants import GET
