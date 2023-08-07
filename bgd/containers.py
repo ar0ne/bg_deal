@@ -3,10 +3,10 @@ App containers
 """
 import os
 
-import aioredis
 from dependency_injector import containers, providers
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.backends.redis import RedisBackend
+from redis import asyncio as aioredis
 from starlette.templating import Jinja2Templates
 from starlette_json import ORJsonMiddleware, ORJsonResponse
 

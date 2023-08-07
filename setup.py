@@ -53,7 +53,7 @@ class PyTest(testcommand):
 
 setup(
     name="board_game_deals",
-    version="0.0.0",
+    version="0.0.1",
     license="None",
     author="ar0ne",
     author_email="",
