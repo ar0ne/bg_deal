@@ -156,7 +156,7 @@
                                             </div>
                                         </div>
                                         <div v-if="result.images" class="col-md-1">
-                                            <img v-bind:src="result.images[0]" alt="Search result image" class="rounded img-thumbnail float-left">
+                                            <img v-bind:src="result.images[0]" v-bind:alt="result.source" class="rounded img-thumbnail float-left">
                                         </div>
                                     </div>
                                 </div>

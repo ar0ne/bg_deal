@@ -26,7 +26,7 @@ from bgd.services.types import GameAlias
 
 log = logging.getLogger(__name__)
 
-STREAM_RETRY_TIMEOUT = 30000  # milliseconds
+STREAM_RETRY_TIMEOUT = 600  # milliseconds
 
 
 class GameInfoService(ABC):
